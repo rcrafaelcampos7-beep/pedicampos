@@ -1,0 +1,83 @@
+import { ORDER_STATUS, PAYMENT_STATUS } from "../utils/orderStatus.js";
+
+export const initialOrders = [
+  {
+    id: "1001",
+    number: "1001",
+    storeId: "store-neguinho",
+    storeSlug: "neguinhodoacai",
+    storeName: "Neguinho do Açaí",
+    createdAt: new Date(Date.now() - 1000 * 60 * 42).toISOString(),
+    updatedAt: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
+    customer: {
+      name: "Rafael Campos",
+      phone: "22999990001",
+    },
+    fulfillment: "delivery",
+    address: {
+      street: "Rua Voluntários da Pátria",
+      district: "Centro",
+      number: "45",
+      complement: "Apto 302",
+    },
+    notes: "Caprichar no leite condensado.",
+    paymentMethod: "Pix online",
+    paymentStatus: PAYMENT_STATUS.APPROVED,
+    orderStatus: ORDER_STATUS.PREPARING,
+    subtotal: 48.8,
+    deliveryFee: 5,
+    total: 53.8,
+    items: [
+      {
+        productId: "prod-acai-500",
+        name: "Açaí 500ml",
+        quantity: 2,
+        unitPrice: 18.9,
+        addons: [
+          { id: "leite-po", name: "Leite em pó", price: 2.5 },
+          { id: "morango", name: "Morango", price: 3 },
+        ],
+        note: "Sem banana.",
+        total: 48.8,
+      },
+    ],
+  },
+  {
+    id: "1002",
+    number: "1002",
+    storeId: "store-gordinho",
+    storeSlug: "gordinhoburguer",
+    storeName: "Gordinho Burguer",
+    createdAt: new Date(Date.now() - 1000 * 60 * 95).toISOString(),
+    updatedAt: new Date(Date.now() - 1000 * 60 * 32).toISOString(),
+    customer: {
+      name: "Bianca Souza",
+      phone: "22999990002",
+    },
+    fulfillment: "delivery",
+    address: {
+      street: "Rua Barão de Miracema",
+      district: "Pelinca",
+      number: "89",
+      complement: "Casa",
+    },
+    notes: "Mandar maionese extra.",
+    paymentMethod: "Cartão na entrega",
+    paymentStatus: PAYMENT_STATUS.PENDING_DELIVERY,
+    orderStatus: ORDER_STATUS.RECEIVED,
+    subtotal: 53.8,
+    deliveryFee: 7,
+    total: 60.8,
+    items: [
+      {
+        productId: "prod-smash-duplo",
+        name: "Smash Duplo",
+        quantity: 2,
+        unitPrice: 26.9,
+        addons: [],
+        note: "",
+        total: 53.8,
+      },
+    ],
+  },
+];
