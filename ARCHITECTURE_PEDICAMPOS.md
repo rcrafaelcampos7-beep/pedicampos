@@ -346,6 +346,13 @@ Conceitos:
 - `getPlanPriceLabel`: pega preco formatado.
 - `getActivePlans`: retorna planos ativos para landing/master.
 
+Valores comerciais padrao:
+
+- Implantacao: R$ 599,99.
+- Start: R$ 99,99/mes.
+- Pro: R$ 179,99/mes.
+- Premium: R$ 199,99/mes.
+
 Features atuais:
 
 - Start:

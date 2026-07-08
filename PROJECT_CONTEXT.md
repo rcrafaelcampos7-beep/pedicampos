@@ -218,15 +218,15 @@ Dados da landing:
 - Editavel em `/master/configuracoes`.
 - Secoes podem ser ativadas/desativadas por `platform.sections`.
 
-Valores comerciais atuais no codigo:
+Valores comerciais finais:
 
-- Implantacao: a partir de R$ 599,99.
+- Implantacao: R$ 599,99.
 - Plano Start: R$ 99,99/mes.
 - Plano Pro: R$ 179,99/mes.
 - Plano Premium: R$ 199,99/mes.
 - Premium destacado com selo "Melhor escolha" e texto "Por apenas R$ 20,00 a mais que o Pro".
 
-Observacao: havia uma solicitacao textual citando Pro como R$ 179,00 e Premium como R$ 199,00. O codigo atual esta com R$ 179,99 e R$ 199,99. Revisar comercialmente antes de producao.
+Observacao: todos os valores comerciais usam gatilho com `,99`.
 
 ## Planos e funcionalidades
 
@@ -676,7 +676,7 @@ Build:
    - vincular adicional a produto;
    - atualizar status de pedido.
 7. Revisar bloqueios por plano.
-8. Revisar precos comerciais finais.
+8. Manter precos comerciais finais com gatilho em `,99`.
 9. Polir visual.
 10. Preparar deploy Vercel.
 11. Integrar Supabase futuramente.

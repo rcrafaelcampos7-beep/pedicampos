@@ -154,7 +154,8 @@ Legenda:
 - [x] Checkout no site liberado a partir do Pro.
 - [x] Pix online simulado liberado no Premium.
 - [x] Premium destacado na landing.
-- [ ] Revisar divergencia comercial: textos anteriores citaram Pro/Premium com final `,00`, codigo esta com `,99`.
+- [x] Confirmar precos comerciais finais com gatilho em `,99`.
+- [x] Valores finais: implantacao R$ 599,99; Start R$ 99,99/mes; Pro R$ 179,99/mes; Premium R$ 199,99/mes.
 - [ ] Testar downgrade de Premium para Start com pedidos/adicionais ja existentes.
 - [ ] Testar recursos ativos/desativados se `featuresByPlan` mudar no master futuramente.
 
@@ -198,7 +199,7 @@ Legenda:
 - [x] Premium destacado como melhor escolha.
 - [x] Loja demo real exibida na landing.
 - [ ] Revisar copy final da landing.
-- [ ] Definir precos finais com centavos.
+- [x] Definir precos finais com centavos.
 - [ ] Criar roteiro de demonstracao para cliente.
 - [ ] Criar apresentacao comercial.
 - [ ] Preparar prints/videos da demo.

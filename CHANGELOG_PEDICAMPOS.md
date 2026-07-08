@@ -313,4 +313,4 @@ Observacoes:
 - Possivel erro de runtime em `src/pages/AdminProducts.jsx` por falta de import de `formatCurrency`.
 - Necessario teste visual em navegador real.
 - Necessario teste completo de fluxo multi-loja.
-- Necessario revisar precos comerciais finais: texto anterior citou valores terminados em `,00`, codigo atual usa `,99`.
+- Precos comerciais finais confirmados: implantacao R$ 599,99; Start R$ 99,99/mes; Pro R$ 179,99/mes; Premium R$ 199,99/mes.

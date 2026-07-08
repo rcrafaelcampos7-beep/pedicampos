@@ -194,16 +194,22 @@ function normalizeStore(store) {
 
 function normalizePlanConfig(key, plan = {}) {
   const fallback = defaultPlatformSettings.plans[key];
-  const legacyPrices = { start: 79, pro: 147, premium: 247 };
-  const legacyLabels = { start: "R$ 79/mês", pro: "R$ 147/mês", premium: "R$ 247/mês" };
+  const legacyPrices = { start: [79], pro: [147, 179], premium: [247, 199] };
+  const legacyLabels = {
+    start: ["R$ 79/mês"],
+    pro: ["R$ 147/mês", "R$ 179,00/mês"],
+    premium: ["R$ 247/mês", "R$ 199,00/mês"],
+  };
   const rawPrice = Number(plan.price ?? fallback.price) || fallback.price;
-  const shouldUseFallbackPrice = rawPrice === legacyPrices[key];
+  const shouldUseFallbackPrice = legacyPrices[key].includes(rawPrice);
   return {
     ...fallback,
     ...plan,
     price: shouldUseFallbackPrice ? fallback.price : rawPrice,
     priceLabel:
-      !plan.priceLabel || plan.priceLabel === legacyLabels[key] ? fallback.priceLabel : plan.priceLabel,
+      shouldUseFallbackPrice || !plan.priceLabel || legacyLabels[key].includes(plan.priceLabel)
+        ? fallback.priceLabel
+        : plan.priceLabel,
     active: plan.active !== false,
     highlighted: Boolean(plan.highlighted ?? fallback.highlighted),
     features: Array.isArray(plan.features) ? plan.features : fallback.features,
