@@ -4,6 +4,7 @@ import { Button } from "../components/ui/Button.jsx";
 import { Card } from "../components/ui/Card.jsx";
 import { Checkbox, Input, Select, Textarea } from "../components/ui/Input.jsx";
 import { updateStore } from "../services/storage.js";
+import { formatCurrency } from "../utils/formatCurrency.js";
 
 const emptyProduct = {
   id: "",
