@@ -51,7 +51,8 @@ Decisoes registradas:
 - Tudo que for criado no master/admin deve futuramente refletir online no dominio e em outros dispositivos.
 - `localStorage` nao sera removido agora; ele sera mantido temporariamente como fallback durante a migracao.
 - `src/data/mockStores.js` e `src/data/mockOrders.js` nao serao removidos agora; continuam como seed/fallback enquanto a migracao nao estiver validada.
-- A proxima fase tecnica e criar uma camada de acesso a dados, por exemplo `src/services/database.js`, inicialmente usando `storage.js` por baixo.
+- A primeira camada de acesso a dados foi criada em `src/services/database.js`.
+- `src/services/database.js` funciona como fachada/adapter temporario e ainda usa `src/services/storage.js` por baixo.
 - Depois, essa camada deve passar a falar com Supabase usando variaveis de ambiente.
 - Nao deve haver SDK do Supabase espalhado diretamente pelas telas.
 - O plano tecnico completo foi criado em `SUPABASE_MIGRATION_PLAN.md`.
@@ -76,6 +77,7 @@ Implementado:
 - Configuracoes da plataforma editaveis no master.
 - Planos Start, Pro e Premium com recursos por plano.
 - Adicionais configuraveis por loja, vinculados a produtos.
+- Fachada inicial de dados criada em `src/services/database.js`, ainda usando `storage.js/localStorage`.
 - Persistencia via localStorage.
 - Dados mockados iniciais.
 - Rewrites de SPA para Vercel em `vercel.json`.
@@ -609,6 +611,7 @@ Observacoes:
 - `src/main.jsx`: entrada React.
 - `src/App.jsx`: roteamento principal e protecao fake de admin/master.
 - `src/routes/router.jsx`: roteador simples com `Link`, `navigate`, `usePath`.
+- `src/services/database.js`: fachada/adapter temporario de dados para preparar Supabase sem alterar telas ainda.
 - `src/services/storage.js`: inicializacao, normalizacao, localStorage, updates de loja, pedido e plataforma.
 - `src/data/mockStores.js`: lojas demo, produtos, categorias, adicionais e criacao de loja vazia.
 - `src/data/mockOrders.js`: pedidos iniciais mockados.
@@ -649,6 +652,14 @@ Observacoes:
 
 Ajustes recentes implementados:
 
+- Criada a primeira camada de abstracao de dados:
+  - arquivo: `src/services/database.js`;
+  - atua como fachada/adapter temporario;
+  - ainda usa `src/services/storage.js`, mocks e localStorage por baixo;
+  - Supabase real ainda nao foi conectado;
+  - nenhuma tela foi migrada para usar essa camada ainda;
+  - `node --check src/services/database.js` passou;
+  - `npm run build` passou com permissao elevada apos a falha conhecida do sandbox.
 - Auditoria de migracao para Supabase realizada:
   - identificado que `src/services/storage.js` concentra carregamento, normalizacao e escrita do banco local;
   - identificado que `src/hooks/usePediData.js` e a principal entrada de leitura das telas;
@@ -747,12 +758,13 @@ Build:
 - Build apos ajuste da regra comercial de pagamentos por plano passou com `npm run build`.
 - Build apos auditoria final de termos antigos de pagamento passou com `npm run build`.
 - Build apos criacao de `SUPABASE_MIGRATION_PLAN.md` e atualizacao das memorias passou com `npm run build`.
+- Build apos criacao de `src/services/database.js` passou com `npm run build`.
 - Observacao: a primeira tentativa dentro do sandbox falhou por acesso negado ao resolver `vite.config.js`; a repeticao com permissao elevada passou.
 
 ## Proximas etapas recomendadas
 
-1. Criar `src/services/database.js` como camada de dados, ainda usando `storage.js` por baixo.
-2. Migrar `src/hooks/usePediData.js` para consumir a nova camada.
+1. Migrar `src/hooks/usePediData.js` para consumir `src/services/database.js`.
+2. Manter `storage.js/localStorage` como fallback durante a adaptacao.
 3. Criar adaptadores entre o modelo local aninhado e o modelo relacional planejado para Supabase.
 4. Criar projeto Supabase, tabelas e seeds iniciais.
 5. Migrar tela por tela, com localStorage como fallback temporario.

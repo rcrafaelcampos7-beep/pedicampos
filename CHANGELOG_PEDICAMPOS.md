@@ -527,6 +527,42 @@ Build:
 - Primeira tentativa dentro do sandbox falhou por acesso negado ao resolver `vite.config.js`.
 - Repeticao com permissao elevada passou com `npm run build`.
 
+## v0.18 - Fachada inicial de dados
+
+Implementado nesta rotina:
+
+- Criado `src/services/database.js`.
+- `database.js` atua como fachada/adapter temporario de dados.
+- A fachada ainda usa `src/services/storage.js`, mocks e `localStorage` por baixo.
+- Supabase real ainda nao foi conectado.
+- Nenhuma tela foi migrada para usar `database.js` nesta etapa.
+- `src/hooks/usePediData.js` permanece usando o fluxo atual e sera a proxima etapa correta.
+- `node --check src/services/database.js` passou sem erro de sintaxe.
+
+Funcoes expostas:
+
+- `getDatabase`, `getStores`, `getStoreBySlug`, `getStoreById`;
+- `createStore`, `updateStore`, `deactivateStore`, `deleteStore`;
+- `getProductsByStore`, `createProduct`, `updateProduct`, `deleteProduct`;
+- `getCategoriesByStore`, `createCategory`, `updateCategory`, `deleteCategory`;
+- `getAdditionalGroupsByStore`, `createAdditionalGroup`, `updateAdditionalGroup`, `deleteAdditionalGroup`;
+- `getOrdersByStore`, `getOrderById`, `createOrder`, `updateOrder`, `updateOrderStatus`;
+- `getPlatformSettings`, `updatePlatformSettings`, `getPlans`, `updatePlan`.
+
+Arquivos alterados nesta etapa:
+
+- `src/services/database.js`
+- `PROJECT_CONTEXT.md`
+- `TODO_PEDICAMPOS.md`
+- `CHANGELOG_PEDICAMPOS.md`
+- `ARCHITECTURE_PEDICAMPOS.md`
+- `SUPABASE_MIGRATION_PLAN.md`
+
+Build:
+
+- Primeira tentativa dentro do sandbox falhou por acesso negado ao resolver `vite.config.js`.
+- Repeticao com permissao elevada passou com `npm run build`.
+
 ## Builds e verificacoes
 
 - Build anterior conhecido: `npm run build` passou durante o desenvolvimento.
@@ -537,6 +573,7 @@ Build:
 - Build apos ajuste da regra comercial de pagamentos por plano passou.
 - Build apos auditoria final de termos antigos de pagamento passou.
 - Build apos criacao do plano de migracao Supabase e atualizacao das memorias passou.
+- Build apos criacao de `src/services/database.js` passou.
 - Observacao: a primeira tentativa no sandbox falhou por acesso negado ao resolver `vite.config.js`; a tentativa com permissao elevada passou.
 
 ## Pendencias conhecidas registradas

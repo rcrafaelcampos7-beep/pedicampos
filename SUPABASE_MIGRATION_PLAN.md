@@ -21,7 +21,11 @@ Decisao tecnica desta etapa:
 - `localStorage` continua temporariamente como fallback.
 - `src/data/mockStores.js` e `src/data/mockOrders.js` continuam existindo ate a migracao estar validada.
 - Nenhuma tela deve passar a depender diretamente do SDK do Supabase.
-- A primeira mudanca de codigo futura deve criar uma camada de service, por exemplo `src/services/database.js`.
+- A primeira camada de service foi criada em `src/services/database.js`.
+- `src/services/database.js` funciona como fachada/adapter temporario e ainda usa `src/services/storage.js` por baixo.
+- Supabase real ainda nao foi conectado.
+- Nenhuma tela foi migrada para `database.js` nesta etapa.
+- A proxima etapa correta e adaptar `src/hooks/usePediData.js` para consumir `database.js`.
 
 ## Auditoria do estado atual
 
@@ -501,43 +505,60 @@ RLS deve ser implementado tabela por tabela depois do schema inicial, com testes
 
 ## Service alvo
 
-Criar um arquivo novo em etapa futura:
+Arquivo criado nesta etapa:
 
 - `src/services/database.js`
 
-API inicial proposta:
+API inicial exposta:
 
 ```js
+getDatabase()
 getStores()
 getStoreBySlug(slug)
+getStoreById(id)
 createStore(data)
 updateStore(id, data)
+deactivateStore(id)
+deleteStore(id)
 getProductsByStore(storeId)
-createProduct(data)
-updateProduct(id, data)
+createProduct(storeId, data)
+updateProduct(productId, data)
+deleteProduct(productId)
 getCategoriesByStore(storeId)
+createCategory(storeId, data)
+updateCategory(categoryId, data)
+deleteCategory(categoryId)
 getAdditionalGroupsByStore(storeId)
-createOrder(data)
+createAdditionalGroup(storeId, data)
+updateAdditionalGroup(groupId, data)
+deleteAdditionalGroup(groupId)
 getOrdersByStore(storeId)
+getOrderById(orderId)
+createOrder(storeId, data)
+updateOrder(orderId, data)
 updateOrderStatus(orderId, status)
+getPlatformSettings()
+updatePlatformSettings(data)
+getPlans()
+updatePlan(planId, data)
 ```
 
 Primeira versao segura:
 
-- As funcoes acima podem chamar `src/services/storage.js` por baixo.
+- As funcoes acima chamam `src/services/storage.js` por baixo.
 - O objetivo inicial e trocar as telas para um contrato de dados estavel sem mudar a origem real dos dados.
 - Depois, cada funcao pode ganhar uma implementacao Supabase preservando assinatura e formato retornado.
 
 ## Ordem segura de implementacao
 
 1. Manter o app atual funcionando com localStorage e mocks.
-2. Criar `src/services/database.js` usando `storage.js` por baixo como fallback.
-3. Criar adaptadores de formato entre modelo atual e modelo relacional.
-4. Migrar leituras centrais:
+2. `src/services/database.js` foi criado usando `storage.js` por baixo como fallback.
+3. Migrar leituras centrais para a fachada local:
    - primeiro `src/hooks/usePediData.js`;
    - depois `src/pages/StorePage.jsx`;
    - depois `src/pages/CheckoutPage.jsx`;
    - depois `src/pages/OrderTrackingPage.jsx`.
+4. Criar adaptadores de formato entre modelo atual e modelo relacional antes de ativar Supabase real.
 5. Migrar master lojas:
    - `src/pages/MasterCreateStore.jsx`;
    - `src/pages/MasterStores.jsx`;
@@ -579,7 +600,7 @@ Quando `VITE_DATA_SOURCE=supabase`:
 ## Arquivos criticos para alteracao futura
 
 - `src/services/storage.js`
-- `src/services/database.js` (novo)
+- `src/services/database.js`
 - `src/services/supabaseClient.js` (novo, quando conectar Supabase)
 - `src/hooks/usePediData.js`
 - `src/hooks/useCart.js`
@@ -623,7 +644,12 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - [x] Manter localStorage/mocks como fallback temporario.
 - [x] Propor schema SQL inicial.
 - [x] Registrar arquivos criticos.
-- [ ] Criar `src/services/database.js` com backend local.
+- [x] Criar `src/services/database.js` com backend local.
+- [x] Revisar `src/services/database.js` com `node --check`.
+- [x] Confirmar que `database.js` ainda usa `storage.js/localStorage` por baixo.
+- [x] Confirmar que Supabase real ainda nao foi conectado.
+- [x] Confirmar que nenhuma tela foi migrada para `database.js`.
+- [x] Rodar `npm run build` apos a criacao de `database.js`; build passou com permissao elevada apos falha conhecida do sandbox.
 - [ ] Migrar `usePediData` para a nova camada.
 - [ ] Criar adaptadores entre modelo local aninhado e modelo relacional.
 - [ ] Criar projeto Supabase.

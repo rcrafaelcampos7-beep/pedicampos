@@ -29,7 +29,8 @@ Legenda:
 - [x] Auditar termos antigos de pagamento antes da troca de chat.
 - [x] Confirmar que nao ha termos antigos de pagamento visiveis ao cliente final.
 - [x] Testar fluxo completo de pedido de ponta a ponta por validacao automatizada dos modulos reais.
-- [ ] Proxima tarefa real: criar camada de dados `src/services/database.js` usando `storage.js` como fallback.
+- [x] Criar camada de dados `src/services/database.js` usando `storage.js` como fallback.
+- [ ] Proxima tarefa real: adaptar `src/hooks/usePediData.js` para usar `src/services/database.js`.
 - [ ] Testar fluxo completo com dados ja migrados no localStorage.
 - [ ] Validar em navegador real as rotas principais.
 
@@ -43,7 +44,10 @@ Legenda:
 - [x] Auditar telas que chamam `updateStore`, `mutateDatabase`, `createOrder`, `updateOrder` e `updatePlatform`.
 - [x] Auditar linguagem publica/comercial com termos de simulacao.
 - [x] Criar proposta de tabelas Supabase em `SUPABASE_MIGRATION_PLAN.md`.
-- [ ] Criar `src/services/database.js` com API preparada para Supabase e implementacao local por baixo.
+- [x] Criar `src/services/database.js` com API preparada para Supabase e implementacao local por baixo.
+- [x] Confirmar que `src/services/database.js` ainda usa `storage.js/localStorage` como adapter temporario.
+- [x] Confirmar que Supabase real ainda nao foi conectado.
+- [x] Confirmar que nenhuma tela foi migrada para `database.js` nesta etapa.
 - [ ] Criar `src/services/supabaseClient.js` quando as variaveis de ambiente existirem.
 - [ ] Definir `VITE_DATA_SOURCE=local|supabase`.
 - [ ] Definir `VITE_SUPABASE_URL`.
@@ -252,7 +256,8 @@ Legenda:
 - [ ] Criar botao/fluxo de reset de dados se desejado.
 - [ ] Documentar rotina manual para limpar localStorage durante testes.
 - [x] Preparar modelo inicial para migrar a Supabase em `SUPABASE_MIGRATION_PLAN.md`.
-- [ ] Implementar camada de dados que substitua acesso direto ao `storage.js` pelas telas.
+- [x] Criar camada de dados inicial como fachada sobre `storage.js`.
+- [ ] Migrar telas e hooks para substituir acesso direto ao `storage.js` pela fachada `database.js`.
 
 ## Integracoes futuras
 

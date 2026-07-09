@@ -14,6 +14,7 @@ Estado tecnico atual:
 - Sem backend real ainda.
 - Dados mockados inicializados a partir de arquivos JS.
 - Persistencia local via localStorage.
+- `src/services/database.js` criado como fachada/adapter temporario sobre `storage.js`.
 - Preparada conceitualmente para migrar para Supabase/backend real.
 - Nova direcao registrada em 2026-07-09: Supabase sera o banco alvo e localStorage sera mantido temporariamente como fallback.
 - Rewrites SPA configurados em `vercel.json`.
@@ -35,27 +36,46 @@ Principios:
 
 - As telas nao devem acessar Supabase diretamente.
 - Uma camada de dados deve ficar entre UI e persistencia.
-- O primeiro arquivo novo recomendado e `src/services/database.js`.
-- A primeira implementacao de `database.js` deve usar `src/services/storage.js` por baixo para preservar o comportamento atual.
+- O primeiro arquivo novo foi criado em `src/services/database.js`.
+- A implementacao atual de `database.js` usa `src/services/storage.js` por baixo para preservar o comportamento atual.
 - Depois, `database.js` deve trocar a origem para Supabase com `VITE_DATA_SOURCE=supabase`.
 - `localStorage` e mocks continuam como fallback temporario, nao como arquitetura final.
+- Supabase real ainda nao foi conectado.
+- Nenhuma tela foi migrada para `database.js` ainda.
 - O schema SQL inicial, riscos e checklist estao em `SUPABASE_MIGRATION_PLAN.md`.
 
-API alvo inicial:
+API inicial criada:
 
 ```js
+getDatabase()
 getStores()
 getStoreBySlug(slug)
+getStoreById(id)
 createStore(data)
 updateStore(id, data)
+deactivateStore(id)
+deleteStore(id)
 getProductsByStore(storeId)
-createProduct(data)
-updateProduct(id, data)
+createProduct(storeId, data)
+updateProduct(productId, data)
+deleteProduct(productId)
 getCategoriesByStore(storeId)
+createCategory(storeId, data)
+updateCategory(categoryId, data)
+deleteCategory(categoryId)
 getAdditionalGroupsByStore(storeId)
-createOrder(data)
+createAdditionalGroup(storeId, data)
+updateAdditionalGroup(groupId, data)
+deleteAdditionalGroup(groupId)
 getOrdersByStore(storeId)
+getOrderById(orderId)
+createOrder(storeId, data)
+updateOrder(orderId, data)
 updateOrderStatus(orderId, status)
+getPlatformSettings()
+updatePlatformSettings(data)
+getPlans()
+updatePlan(planId, data)
 ```
 
 Variaveis de ambiente previstas:
@@ -139,6 +159,7 @@ src/
   routes/
     router.jsx
   services/
+    database.js
     storage.js
   styles/
     global.css
@@ -219,7 +240,7 @@ Regra importante:
 8. `saveDatabase()` grava o novo estado e dispara `pedicampos:data-updated`.
 9. Componentes inscritos atualizam a interface automaticamente.
 
-Este e o fluxo real atual. Ele sera preservado temporariamente enquanto a nova camada `database.js` e criada e enquanto cada tela e migrada com seguranca.
+Este e o fluxo real atual. Ele sera preservado temporariamente enquanto cada tela e migrada com seguranca para `src/services/database.js`.
 
 Fluxo simplificado:
 
@@ -583,24 +604,44 @@ Funcoes principais em `src/services/storage.js`:
 Observacao de migracao:
 
 - `src/services/storage.js` continua critico e nao deve ser apagado agora.
-- A proxima camada deve envolver essas funcoes com nomes preparados para banco real.
+- `src/services/database.js` ja envolve essas funcoes com nomes preparados para banco real.
+- `src/services/database.js` ainda usa `storage.js/localStorage` como adapter temporario.
+- Supabase real ainda nao foi conectado.
+- Nenhuma tela foi migrada para `database.js` nesta etapa.
 - O objetivo e reduzir chamadas diretas a `storage.js` nas telas antes de conectar Supabase.
 - Depois da migracao, `storage.js` pode virar fallback/dev seed ou ser removido em uma etapa futura.
 
-Funcoes alvo em `src/services/database.js`:
+Funcoes exportadas por `src/services/database.js`:
 
+- `getDatabase()`
 - `getStores()`
 - `getStoreBySlug(slug)`
+- `getStoreById(id)`
 - `createStore(data)`
 - `updateStore(id, data)`
+- `deactivateStore(id)`
+- `deleteStore(id)`
 - `getProductsByStore(storeId)`
-- `createProduct(data)`
-- `updateProduct(id, data)`
+- `createProduct(storeId, data)`
+- `updateProduct(productId, data)`
+- `deleteProduct(productId)`
 - `getCategoriesByStore(storeId)`
+- `createCategory(storeId, data)`
+- `updateCategory(categoryId, data)`
+- `deleteCategory(categoryId)`
 - `getAdditionalGroupsByStore(storeId)`
-- `createOrder(data)`
+- `createAdditionalGroup(storeId, data)`
+- `updateAdditionalGroup(groupId, data)`
+- `deleteAdditionalGroup(groupId)`
 - `getOrdersByStore(storeId)`
+- `getOrderById(orderId)`
+- `createOrder(storeId, data)`
+- `updateOrder(orderId, data)`
 - `updateOrderStatus(orderId, status)`
+- `getPlatformSettings()`
+- `updatePlatformSettings(data)`
+- `getPlans()`
+- `updatePlan(planId, data)`
 
 Normalizacoes importantes:
 
@@ -623,7 +664,9 @@ Validacoes atuais:
 - `platform` e `platformSettings` carregam com PediCampos.
 - Rotas principais responderam 200: `/`, `/neguinhodoacai`, `/gordinhoburguer`, `/admin` e `/master`.
 - `src/pages/AdminProducts.jsx` importa `formatCurrency` de `../utils/formatCurrency.js`.
+- `node --check src/services/database.js` passou sem erro de sintaxe.
 - `npm run build` passou apos a correcao de `formatCurrency` e apos os ajustes responsivos.
+- `npm run build` passou apos a criacao de `src/services/database.js`.
 - Loja publica/checkout nao deve expor plano, upgrade, "Pix online" ou "Pix na entrega" para o consumidor final.
 - Checkout publico deve mostrar formas de pagamento apenas como `Pix`, `Dinheiro` e `Cartao`.
 - Resumo lateral do checkout deve mostrar somente itens, subtotal, entrega e total.
@@ -691,7 +734,7 @@ Objetivo:
 
 Supabase passou a ser o banco alvo oficial do projeto em 2026-07-09.
 
-Nao deve substituir tudo de uma vez. Deve entrar por uma camada de service, preservando localStorage/mocks como fallback temporario.
+Nao deve substituir tudo de uma vez. A camada de service inicial ja existe em `src/services/database.js`, preservando localStorage/mocks como fallback temporario.
 
 Tabelas propostas:
 
@@ -787,8 +830,8 @@ Antes de implementar novas features, ler:
 
 Depois, continuar pela prioridade:
 
-1. Criar `src/services/database.js` com fallback local.
-2. Migrar `src/hooks/usePediData.js` para a nova camada.
+1. Migrar `src/hooks/usePediData.js` para consumir `src/services/database.js`.
+2. Manter `storage.js/localStorage` como fallback durante a adaptacao.
 3. Criar adaptadores entre modelo local aninhado e modelo relacional Supabase.
 4. Criar schema Supabase e seeds.
 5. Migrar loja publica, master, admin e checkout por etapas.
