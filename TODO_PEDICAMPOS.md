@@ -22,6 +22,12 @@ Legenda:
 - [x] Reestruturar hero/landing para evitar sobreposicao de cards no desktop.
 - [x] Fazer hero desktop em grid de duas colunas.
 - [x] Fazer hero mobile em uma coluna.
+- [x] Revisar responsividade e visual por CSS em `src/styles/global.css`.
+- [x] Ajustar menus mobile com rolagem horizontal.
+- [x] Adaptar sidebar admin/master para mobile com rolagem horizontal.
+- [x] Garantir scroll horizontal controlado em tabelas do admin/master.
+- [x] Ajustar modais com limite de altura e scroll interno.
+- [x] Ajustar botoes, textos, cards, carrinho e metricas para telas pequenas.
 - [ ] Revisar visual da landing em desktop largo.
 - [ ] Revisar visual da landing em mobile pequeno.
 - [ ] Revisar se o titulo da landing nunca fica cortado no topo.

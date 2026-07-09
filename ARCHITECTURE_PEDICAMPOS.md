@@ -539,6 +539,12 @@ Estilos:
 - `src/styles/variables.css` guarda variaveis CSS globais.
 - Loja publica usa `--store-color` para cor principal.
 - Landing usa `--color-primary`, `--color-primary-dark` e `--color-graphite`.
+- Responsividade principal fica em `src/styles/global.css`.
+- Menus mobile usam rolagem horizontal controlada quando o espaco fica curto.
+- Sidebar do admin/master vira barra superior com rolagem horizontal em telas menores.
+- Tabelas administrativas usam scroll horizontal controlado para nao estourar o viewport.
+- Modais usam limite de altura, scroll interno e ajustes de padding no mobile.
+- Botoes, textos, cards, carrinho e metricas possuem quebras/empilhamento para telas pequenas.
 
 Componentes UI:
 

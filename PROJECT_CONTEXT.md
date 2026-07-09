@@ -625,6 +625,12 @@ Observacoes:
 Ajustes recentes implementados:
 
 - Corrigida estrutura responsiva da landing/hero para evitar sobreposicao entre hero e cards.
+- Revisao de responsividade e visual concentrada em `src/styles/global.css`.
+- Menus mobile da landing passaram a usar rolagem horizontal controlada.
+- Sidebar do admin/master foi adaptada para mobile como barra superior com rolagem horizontal.
+- Tabelas do admin/master mantem scroll horizontal controlado em telas menores.
+- Modais passaram a usar limite de altura com `dvh`, scroll interno e padding menor no mobile.
+- Botoes, textos, carrinho, cards e metricas foram ajustados para reduzir cortes e estouros em telas pequenas.
 - Criada logica de lojas reais no mock/localStorage em vez de paginas fixas.
 - Criacao/edicao/ativacao/desativacao de lojas pelo master.
 - Loja inativa mostra aviso publico e nao aceita pedido.
@@ -648,6 +654,7 @@ Build:
 
 - Build anterior conhecido passou com `npm run build`.
 - Build final desta rotina passou em 2026-07-08 com `npm run build`.
+- Build apos a revisao responsiva de `src/styles/global.css` passou com `npm run build`.
 - Observacao: a primeira tentativa dentro do sandbox falhou por acesso negado ao resolver `vite.config.js`; a repeticao com permissao elevada passou.
 
 ## Proximas etapas recomendadas
@@ -662,7 +669,7 @@ Build:
    - pedido;
    - admin pedidos.
 3. Corrigir pendencia de runtime em `AdminProducts.jsx`, se confirmada.
-4. Testar responsividade desktop/mobile da landing, loja, carrinho e checkout.
+4. Validar visualmente em navegador real a responsividade desktop/mobile da landing, loja, carrinho, checkout, admin e master.
 5. Testar master:
    - criar loja;
    - editar slug;

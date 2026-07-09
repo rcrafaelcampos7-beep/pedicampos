@@ -302,6 +302,22 @@ Observacoes:
 - Esta versao nao refatora codigo.
 - Esta versao apenas registra a memoria do projeto.
 
+## v0.12 - Revisao responsiva e visual
+
+Implementado:
+
+- Revisada responsividade das telas principais por CSS, sem alterar regras de negocio.
+- Arquivo alterado: `src/styles/global.css`.
+- Menus mobile da landing configurados com rolagem horizontal.
+- Sidebar admin/master adaptada para mobile como barra superior com rolagem horizontal.
+- Tabelas do admin/master mantidas com scroll horizontal controlado.
+- Modais ajustados com limite de altura e scroll interno.
+- Botoes, textos, cards, carrinho e metricas ajustados para telas pequenas.
+
+Build:
+
+- `npm run build` passou apos a revisao responsiva.
+
 ## Builds e verificacoes
 
 - Build anterior conhecido: `npm run build` passou durante o desenvolvimento.
