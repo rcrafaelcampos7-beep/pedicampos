@@ -10,7 +10,7 @@ import { EmptyState } from "../components/ui/EmptyState.jsx";
 import { useCart } from "../hooks/useCart.js";
 import { usePediData } from "../hooks/usePediData.js";
 import { Link } from "../routes/router.jsx";
-import { getPlanName, planHasFeature } from "../utils/plans.js";
+import { planHasFeature } from "../utils/plans.js";
 
 export function StorePage({ slug }) {
   const { stores, platform } = usePediData();
@@ -48,7 +48,7 @@ export function StorePage({ slug }) {
       <main className="not-found" style={{ "--store-color": store.primaryColor }}>
         <Card>
           <h1>Esta loja está temporariamente indisponível.</h1>
-          <p>{store.name} foi desativada no painel master e não está aceitando pedidos no momento.</p>
+          <p>{store.name} não está aceitando pedidos por este link no momento.</p>
           <Link className="btn btn-primary btn-md" to="/">
             Voltar para PediCampos
           </Link>
@@ -66,10 +66,9 @@ export function StorePage({ slug }) {
             <strong>{store.open ? "Loja aberta para pedidos" : "Loja fechada agora"}</strong>
             <p>{store.open ? store.openingHours : "O carrinho continua visível, mas o checkout fica bloqueado."}</p>
             <p className="muted">
-              Plano {getPlanName(platform, store.plan)} ·{" "}
               {planHasFeature(store.plan, "siteCheckout", platform)
-                ? "pedido salvo no painel"
-                : "finalização simples via WhatsApp"}
+                ? "Finalize seu pedido aqui pelo site."
+                : "Finalize seu pedido pelo WhatsApp da loja."}
             </p>
           </div>
           <Button variant="store" onClick={() => setCartOpen(true)} disabled={!cart.items.length}>

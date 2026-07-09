@@ -4,7 +4,6 @@ import { OrderTimeline } from "../components/store/OrderTimeline.jsx";
 import { usePediData } from "../hooks/usePediData.js";
 import { Link } from "../routes/router.jsx";
 import { formatCurrency } from "../utils/formatCurrency.js";
-import { generateWhatsAppMessage } from "../utils/whatsappMessage.js";
 
 export function OrderTrackingPage({ slug, orderId }) {
   const { orders } = usePediData();
@@ -42,7 +41,7 @@ export function OrderTrackingPage({ slug, orderId }) {
         <section>
           <span className="eyebrow">Acompanhamento</span>
           <h1>Pedido #{order.number}</h1>
-          <p>Você receberá atualizações automáticas pelo WhatsApp.</p>
+          <p>Acompanhe o andamento do seu pedido por aqui.</p>
           <Card className="order-card">
             <div className="order-card-header">
               <div>
@@ -50,7 +49,7 @@ export function OrderTrackingPage({ slug, orderId }) {
                 <strong>{order.customer.name}</strong>
               </div>
               <div>
-                <span>Pagamento</span>
+                <span>Status do pagamento</span>
                 <StatusBadge status={order.paymentStatus} />
               </div>
             </div>
@@ -58,8 +57,10 @@ export function OrderTrackingPage({ slug, orderId }) {
           </Card>
 
           <Card className="whatsapp-preview">
-            <span>Prévia da mensagem enviada no WhatsApp</span>
-            <p>{generateWhatsAppMessage(order, order.orderStatus)}</p>
+            <span>Pagamento</span>
+            <p>{order.paymentMethod}</p>
+            <span>Status do pagamento</span>
+            <p>{order.paymentStatus}</p>
           </Card>
         </section>
 
@@ -101,7 +102,10 @@ export function OrderTrackingPage({ slug, orderId }) {
           <Card>
             <h2>Dados do pedido</h2>
             <p>
-              <strong>Forma de pagamento:</strong> {order.paymentMethod}
+              <strong>Pagamento:</strong> {order.paymentMethod}
+            </p>
+            <p>
+              <strong>Status do pagamento:</strong> {order.paymentStatus}
             </p>
             <p>
               <strong>Tipo:</strong> {order.fulfillment === "delivery" ? "Entrega" : "Retirada"}

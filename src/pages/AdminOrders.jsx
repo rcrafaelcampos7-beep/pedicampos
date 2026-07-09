@@ -9,6 +9,7 @@ import { usePediData } from "../hooks/usePediData.js";
 import { updateOrder } from "../services/storage.js";
 import { formatCurrency } from "../utils/formatCurrency.js";
 import { ORDER_STATUS, PAYMENT_STATUS } from "../utils/orderStatus.js";
+import { planHasFeature } from "../utils/plans.js";
 import { generateWhatsAppMessage } from "../utils/whatsappMessage.js";
 
 const statusActions = [
@@ -20,7 +21,7 @@ const statusActions = [
 ];
 
 export function AdminOrders({ activePath, store }) {
-  const { orders } = usePediData();
+  const { orders, platform } = usePediData();
   const [selectedOrderId, setSelectedOrderId] = useState("");
   const [filter, setFilter] = useState("todos");
   const storeOrders = orders.filter((order) => order.storeId === store.id);
@@ -180,10 +181,12 @@ export function AdminOrders({ activePath, store }) {
               ))}
             </div>
 
-            <Card className="whatsapp-preview">
-              <span>Prévia da mensagem automática de WhatsApp</span>
-              <p>{generateWhatsAppMessage(selectedOrder, selectedOrder.orderStatus)}</p>
-            </Card>
+            {planHasFeature(store.plan, "whatsappAutomation", platform) ? (
+              <Card className="whatsapp-preview">
+                <span>Prévia da mensagem automática de WhatsApp</span>
+                <p>{generateWhatsAppMessage(selectedOrder, selectedOrder.orderStatus)}</p>
+              </Card>
+            ) : null}
           </div>
         ) : null}
       </Modal>

@@ -1,7 +1,7 @@
 export const PAYMENT_STATUS = {
   WAITING: "Aguardando pagamento",
-  APPROVED: "Aprovado",
-  PENDING_DELIVERY: "Pagamento na entrega",
+  APPROVED: "Pagamento confirmado",
+  PENDING: "Pendente",
   REFUSED: "Recusado",
 };
 

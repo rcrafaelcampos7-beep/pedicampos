@@ -100,10 +100,10 @@ export const initialStores = [
     logo: "NA",
     banner: acaiBanner,
     paymentMethods: {
+      pix: true,
       pixOnline: true,
-      pixDelivery: true,
       cash: true,
-      cardDelivery: true,
+      card: true,
     },
     categories: [
       { id: "cat-acai", name: "Açaí", order: 1, active: true },
@@ -216,10 +216,10 @@ export const initialStores = [
     logo: "GB",
     banner: burgerBanner,
     paymentMethods: {
+      pix: true,
       pixOnline: true,
-      pixDelivery: true,
       cash: true,
-      cardDelivery: true,
+      card: true,
     },
     categories: [
       { id: "cat-artesanais", name: "Artesanais", order: 1, active: true },
@@ -337,10 +337,10 @@ export function createEmptyStore(overrides = {}) {
     logo: "NL",
     banner: acaiBanner,
     paymentMethods: {
+      pix: true,
       pixOnline: true,
-      pixDelivery: true,
       cash: true,
-      cardDelivery: true,
+      card: true,
     },
     categories: [],
     additionalGroups: [],

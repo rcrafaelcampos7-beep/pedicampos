@@ -318,15 +318,130 @@ Build:
 
 - `npm run build` passou apos a revisao responsiva.
 
+## v0.13 - Correcoes e validacoes de estabilidade
+
+Implementado/validado:
+
+- Corrigido import ausente de `formatCurrency` em `src/pages/AdminProducts.jsx`.
+- Import adicionado: `import { formatCurrency } from "../utils/formatCurrency.js";`.
+- `npm run build` passou apos a correcao do import.
+- Sistema testado com localStorage limpo:
+  - `pedicampos.database.v1` foi criado corretamente;
+  - mocks iniciais carregaram;
+  - Neguinho do Acai carregou;
+  - Gordinho Burguer carregou;
+  - `platform` e `platformSettings` carregaram com PediCampos.
+- Rotas principais responderam 200:
+  - `/`;
+  - `/neguinhodoacai`;
+  - `/gordinhoburguer`;
+  - `/admin`;
+  - `/master`.
+- Precos oficiais confirmados/corrigidos:
+  - Implantacao: R$ 599,99;
+  - Start: R$ 99,99/mes;
+  - Pro: R$ 179,99/mes;
+  - Premium: R$ 199,99/mes.
+- Normalizacao/migracao no storage ajustada para corrigir valores antigos `179`/`199` para `179.99`/`199.99`.
+
+Proxima tarefa registrada:
+
+- Testar painel master: `/master`, login fake, dashboard, lojas, criacao/edicao, slug, plano, ativar/desativar, `/master/configuracoes` e reflexos na landing/loja publica.
+
+## v0.14 - Comunicacao publica de formas de pagamento
+
+Implementado:
+
+- Removido do checkout publico o card lateral "Formas ativas".
+- O resumo lateral do checkout publico agora fica limitado a itens, subtotal, entrega e total.
+- A loja publica e o checkout nao exibem informacoes internas de plano, upgrade ou recurso bloqueado para o consumidor final.
+- As formas de pagamento publicas passaram a aparecer apenas como:
+  - Pix;
+  - Dinheiro;
+  - Cartao.
+- Labels publicos antigos `Pix online`, `Pix na entrega` e `Cartao na entrega` foram substituidos por labels simples.
+- Internamente, `pixOnline` continua existindo para controlar QR Code/copia e cola simulado quando o plano/recurso permitir.
+- Mensagem manual de WhatsApp do checkout inclui `Forma de pagamento: Pix` quando Pix e escolhido.
+- Se existir chave Pix configurada na loja, a mensagem pode incluir `Chave Pix`.
+- `storage.js` passou a normalizar metodos antigos (`pixDelivery`, `cardDelivery`) e labels antigos de pedidos para `Pix`, `Dinheiro` e `Cartao`.
+- Admin da loja passou a usar nomenclatura interna mais clara para pagamento: `Pix`, `Pix automatico / QR Code`, `Dinheiro` e `Cartao`.
+
+Arquivos alterados nesta etapa:
+
+- `src/pages/CheckoutPage.jsx`
+- `src/pages/StorePage.jsx`
+- `src/pages/AdminSettings.jsx`
+- `src/services/storage.js`
+- `src/data/mockStores.js`
+- `src/data/mockOrders.js`
+- `src/utils/whatsappMessage.js`
+- `PROJECT_CONTEXT.md`
+- `TODO_PEDICAMPOS.md`
+- `CHANGELOG_PEDICAMPOS.md`
+- `ARCHITECTURE_PEDICAMPOS.md`
+
+Build:
+
+- `npm run build` passou apos a correcao.
+
+## v0.15 - Regra comercial de pagamentos por plano
+
+Implementado:
+
+- Atualizada regra oficial de pagamento por plano:
+  - Start: pedido pelo WhatsApp e pagamento manual por Pix, Cartao ou Dinheiro;
+  - Pro: pedido salvo no painel, acompanhamento e pagamento automatico simulado por Pix e Cartao;
+  - Premium: tudo do Pro mais WhatsApp automatico simulado, mensagens por status e automacoes.
+- `src/utils/plans.js` passou a registrar features comerciais de pagamento:
+  - `paymentsManual`;
+  - `pixManual`;
+  - `cardManual`;
+  - `pixAutomatic`;
+  - `cardAutomatic`;
+  - `onlinePayments`;
+  - `automaticPaymentConfirmation`.
+- Checkout publico manteve os labels simples `Pix`, `Cartao` e `Dinheiro`.
+- Pro e Premium agora podem exibir experiencia simulada de pagamento por Pix e Cartao.
+- Status antigo `Pagamento na entrega` deixou de ser usado e foi substituido por status publico amigavel.
+- `storage.js` passou a normalizar status antigos de pagamento.
+- Pagina de acompanhamento separa:
+  - pagamento;
+  - status do pagamento.
+- Mensagem de WhatsApp para Start mantem `Forma de pagamento: Pix`, `Forma de pagamento: Cartao` ou `Forma de pagamento: Dinheiro`.
+
+Arquivos alterados nesta etapa:
+
+- `src/utils/plans.js`
+- `src/utils/orderStatus.js`
+- `src/pages/CheckoutPage.jsx`
+- `src/pages/OrderTrackingPage.jsx`
+- `src/services/storage.js`
+- `src/data/mockOrders.js`
+- `src/data/mockStores.js`
+- `src/pages/AdminSettings.jsx`
+- `src/pages/StorePage.jsx`
+- `src/utils/whatsappMessage.js`
+- `PROJECT_CONTEXT.md`
+- `TODO_PEDICAMPOS.md`
+- `CHANGELOG_PEDICAMPOS.md`
+- `ARCHITECTURE_PEDICAMPOS.md`
+
+Build:
+
+- `npm run build` passou apos a correcao.
+
 ## Builds e verificacoes
 
 - Build anterior conhecido: `npm run build` passou durante o desenvolvimento.
 - Build final desta rotina: `npm run build` passou em 2026-07-08.
+- Build apos correcao do import de `formatCurrency` passou.
+- Build apos ajustes responsivos em `src/styles/global.css` passou.
+- Build apos ajuste de comunicacao publica de pagamento passou.
+- Build apos ajuste da regra comercial de pagamentos por plano passou.
 - Observacao: a primeira tentativa no sandbox falhou por acesso negado ao resolver `vite.config.js`; a tentativa com permissao elevada passou.
 
 ## Pendencias conhecidas registradas
 
-- Possivel erro de runtime em `src/pages/AdminProducts.jsx` por falta de import de `formatCurrency`.
 - Necessario teste visual em navegador real.
 - Necessario teste completo de fluxo multi-loja.
 - Precos comerciais finais confirmados: implantacao R$ 599,99; Start R$ 99,99/mes; Pro R$ 179,99/mes; Premium R$ 199,99/mes.

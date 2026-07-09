@@ -36,7 +36,7 @@ A PediCampos e uma plataforma SaaS multi-lojas para:
 - pedidos online;
 - painel administrativo da loja;
 - painel master geral;
-- Pix online futuramente real, atualmente simulado;
+- pagamento online por Pix/Cartao futuramente real, atualmente simulado;
 - WhatsApp automatico futuramente real, atualmente simulado;
 - planos por funcionalidades;
 - cada loja em um slug proprio no mesmo dominio.
@@ -52,7 +52,7 @@ Implementado:
 - Carrinho por loja com persistencia em localStorage.
 - Modal de produto com quantidade, observacao e adicionais configuraveis.
 - Checkout em `/:slug/checkout`.
-- Pix online simulado para plano Premium.
+- Pagamento automatico simulado por Pix e Cartao para planos Pro e Premium.
 - Pedido salvo em localStorage para planos com checkout no site.
 - Acompanhamento de pedido em `/:slug/pedido/:orderId`.
 - Painel admin da loja.
@@ -66,7 +66,7 @@ Implementado:
 
 Parcial ou simulado:
 
-- Pix online e apenas simulado, sem Mercado Pago/Asaas/webhook.
+- Pagamento online por Pix/Cartao e apenas simulado, sem Mercado Pago/Asaas/webhook/gateway real.
 - WhatsApp automatico e apenas simulado por mensagens geradas no painel.
 - Login e fake/localStorage, sem autenticacao real.
 - Upload de imagens nao existe; campos aceitam URL, iniciais ou assets locais.
@@ -250,7 +250,10 @@ Recursos permitidos:
 - botao WhatsApp;
 - pedido simples pelo WhatsApp;
 - painel basico para produtos/categorias/configuracoes;
-- carrinho simples.
+- carrinho simples;
+- Pix manual;
+- Cartao manual/na entrega;
+- dinheiro.
 
 Recursos bloqueados:
 
@@ -258,7 +261,8 @@ Recursos bloqueados:
 - painel de pedidos;
 - status avancado do pedido;
 - adicionais configuraveis;
-- Pix online;
+- pagamento online automatico;
+- confirmacao automatica de pagamento;
 - WhatsApp automatico;
 - cupons;
 - relatorios avancados;
@@ -281,11 +285,14 @@ Recursos permitidos:
 - categorias;
 - configuracoes;
 - acompanhamento do pedido;
+- Pix automatico simulado com QR Code/copia e cola;
+- Cartao automatico simulado;
+- pagamento automatico simulado;
+- confirmacao automatica de pagamento simulada;
 - relatorios simples.
 
 Recursos bloqueados:
 
-- Pix online real/simulado;
 - WhatsApp automatico real/simulado;
 - cupons;
 - relatorios avancados;
@@ -298,11 +305,8 @@ Preco atual no codigo: R$ 199,99/mes.
 Recursos permitidos:
 
 - tudo do Pro;
-- Pix online simulado;
-- QR Code Pix simulado;
-- Pix copia e cola;
-- confirmacao automatica simulada;
 - WhatsApp automatico simulado;
+- mensagens automaticas por status;
 - cupons;
 - relatorios avancados;
 - automacoes;
@@ -314,7 +318,7 @@ Como o plano controla o sistema:
 - `FEATURE_MIN_PLAN` define o plano minimo de algumas features.
 - `/admin/pedidos` e `/admin/adicionais` usam `PlanGuard`.
 - Checkout no site depende de `siteCheckout`.
-- Pix online depende de `pixOnline`.
+- Pagamento automatico simulado depende de `onlinePayments`, `pixAutomatic`, `cardAutomatic` e `automaticPaymentConfirmation`.
 - Adicionais no modal do produto dependem de `additionals`.
 - Os recursos por plano podem ser sobrescritos em `platform.featuresByPlan`.
 
@@ -495,15 +499,17 @@ Checkout:
 - Permite entrega ou retirada.
 - Usa taxa de entrega da loja.
 - Formas de pagamento vem de `store.paymentMethods`.
-- `pixOnline` so aparece quando a loja tem o metodo ativo e o plano tem feature `pixOnline`.
+- Na area publica do checkout, as formas aparecem apenas como `Pix`, `Dinheiro` e `Cartao`.
+- O card publico "Formas ativas" foi removido do resumo lateral; o resumo mostra somente itens, subtotal, entrega e total.
+- `pixOnline` continua como recurso interno para QR Code/copia e cola, mas o label publico deve ser sempre `Pix`.
 - Loja inativa mostra aviso e nao aceita pedido.
 - Loja fechada bloqueia finalizacao.
 
 Comportamento por plano:
 
 - Start: nao salva pedido no painel; monta mensagem e abre WhatsApp manualmente.
-- Pro: salva pedido no painel e permite acompanhamento, mas sem Pix online.
-- Premium: salva pedido, permite Pix online simulado e acompanhamento.
+- Pro: salva pedido no painel, permite acompanhamento e pagamento automatico simulado por Pix e Cartao.
+- Premium: tudo do Pro mais WhatsApp automatico simulado, mensagens por status e automacoes.
 
 Pedidos:
 
@@ -511,18 +517,18 @@ Pedidos:
 - Numero/id e gerado com os ultimos 6 digitos de `Date.now()`.
 - Campos principais: `id`, `number`, `storeId`, `storeSlug`, `storeName`, `customer`, `fulfillment`, `address`, `paymentMethod`, `paymentStatus`, `orderStatus`, `subtotal`, `deliveryFee`, `total`, `pixCode`, `items`.
 
-## Pix simulado
+## Pagamento automatico simulado
 
 Implementado no checkout:
 
 - Aparece no checkout quando:
-  - o plano tem feature `pixOnline`;
-  - a loja tem `paymentMethods.pixOnline = true`;
-  - o cliente escolhe Pix online.
-- Exibe QR Code visual fake.
-- Gera Pix copia e cola ficticio no formato `000201PEDICAMPOS-slug-valor-DEMO`.
-- Botao "Copiar Pix" tenta copiar para clipboard.
-- Botao "Simular pagamento aprovado" muda o estado local `pixApproved`.
+  - o plano tem `onlinePayments`;
+  - para Pix, o plano tem `pixAutomatic` e a loja tem Pix ativo;
+  - para Cartao, o plano tem `cardAutomatic` e a loja tem Cartao ativo.
+- Para Pix, exibe QR Code visual fake.
+- Para Pix, gera copia e cola ficticio no formato `000201PEDICAMPOS-slug-valor-DEMO`.
+- Para Cartao, exibe confirmacao de pagamento com cartao simulada.
+- Botao "Simular pagamento aprovado" muda o estado local `automaticPaymentApproved`.
 - Se aprovado antes de finalizar, pedido e salvo com pagamento aprovado e status "Pagamento confirmado".
 - Se nao aprovado, pedido fica aguardando pagamento.
 
@@ -624,6 +630,42 @@ Observacoes:
 
 Ajustes recentes implementados:
 
+- Corrigido import ausente de `formatCurrency` em `src/pages/AdminProducts.jsx`:
+  - `import { formatCurrency } from "../utils/formatCurrency.js";`
+- Corrigida comunicacao publica das formas de pagamento:
+  - card publico "Formas ativas" removido de `src/pages/CheckoutPage.jsx`;
+  - checkout publico exibe somente `Pix`, `Dinheiro` e `Cartao`;
+  - labels publicos `Pix online`, `Pix na entrega` e `Cartao na entrega` deixaram de aparecer para o consumidor final;
+  - mensagem manual de WhatsApp inclui `Forma de pagamento: Pix` quando Pix e escolhido;
+  - se houver chave Pix configurada na loja, a mensagem pode incluir `Chave Pix`;
+  - `storage.js` normaliza metodos antigos (`pixDelivery`, `cardDelivery`) e labels antigos de pedidos para os nomes publicos simples;
+  - arquivos alterados nesta etapa: `src/pages/CheckoutPage.jsx`, `src/pages/StorePage.jsx`, `src/pages/AdminSettings.jsx`, `src/services/storage.js`, `src/data/mockStores.js`, `src/data/mockOrders.js`, `src/utils/whatsappMessage.js`.
+- Atualizada regra comercial de pagamentos:
+  - Start: pedido via WhatsApp e pagamento manual por Pix, Cartao ou Dinheiro;
+  - Pro: pedido no painel, acompanhamento e pagamento automatico simulado por Pix e Cartao;
+  - Premium: tudo do Pro mais WhatsApp automatico simulado, mensagens por status e automacoes;
+  - pagina de acompanhamento separa `Pagamento` e `Status do pagamento`;
+  - `Pagamento na entrega` foi removido como status publico e dados antigos sao normalizados para status amigavel;
+  - arquivos alterados nesta etapa tambem incluem `src/utils/plans.js`, `src/utils/orderStatus.js` e `src/pages/OrderTrackingPage.jsx`.
+- `npm run build` passou apos a correcao do import de `formatCurrency`.
+- Sistema testado com localStorage limpo:
+  - `pedicampos.database.v1` foi criado corretamente;
+  - mocks iniciais carregaram;
+  - Neguinho do Acai carregou;
+  - Gordinho Burguer carregou;
+  - `platform` e `platformSettings` carregaram com PediCampos.
+- Rotas principais responderam 200:
+  - `/`;
+  - `/neguinhodoacai`;
+  - `/gordinhoburguer`;
+  - `/admin`;
+  - `/master`.
+- Precos oficiais corrigidos/mantidos com gatilho em `,99`:
+  - Implantacao: R$ 599,99;
+  - Start: R$ 99,99/mes;
+  - Pro: R$ 179,99/mes;
+  - Premium: R$ 199,99/mes.
+- Normalizacao/migracao em `storage.js` ajustada para corrigir valores antigos `179`/`199` para `179.99`/`199.99`.
 - Corrigida estrutura responsiva da landing/hero para evitar sobreposicao entre hero e cards.
 - Revisao de responsividade e visual concentrada em `src/styles/global.css`.
 - Menus mobile da landing passaram a usar rolagem horizontal controlada.
@@ -642,10 +684,9 @@ Ajustes recentes implementados:
 
 Bugs/pendencias conhecidas:
 
-- `src/pages/AdminProducts.jsx` usa `formatCurrency(product.price)` mas, no estado atual lido, nao importa `formatCurrency`. Isso pode quebrar em runtime ao abrir/renderizar `/admin/produtos`. Nao foi corrigido aqui porque esta tarefa pediu somente documentacao.
 - Produtos inativos aparecem como "Indisponivel" na loja publica, nao somem. Isso atende uma das possibilidades pedidas anteriormente, mas deve ser revisado se a decisao final for esconder.
 - Necessario testar visualmente desktop/mobile em navegador real.
-- Necessario testar fluxo completo apos limpar localStorage e apos migrar dados antigos.
+- Necessario testar fluxo completo apos migrar dados antigos.
 - `mockOrders.js` ainda tem pedidos com `addons`; a normalizacao converte para `selectedAdditionals`.
 - Pix e WhatsApp sao simulados.
 - Login e permissoes sao fake.
@@ -654,13 +695,28 @@ Build:
 
 - Build anterior conhecido passou com `npm run build`.
 - Build final desta rotina passou em 2026-07-08 com `npm run build`.
+- Build apos correcao do import de `formatCurrency` passou com `npm run build`.
 - Build apos a revisao responsiva de `src/styles/global.css` passou com `npm run build`.
+- Build apos ajuste de comunicacao publica de pagamento passou com `npm run build`.
+- Build apos ajuste da regra comercial de pagamentos por plano passou com `npm run build`.
 - Observacao: a primeira tentativa dentro do sandbox falhou por acesso negado ao resolver `vite.config.js`; a repeticao com permissao elevada passou.
 
 ## Proximas etapas recomendadas
 
-1. Rodar `npm run build` e registrar resultado.
-2. Abrir fluxo completo no navegador:
+1. Testar painel master:
+   - acessar `/master`;
+   - fazer login fake master;
+   - abrir dashboard;
+   - listar lojas;
+   - criar loja;
+   - editar loja;
+   - alterar slug;
+   - alterar plano;
+   - ativar/desativar loja;
+   - testar `/master/configuracoes`;
+   - confirmar reflexo na landing e na loja publica.
+2. Validar visualmente em navegador real a responsividade desktop/mobile da landing, loja, carrinho, checkout, admin e master.
+3. Abrir fluxo completo no navegador:
    - landing;
    - loja demo;
    - produto com adicionais;
@@ -668,24 +724,15 @@ Build:
    - checkout;
    - pedido;
    - admin pedidos.
-3. Corrigir pendencia de runtime em `AdminProducts.jsx`, se confirmada.
-4. Validar visualmente em navegador real a responsividade desktop/mobile da landing, loja, carrinho, checkout, admin e master.
-5. Testar master:
-   - criar loja;
-   - editar slug;
-   - mudar cor;
-   - ativar/desativar;
-   - mudar plano.
-6. Testar admin:
+4. Testar admin:
    - editar produto/preco;
    - criar categoria;
    - criar adicional;
    - vincular adicional a produto;
    - atualizar status de pedido.
-7. Revisar bloqueios por plano.
-8. Manter precos comerciais finais com gatilho em `,99`.
-9. Polir visual.
-10. Preparar deploy Vercel.
-11. Integrar Supabase futuramente.
-12. Integrar Pix real futuramente.
-13. Integrar WhatsApp real futuramente.
+5. Revisar bloqueios por plano.
+6. Manter precos comerciais finais com gatilho em `,99`.
+7. Preparar deploy Vercel.
+8. Integrar Supabase futuramente.
+9. Integrar Pix real futuramente.
+10. Integrar WhatsApp real futuramente.

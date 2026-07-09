@@ -324,7 +324,7 @@ Order:
 14. Se a loja esta fechada, bloqueia finalizacao.
 15. Se o plano e Start, monta mensagem e abre WhatsApp manualmente.
 16. Se o plano e Pro ou Premium, cria pedido em `orders`.
-17. Se o pagamento e Pix online e o plano e Premium, usa Pix simulado.
+17. Se o pagamento e Pix ou Cartao com pagamento automatico habilitado a partir do Pro, usa pagamento simulado.
 18. Pedido e salvo com status adequado.
 19. Cliente vai para `/:slug/pedido/:orderId`.
 20. Pedido aparece no admin da loja em `/admin/pedidos` se o plano permite.
@@ -362,6 +362,9 @@ Features atuais:
   - `categories`
   - `basicAdmin`
   - `simpleCart`
+  - `paymentsManual`
+  - `pixManual`
+  - `cardManual`
 - Pro:
   - tudo do Start;
   - `siteCheckout`;
@@ -369,10 +372,13 @@ Features atuais:
   - `orderStatus`;
   - `additionals`;
   - `reportsBasic`;
-  - `orderTracking`.
+  - `orderTracking`;
+  - `pixAutomatic`;
+  - `cardAutomatic`;
+  - `onlinePayments`;
+  - `automaticPaymentConfirmation`.
 - Premium:
   - tudo do Pro;
-  - `pixOnline`;
   - `whatsappAutomation`;
   - `coupons`;
   - `reportsAdvanced`;
@@ -382,7 +388,8 @@ Uso atual:
 
 - `PlanGuard` protege rotas admin.
 - `CheckoutPage` decide Start vs Pro/Premium.
-- `CheckoutPage` filtra Pix online.
+- `CheckoutPage` exibe `Pix`, `Cartao` e `Dinheiro` como labels publicos.
+- `CheckoutPage` usa `onlinePayments`, `pixAutomatic` e `cardAutomatic` para liberar pagamento automatico simulado.
 - `ProductModal` so mostra adicionais se o plano tiver `additionals`.
 - Landing e master usam configuracoes comerciais de planos.
 
@@ -456,14 +463,17 @@ Pelo admin:
 - Pode abrir/fechar.
 - Pode ativar/desativar.
 
-## Fluxo de Pix simulado
+## Fluxo de pagamento automatico simulado
 
-1. Loja deve ter `paymentMethods.pixOnline = true`.
-2. Plano deve ter feature `pixOnline`.
-3. Checkout inclui "Pix online" nas opcoes.
-4. Ao selecionar, exibe QR fake e copia e cola ficticio.
-5. Usuario pode clicar em "Simular pagamento aprovado".
-6. Pedido e salvo como:
+1. Loja deve ter `paymentMethods.pix` ou `paymentMethods.card` ativo.
+2. Plano deve ter `onlinePayments`.
+3. Para Pix automatico, o plano deve ter `pixAutomatic`.
+4. Para Cartao automatico, o plano deve ter `cardAutomatic`.
+5. Checkout publico exibe as opcoes como `Pix` e `Cartao`, sem nomes tecnicos.
+6. Ao escolher Pix com recurso automatico, exibe QR fake e copia e cola ficticio.
+7. Ao escolher Cartao com recurso automatico, exibe confirmacao de pagamento simulada.
+8. Usuario pode clicar em "Simular pagamento aprovado".
+9. Pedido e salvo como:
    - aprovado/confirmado se simulado antes de finalizar;
    - aguardando pagamento se nao simulado.
 
@@ -477,6 +487,8 @@ Ponto futuro:
 Start:
 
 - Checkout monta mensagem manual com itens, endereco, subtotal, entrega e total.
+- Quando Pix e escolhido, a mensagem informa `Forma de pagamento: Pix`.
+- Se a loja tiver chave Pix configurada, a mensagem pode incluir `Chave Pix`.
 - Abre `https://wa.me/{store.whatsapp}?text=...`.
 - Nao salva pedido no painel.
 
@@ -526,10 +538,28 @@ Funcoes principais em `src/services/storage.js`:
 Normalizacoes importantes:
 
 - Planos antigos sao normalizados para `start`, `pro`, `premium`.
+- Features antigas de planos sao complementadas com a regra comercial atual, incluindo pagamento automatico no Pro/Premium.
 - Precos antigos de planos sao migrados para defaults atuais quando detectados.
+- Valores antigos `179`/`199` nos planos Pro/Premium sao corrigidos para `179.99`/`199.99`.
+- Metodos antigos de pagamento (`pixDelivery`, `pix_delivery`, `pix_on_delivery`, `cardDelivery`) sao normalizados para `pix` e `card`.
+- Labels antigos de pedidos como "Pix online", "Pix na entrega" e "Cartao na entrega" sao normalizados para `Pix`, `Dinheiro` e `Cartao`.
+- Status antigo `Pagamento na entrega` e variantes antigas sao normalizados para status publico amigavel.
 - `additionalGroups` sao criados a partir de dados antigos `addons` se necessario.
 - Pedidos antigos com `addons` viram `selectedAdditionals`.
 - `platformSettings` e mantido como alias de `platform`.
+
+Validacoes atuais:
+
+- LocalStorage limpo inicializa `pedicampos.database.v1` corretamente.
+- Mocks iniciais carregam Neguinho do Acai e Gordinho Burguer.
+- `platform` e `platformSettings` carregam com PediCampos.
+- Rotas principais responderam 200: `/`, `/neguinhodoacai`, `/gordinhoburguer`, `/admin` e `/master`.
+- `src/pages/AdminProducts.jsx` importa `formatCurrency` de `../utils/formatCurrency.js`.
+- `npm run build` passou apos a correcao de `formatCurrency` e apos os ajustes responsivos.
+- Loja publica/checkout nao deve expor plano, upgrade, "Pix online" ou "Pix na entrega" para o consumidor final.
+- Checkout publico deve mostrar formas de pagamento apenas como `Pix`, `Dinheiro` e `Cartao`.
+- Resumo lateral do checkout deve mostrar somente itens, subtotal, entrega e total.
+- Pagina de acompanhamento deve separar `Pagamento` e `Status do pagamento`.
 
 ## UI e estilos
 
@@ -665,7 +695,6 @@ Passos futuros:
 - Nao existe isolamento seguro de tenant no backend.
 - Pix e WhatsApp sao simulados.
 - Imagens sao URLs/assets, sem upload.
-- Possivel bug runtime em `AdminProducts.jsx` por falta de import de `formatCurrency`.
 - Testes automatizados ainda nao existem.
 
 ## Principio para continuar
@@ -679,8 +708,8 @@ Antes de implementar novas features, ler:
 
 Depois, continuar pela prioridade:
 
-1. Corrigir bugs bloqueadores.
-2. Testar fluxo completo.
-3. Polir responsividade.
+1. Testar painel master de ponta a ponta.
+2. Validar visualmente em navegador real.
+3. Testar fluxo completo.
 4. Preparar deploy.
 5. Planejar backend real.

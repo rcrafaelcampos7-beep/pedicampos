@@ -12,8 +12,13 @@ Legenda:
 - [x] Criar memoria permanente do projeto em arquivos Markdown.
 - [x] Verificar existencia de `PROJECT_CONTEXT.md`, `TODO_PEDICAMPOS.md`, `CHANGELOG_PEDICAMPOS.md` e `ARCHITECTURE_PEDICAMPOS.md`.
 - [x] Rodar `npm run build` no final desta rotina e registrar resultado na resposta final.
-- [ ] Corrigir possivel erro de runtime em `src/pages/AdminProducts.jsx`: `formatCurrency` e usado mas nao esta importado no estado atual lido.
-- [ ] Testar fluxo completo com localStorage limpo.
+- [x] Corrigir import de `formatCurrency` em `src/pages/AdminProducts.jsx`.
+- [x] Rodar `npm run build` apos a correcao do import de `formatCurrency`.
+- [x] Testar inicializacao com localStorage limpo.
+- [x] Confirmar criacao de `pedicampos.database.v1` com localStorage limpo.
+- [x] Confirmar mocks iniciais, Neguinho do Acai, Gordinho Burguer e `platform/platformSettings`.
+- [x] Confirmar rotas principais respondendo 200: `/`, `/neguinhodoacai`, `/gordinhoburguer`, `/admin`, `/master`.
+- [ ] Proxima tarefa real: testar painel master de ponta a ponta.
 - [ ] Testar fluxo completo com dados ja migrados no localStorage.
 - [ ] Validar em navegador real as rotas principais.
 
@@ -61,14 +66,23 @@ Legenda:
 - [x] Taxa de entrega soma no total.
 - [x] Plano Start finaliza por WhatsApp manual.
 - [x] Plano Pro salva pedido no painel.
-- [x] Plano Premium libera Pix online simulado.
+- [x] Plano Pro libera pagamento automatico simulado por Pix e Cartao.
+- [x] Plano Premium mantem pagamento automatico simulado e adiciona WhatsApp automatico/automacoes.
 - [x] Loja fechada bloqueia finalizacao.
 - [x] Loja inativa bloqueia checkout.
+- [x] Remover card publico "Formas ativas" do resumo lateral do checkout.
+- [x] Usar labels publicos simples no checkout: `Pix`, `Dinheiro` e `Cartao`.
+- [x] Remover `Pix online`, `Pix na entrega`, `Cartao na entrega` e avisos de plano/upgrade da loja publica/checkout.
+- [x] Ajustar mensagem manual de WhatsApp para informar `Forma de pagamento: Pix` quando Pix for escolhido.
+- [x] Normalizar metodos/labels antigos de pagamento para nomes publicos simples.
+- [x] Remover `Pagamento na entrega` da area publica e normalizar status antigo para status amigavel.
+- [x] Separar pagamento e status do pagamento na pagina de acompanhamento.
+- [x] Adicionar experiencia simulada de pagamento por Cartao para planos com pagamento automatico.
 - [ ] Testar carrinho apos alteracao de preco do produto no admin.
 - [ ] Testar carrinho com produto desativado depois de ja estar no carrinho.
 - [ ] Testar formas de pagamento desativadas.
 - [ ] Melhorar validacoes de telefone.
-- [ ] Revisar mensagem WhatsApp manual do plano Start.
+- [x] Revisar mensagem WhatsApp manual do plano Start para comunicacao publica de pagamento.
 - [ ] Criar confirmacao visual antes de limpar carrinho no Start, se necessario.
 
 ## Adicionais
@@ -115,7 +129,7 @@ Legenda:
 - [x] Confirmar pagamento manualmente.
 - [x] Previa de WhatsApp automatico simulado.
 - [x] Bloqueio por plano para pedidos e adicionais.
-- [ ] Corrigir/importar `formatCurrency` em `AdminProducts.jsx`.
+- [x] Corrigir/importar `formatCurrency` em `AdminProducts.jsx`.
 - [ ] Testar isolamento de dados ao trocar loja selecionada.
 - [ ] Impedir conflito de slug no admin ou aplicar `uniqueSlug` tambem no admin.
 - [ ] Melhorar feedback "salvo com sucesso".
@@ -146,6 +160,7 @@ Legenda:
 - [ ] Testar desativar loja e acessar publicamente.
 - [ ] Testar mudar cor da loja e conferir loja publica.
 - [ ] Testar mudar plano e conferir bloqueios no admin/checkout.
+- [ ] Testar `/master/configuracoes` e confirmar reflexo na landing.
 - [ ] Melhorar tela de edicao de loja com mais campos se necessario.
 
 ## Planos
@@ -158,10 +173,12 @@ Legenda:
 - [x] `/admin/pedidos` bloqueado para Start.
 - [x] `/admin/adicionais` bloqueado para Start.
 - [x] Checkout no site liberado a partir do Pro.
-- [x] Pix online simulado liberado no Premium.
+- [x] Pagamento automatico simulado por Pix e Cartao liberado a partir do Pro.
+- [x] Premium diferenciado por WhatsApp automatico, mensagens por status e automacoes.
 - [x] Premium destacado na landing.
 - [x] Confirmar precos comerciais finais com gatilho em `,99`.
 - [x] Valores finais: implantacao R$ 599,99; Start R$ 99,99/mes; Pro R$ 179,99/mes; Premium R$ 199,99/mes.
+- [x] Ajustar normalizacao/migracao para corrigir valores antigos `179`/`199` para `179.99`/`199.99`.
 - [ ] Testar downgrade de Premium para Start com pedidos/adicionais ja existentes.
 - [ ] Testar recursos ativos/desativados se `featuresByPlan` mudar no master futuramente.
 
@@ -178,6 +195,9 @@ Legenda:
 - [x] Loja admin selecionada em `pedicampos.admin.storeId`.
 - [x] Sessao fake master em `pedicampos.master.auth`.
 - [x] Normalizacao/migracao de dados antigos em `storage.js`.
+- [x] LocalStorage limpo inicializa banco mock principal e carrega lojas/plataforma.
+- [x] Normalizacao converte `pixDelivery`/`cardDelivery` e labels antigos de pedidos para `Pix`/`Cartao`.
+- [x] Normalizacao converte status antigo `Pagamento na entrega` para status publico amigavel.
 - [ ] Criar botao/fluxo de reset de dados se desejado.
 - [ ] Documentar rotina manual para limpar localStorage durante testes.
 - [ ] Preparar modelo para migrar a Supabase.

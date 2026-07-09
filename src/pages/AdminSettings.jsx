@@ -71,10 +71,10 @@ export function AdminSettings({ activePath, store }) {
             <Checkbox label="Loja ativa" checked={form.active} onChange={(checked) => updateForm("active", checked)} />
           </div>
           <div className="settings-switches">
-            <Checkbox label="Pix online" checked={form.paymentMethods.pixOnline} onChange={(checked) => updatePayment("pixOnline", checked)} />
-            <Checkbox label="Pix na entrega" checked={form.paymentMethods.pixDelivery} onChange={(checked) => updatePayment("pixDelivery", checked)} />
-            <Checkbox label="Dinheiro" checked={form.paymentMethods.cash} onChange={(checked) => updatePayment("cash", checked)} />
-            <Checkbox label="Cartão na entrega" checked={form.paymentMethods.cardDelivery} onChange={(checked) => updatePayment("cardDelivery", checked)} />
+            <Checkbox label="Pix" checked={Boolean(form.paymentMethods?.pix)} onChange={(checked) => updatePayment("pix", checked)} />
+            <Checkbox label="Pix automático / QR Code" checked={Boolean(form.paymentMethods?.pixOnline)} onChange={(checked) => updatePayment("pixOnline", checked)} />
+            <Checkbox label="Dinheiro" checked={Boolean(form.paymentMethods?.cash)} onChange={(checked) => updatePayment("cash", checked)} />
+            <Checkbox label="Cartão" checked={Boolean(form.paymentMethods?.card)} onChange={(checked) => updatePayment("card", checked)} />
           </div>
           <Button type="submit" variant="primary" size="lg">
             Salvar configurações

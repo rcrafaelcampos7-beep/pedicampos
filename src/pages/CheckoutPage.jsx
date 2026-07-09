@@ -3,7 +3,7 @@ import { CartDrawer } from "../components/store/CartDrawer.jsx";
 import { Button } from "../components/ui/Button.jsx";
 import { Card } from "../components/ui/Card.jsx";
 import { EmptyState } from "../components/ui/EmptyState.jsx";
-import { Checkbox, Input, Select, Textarea } from "../components/ui/Input.jsx";
+import { Input, Select, Textarea } from "../components/ui/Input.jsx";
 import { useCart } from "../hooks/useCart.js";
 import { usePediData } from "../hooks/usePediData.js";
 import { Link, navigate } from "../routes/router.jsx";
@@ -13,21 +13,40 @@ import { ORDER_STATUS, PAYMENT_STATUS } from "../utils/orderStatus.js";
 import { planHasFeature } from "../utils/plans.js";
 
 const paymentLabels = {
-  pixOnline: "Pix online",
-  pixDelivery: "Pix na entrega",
+  pix: "Pix",
   cash: "Dinheiro",
-  cardDelivery: "Cartão na entrega",
+  card: "Cartão",
 };
 
-function getPaymentOptions(store, platform) {
-  return Object.entries(store.paymentMethods || {})
-    .filter(([, enabled]) => enabled)
-    .filter(([key]) => key !== "pixOnline" || planHasFeature(store.plan, "pixOnline", platform))
-    .map(([key]) => ({ key, label: paymentLabels[key] }));
+function getPaymentOptions(store) {
+  const methods = store.paymentMethods || {};
+  const options = [];
+
+  if (methods.pix || methods.pixOnline || methods.pixDelivery) {
+    options.push({ key: "pix", label: paymentLabels.pix });
+  }
+  if (methods.cash) {
+    options.push({ key: "cash", label: paymentLabels.cash });
+  }
+  if (methods.card || methods.cardDelivery) {
+    options.push({ key: "card", label: paymentLabels.card });
+  }
+
+  return options;
 }
 
 function makeOrderNumber() {
   return String(Date.now()).slice(-6);
+}
+
+function getStorePixKey(store) {
+  return (
+    store?.pixKey ||
+    store?.chavePix ||
+    store?.paymentMethods?.pixKey ||
+    store?.paymentMethods?.chavePix ||
+    ""
+  );
 }
 
 export function CheckoutPage({ slug }) {
@@ -36,7 +55,7 @@ export function CheckoutPage({ slug }) {
   const cart = useCart(store?.id);
   const [cartOpen, setCartOpen] = useState(false);
   const [error, setError] = useState("");
-  const [pixApproved, setPixApproved] = useState(false);
+  const [automaticPaymentApproved, setAutomaticPaymentApproved] = useState(false);
   const [whatsappOrderUrl, setWhatsappOrderUrl] = useState("");
   const [form, setForm] = useState({
     name: "",
@@ -47,13 +66,25 @@ export function CheckoutPage({ slug }) {
     number: "",
     complement: "",
     notes: "",
-    paymentMethod: "pixOnline",
+    paymentMethod: "pix",
     changeFor: "",
   });
 
   const canUseSiteCheckout = store ? planHasFeature(store.plan, "siteCheckout", platform) : false;
-  const canUsePixOnline = store ? planHasFeature(store.plan, "pixOnline", platform) : false;
-  const paymentOptions = useMemo(() => (store ? getPaymentOptions(store, platform) : []), [store, platform]);
+  const canUseAutomaticPayments = store ? planHasFeature(store.plan, "onlinePayments", platform) : false;
+  const canUsePixAutomatic = store ? planHasFeature(store.plan, "pixAutomatic", platform) : false;
+  const canUseCardAutomatic = store ? planHasFeature(store.plan, "cardAutomatic", platform) : false;
+  const canShowPixQrCode = Boolean(
+    store &&
+      form.paymentMethod === "pix" &&
+      canUseAutomaticPayments &&
+      canUsePixAutomatic &&
+      (store.paymentMethods?.pixOnline || store.paymentMethods?.pix)
+  );
+  const canShowCardSimulation = Boolean(
+    store && form.paymentMethod === "card" && canUseAutomaticPayments && canUseCardAutomatic && store.paymentMethods?.card
+  );
+  const paymentOptions = useMemo(() => (store ? getPaymentOptions(store) : []), [store]);
   const deliveryFee = form.fulfillment === "delivery" ? store?.deliveryFee || 0 : 0;
   const total = cart.totals.subtotal + deliveryFee;
   const pixCode = `000201PEDICAMPOS-${store?.slug || "loja"}-${Math.round(total * 100)}-DEMO`;
@@ -96,6 +127,8 @@ export function CheckoutPage({ slug }) {
       form.fulfillment === "delivery"
         ? `${form.street}, ${form.number} - ${form.district}${form.complement ? `, ${form.complement}` : ""}`
         : `Retirada na loja: ${store.address}`;
+    const pixKey = getStorePixKey(store);
+    const paymentMethodLabel = paymentLabels[form.paymentMethod] || "A combinar";
 
     return [
       `Olá, ${store.name}! Quero fazer um pedido pelo PediCampos.`,
@@ -103,6 +136,8 @@ export function CheckoutPage({ slug }) {
       `Cliente: ${form.name}`,
       `Telefone: ${form.phone}`,
       `Entrega: ${form.fulfillment === "delivery" ? "Entrega" : "Retirada"}`,
+      `Forma de pagamento: ${paymentMethodLabel}`,
+      form.paymentMethod === "pix" && pixKey ? `Chave Pix: ${pixKey}` : "",
       `Endereço: ${address}`,
       "",
       items,
@@ -133,14 +168,14 @@ export function CheckoutPage({ slug }) {
       return;
     }
 
-    if (form.paymentMethod === "pixOnline" && !canUsePixOnline) {
-      setError("Pix online está disponível no Plano Premium.");
+    if (!paymentOptions.some((option) => option.key === form.paymentMethod)) {
+      setError("Escolha uma forma de pagamento disponível.");
       return;
     }
 
     const number = makeOrderNumber();
-    const paymentMethodLabel = paymentLabels[form.paymentMethod];
-    const isPixOnline = form.paymentMethod === "pixOnline";
+    const paymentMethodLabel = paymentLabels[form.paymentMethod] || "A combinar";
+    const isAutomaticPayment = canShowPixQrCode || canShowCardSimulation;
     const order = {
       id: number,
       number,
@@ -165,20 +200,21 @@ export function CheckoutPage({ slug }) {
           : null,
       notes: form.notes,
       paymentMethod: paymentMethodLabel,
-      paymentStatus: isPixOnline
-        ? pixApproved
+      paymentStatus: isAutomaticPayment
+        ? automaticPaymentApproved
           ? PAYMENT_STATUS.APPROVED
           : PAYMENT_STATUS.WAITING
-        : PAYMENT_STATUS.PENDING_DELIVERY,
-      orderStatus: isPixOnline
-        ? pixApproved
+        : PAYMENT_STATUS.PENDING,
+      orderStatus: isAutomaticPayment
+        ? automaticPaymentApproved
           ? ORDER_STATUS.PAYMENT_CONFIRMED
           : ORDER_STATUS.WAITING_PAYMENT
         : ORDER_STATUS.RECEIVED,
       subtotal: cart.totals.subtotal,
       deliveryFee,
       total,
-      pixCode: isPixOnline ? pixCode : "",
+      pixCode: canShowPixQrCode ? pixCode : "",
+      pixKey: form.paymentMethod === "pix" ? getStorePixKey(store) : "",
       items: cart.items,
     };
 
@@ -208,7 +244,7 @@ export function CheckoutPage({ slug }) {
       <main className="not-found" style={{ "--store-color": store.primaryColor }}>
         <Card>
           <h1>Esta loja está temporariamente indisponível.</h1>
-          <p>{store.name} foi desativada no painel master e não está aceitando pedidos no momento.</p>
+          <p>{store.name} não está aceitando pedidos por este link no momento.</p>
           <Link className="btn btn-primary btn-md" to="/">
             Voltar para PediCampos
           </Link>
@@ -240,14 +276,14 @@ export function CheckoutPage({ slug }) {
           {!store.open ? (
             <Card className="alert-card">
               <strong>Loja fechada</strong>
-              <p>O checkout está bloqueado enquanto a loja estiver fechada no painel.</p>
+              <p>A loja está fechada no momento. Tente novamente dentro do horário de atendimento.</p>
             </Card>
           ) : null}
 
           {!canUseSiteCheckout ? (
             <Card className="alert-card">
-              <strong>Checkout do Plano Start</strong>
-              <p>Este plano finaliza o pedido pelo WhatsApp da loja. Pedidos no painel e acompanhamento estão disponíveis a partir do Plano Pro.</p>
+              <strong>Pedido pelo WhatsApp</strong>
+              <p>Confira seus dados e envie seu pedido diretamente para o WhatsApp da loja.</p>
               {whatsappOrderUrl ? (
                 <a className="btn btn-primary btn-md" href={whatsappOrderUrl} target="_blank" rel="noreferrer">
                   Abrir WhatsApp novamente
@@ -317,7 +353,7 @@ export function CheckoutPage({ slug }) {
               value={form.paymentMethod}
               onChange={(event) => {
                 updateForm("paymentMethod", event.target.value);
-                setPixApproved(false);
+                setAutomaticPaymentApproved(false);
               }}
             >
               {paymentOptions.map((option) => (
@@ -334,10 +370,7 @@ export function CheckoutPage({ slug }) {
                 placeholder="Ex: R$ 100,00"
               />
             ) : null}
-            {!canUsePixOnline ? (
-              <p className="muted">Pix online está disponível no Plano Premium.</p>
-            ) : null}
-            {canUsePixOnline && form.paymentMethod === "pixOnline" ? (
+            {canShowPixQrCode ? (
               <div className="pix-box">
                 <div className="fake-qr" aria-label="QR Code Pix simulado">
                   {Array.from({ length: 49 }).map((_, index) => (
@@ -351,13 +384,39 @@ export function CheckoutPage({ slug }) {
                     <Button variant="secondary" onClick={() => navigator.clipboard?.writeText(pixCode)}>
                       Copiar Pix
                     </Button>
-                    <Button variant={pixApproved ? "success" : "primary"} onClick={() => setPixApproved(true)}>
-                      {pixApproved ? "Pagamento aprovado" : "Simular pagamento aprovado"}
+                    <Button
+                      variant={automaticPaymentApproved ? "success" : "primary"}
+                      onClick={() => setAutomaticPaymentApproved(true)}
+                    >
+                      {automaticPaymentApproved ? "Pagamento aprovado" : "Simular pagamento aprovado"}
                     </Button>
                   </div>
                   <p className="muted">
-                    Status: {pixApproved ? "Aprovado" : "Aguardando pagamento"}. Futuramente isso será
-                    confirmado por webhook.
+                    Status: {automaticPaymentApproved ? "Pagamento confirmado" : "Aguardando pagamento"}.
+                  </p>
+                </div>
+              </div>
+            ) : null}
+            {canShowCardSimulation ? (
+              <div className="pix-box">
+                <div className="fake-qr" aria-label="Pagamento com cartão simulado">
+                  {Array.from({ length: 49 }).map((_, index) => (
+                    <span key={index} className={index % 3 === 0 || index % 7 === 0 ? "dark" : ""} />
+                  ))}
+                </div>
+                <div>
+                  <strong>Pagamento com cartão simulado</strong>
+                  <p className="muted">Confirme o pagamento para prosseguir com o pedido.</p>
+                  <div className="pix-actions">
+                    <Button
+                      variant={automaticPaymentApproved ? "success" : "primary"}
+                      onClick={() => setAutomaticPaymentApproved(true)}
+                    >
+                      {automaticPaymentApproved ? "Pagamento aprovado" : "Simular pagamento aprovado"}
+                    </Button>
+                  </div>
+                  <p className="muted">
+                    Status: {automaticPaymentApproved ? "Pagamento confirmado" : "Aguardando pagamento"}.
                   </p>
                 </div>
               </div>
@@ -410,12 +469,6 @@ export function CheckoutPage({ slug }) {
                 onAction={() => navigate(`/${store.slug}`)}
               />
             )}
-          </Card>
-          <Card className="mini-settings">
-            <h3>Formas ativas</h3>
-            {paymentOptions.map((option) => (
-              <Checkbox key={option.key} label={option.label} checked readOnly />
-            ))}
           </Card>
         </aside>
       </main>

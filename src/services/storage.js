@@ -1,5 +1,6 @@
 import { initialStores } from "../data/mockStores.js";
 import { initialOrders } from "../data/mockOrders.js";
+import { PAYMENT_STATUS } from "../utils/orderStatus.js";
 import { DEFAULT_FEATURES_BY_PLAN, normalizePlan } from "../utils/plans.js";
 
 const STORAGE_KEY = "pedicampos.database.v1";
@@ -68,7 +69,7 @@ export const defaultPlatformSettings = {
     { question: "Funciona no celular?", answer: "Sim. A experiência é pensada primeiro para celular." },
     { question: "Posso alterar produtos?", answer: "Sim. O painel da loja permite editar produtos, preços e categorias." },
     { question: "O pedido chega onde?", answer: "Depende do plano: via WhatsApp no Start e pelo painel nos planos Pro e Premium." },
-    { question: "Tem Pix?", answer: "Pix online simulado fica disponível no plano Premium." },
+    { question: "Tem Pix?", answer: "Sim. O cliente vê Pix como forma de pagamento, e os planos Pro e Premium liberam pagamento automático simulado." },
   ],
   plans: {
     start: {
@@ -86,8 +87,16 @@ export const defaultPlatformSettings = {
       name: "Pro",
       price: 179.99,
       priceLabel: "R$ 179,99/mês",
-      description: "Pedidos no site, painel de pedidos, status e adicionais configuráveis.",
-      features: ["Tudo do Start", "Pedido salvo no painel", "Status dos pedidos", "Adicionais configuráveis", "Relatórios simples"],
+      description: "Pedidos no site, painel de pedidos, status, adicionais e pagamento automático simulado.",
+      features: [
+        "Tudo do Start",
+        "Pedido salvo no painel",
+        "Status dos pedidos",
+        "Adicionais configuráveis",
+        "Pix automático simulado",
+        "Cartão automático simulado",
+        "Relatórios simples",
+      ],
       active: true,
       highlighted: false,
       badge: "",
@@ -97,8 +106,8 @@ export const defaultPlatformSettings = {
       name: "Premium",
       price: 199.99,
       priceLabel: "R$ 199,99/mês",
-      description: "Plano completo com Pix online, WhatsApp automático e automações.",
-      features: ["Tudo do Pro", "Pix online simulado", "WhatsApp automático simulado", "Cupons", "Automações"],
+      description: "Plano completo com pagamento automático, WhatsApp automático e automações.",
+      features: ["Tudo do Pro", "WhatsApp automático simulado", "Mensagens por status", "Cupons", "Automações"],
       active: true,
       highlighted: true,
       badge: "Melhor escolha",
@@ -177,6 +186,31 @@ function normalizeAdditionalGroups(store) {
   return Array.from(groupsByKey.values());
 }
 
+function normalizePaymentMethods(paymentMethods = {}) {
+  const methods = paymentMethods || {};
+  const {
+    pixDelivery,
+    pix_delivery,
+    pix_on_delivery,
+    cardDelivery,
+    card_delivery,
+    ...rest
+  } = methods;
+  const pixOnline = Boolean(
+    methods.pixOnline ?? methods.pixAutomatic ?? methods.pixQrCode
+  );
+  const pix = Boolean(methods.pix ?? pixDelivery ?? pix_delivery ?? pix_on_delivery ?? pixOnline);
+  const card = Boolean(methods.card ?? cardDelivery ?? card_delivery);
+
+  return {
+    ...rest,
+    pix,
+    pixOnline,
+    cash: Boolean(methods.cash),
+    card,
+  };
+}
+
 function normalizeStore(store) {
   const { addons, ...storeData } = store;
   const products = Array.isArray(store.products)
@@ -189,6 +223,7 @@ function normalizeStore(store) {
     categories: Array.isArray(store.categories) ? store.categories : [],
     products,
     additionalGroups: normalizeAdditionalGroups(store),
+    paymentMethods: normalizePaymentMethods(store.paymentMethods),
   };
 }
 
@@ -216,6 +251,15 @@ function normalizePlanConfig(key, plan = {}) {
   };
 }
 
+function normalizeFeaturesByPlan(featuresByPlan = {}) {
+  return Object.fromEntries(
+    Object.entries(DEFAULT_FEATURES_BY_PLAN).map(([plan, defaultFeatures]) => {
+      const savedFeatures = Array.isArray(featuresByPlan[plan]) ? featuresByPlan[plan] : [];
+      return [plan, Array.from(new Set([...defaultFeatures, ...savedFeatures]))];
+    })
+  );
+}
+
 function normalizePlatform(platform = {}) {
   const merged = {
     ...defaultPlatformSettings,
@@ -229,10 +273,7 @@ function normalizePlatform(platform = {}) {
       pro: normalizePlanConfig("pro", platform.plans?.pro),
       premium: normalizePlanConfig("premium", platform.plans?.premium),
     },
-    featuresByPlan: {
-      ...DEFAULT_FEATURES_BY_PLAN,
-      ...(platform.featuresByPlan || {}),
-    },
+    featuresByPlan: normalizeFeaturesByPlan(platform.featuresByPlan || {}),
   };
 
   merged.logo = merged.logo || merged.name?.slice(0, 2).toUpperCase() || "PC";
@@ -264,12 +305,46 @@ function normalizeOrderItem(item) {
   };
 }
 
+function normalizePaymentMethodLabel(value) {
+  const text = String(value || "");
+  const normalized = text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+  if (normalized.includes("pix")) return "Pix";
+  if (normalized.includes("dinheiro")) return "Dinheiro";
+  if (normalized.includes("cart")) return "Cartão";
+  return text;
+}
+
+function normalizePaymentStatusLabel(value) {
+  const text = String(value || "");
+  const normalized = text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+  if (!text || normalized.includes("pagamento na entrega") || normalized.includes("pending_delivery")) {
+    return PAYMENT_STATUS.PENDING;
+  }
+  if (normalized.includes("aprovado") || normalized.includes("pago") || normalized.includes("confirmado")) {
+    return PAYMENT_STATUS.APPROVED;
+  }
+  if (normalized.includes("aguardando") || normalized === "waiting") {
+    return PAYMENT_STATUS.WAITING;
+  }
+  return text;
+}
+
 function normalizeDatabase(database) {
   const platform = normalizePlatform(database.platform || database.platformSettings || initialPlatform);
   return {
     stores: (database.stores || []).map(normalizeStore),
     orders: (database.orders || []).map((order) => ({
       ...order,
+      paymentMethod: normalizePaymentMethodLabel(order.paymentMethod),
+      paymentStatus: normalizePaymentStatusLabel(order.paymentStatus),
       items: Array.isArray(order.items) ? order.items.map(normalizeOrderItem) : [],
     })),
     platform,

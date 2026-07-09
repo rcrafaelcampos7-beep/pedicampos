@@ -1,7 +1,17 @@
 export const PLAN_KEYS = ["start", "pro", "premium"];
 
 export const DEFAULT_FEATURES_BY_PLAN = {
-  start: ["publicStore", "whatsappOrder", "products", "categories", "basicAdmin", "simpleCart"],
+  start: [
+    "publicStore",
+    "whatsappOrder",
+    "products",
+    "categories",
+    "basicAdmin",
+    "simpleCart",
+    "paymentsManual",
+    "pixManual",
+    "cardManual",
+  ],
   pro: [
     "publicStore",
     "whatsappOrder",
@@ -15,6 +25,10 @@ export const DEFAULT_FEATURES_BY_PLAN = {
     "additionals",
     "reportsBasic",
     "orderTracking",
+    "pixAutomatic",
+    "cardAutomatic",
+    "onlinePayments",
+    "automaticPaymentConfirmation",
   ],
   premium: [
     "publicStore",
@@ -29,7 +43,10 @@ export const DEFAULT_FEATURES_BY_PLAN = {
     "additionals",
     "reportsBasic",
     "orderTracking",
-    "pixOnline",
+    "pixAutomatic",
+    "cardAutomatic",
+    "onlinePayments",
+    "automaticPaymentConfirmation",
     "whatsappAutomation",
     "coupons",
     "reportsAdvanced",
@@ -38,13 +55,20 @@ export const DEFAULT_FEATURES_BY_PLAN = {
 };
 
 export const FEATURE_MIN_PLAN = {
+  paymentsManual: "start",
+  pixManual: "start",
+  cardManual: "start",
   siteCheckout: "pro",
   ordersPanel: "pro",
   orderStatus: "pro",
   additionals: "pro",
   reportsBasic: "pro",
   orderTracking: "pro",
-  pixOnline: "premium",
+  pixAutomatic: "pro",
+  cardAutomatic: "pro",
+  onlinePayments: "pro",
+  automaticPaymentConfirmation: "pro",
+  pixOnline: "pro",
   whatsappAutomation: "premium",
   coupons: "premium",
   reportsAdvanced: "premium",
