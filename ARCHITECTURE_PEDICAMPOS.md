@@ -1,6 +1,6 @@
 # ARCHITECTURE - PediCampos
 
-Atualizado em: 2026-07-08
+Atualizado em: 2026-07-09
 
 ## Visao geral
 
@@ -544,6 +544,7 @@ Normalizacoes importantes:
 - Metodos antigos de pagamento (`pixDelivery`, `pix_delivery`, `pix_on_delivery`, `cardDelivery`) sao normalizados para `pix` e `card`.
 - Labels antigos de pedidos como "Pix online", "Pix na entrega" e "Cartao na entrega" sao normalizados para `Pix`, `Dinheiro` e `Cartao`.
 - Status antigo `Pagamento na entrega` e variantes antigas sao normalizados para status publico amigavel.
+- Auditoria final confirmou que termos antigos de pagamento restantes no codigo sao apenas normalizacao/migracao ou fallback interno de compatibilidade.
 - `additionalGroups` sao criados a partir de dados antigos `addons` se necessario.
 - Pedidos antigos com `addons` viram `selectedAdditionals`.
 - `platformSettings` e mantido como alias de `platform`.
@@ -560,6 +561,8 @@ Validacoes atuais:
 - Checkout publico deve mostrar formas de pagamento apenas como `Pix`, `Dinheiro` e `Cartao`.
 - Resumo lateral do checkout deve mostrar somente itens, subtotal, entrega e total.
 - Pagina de acompanhamento deve separar `Pagamento` e `Status do pagamento`.
+- Auditoria final pesquisou `Pix na entrega`, `Pagamento na entrega`, `Pix online`, `Cartao na entrega`, `pixDelivery`, `cardDelivery`, `paymentOnDelivery`, `pix_delivery`, `pix_on_delivery`, `card_delivery` e `payment_on_delivery`.
+- Nenhum desses termos antigos ficou visivel ao cliente final.
 
 ## UI e estilos
 
@@ -708,8 +711,8 @@ Antes de implementar novas features, ler:
 
 Depois, continuar pela prioridade:
 
-1. Testar painel master de ponta a ponta.
+1. Testar fluxo completo de pedido de ponta a ponta.
 2. Validar visualmente em navegador real.
-3. Testar fluxo completo.
+3. Testar admin e isolamento dos dados.
 4. Preparar deploy.
 5. Planejar backend real.

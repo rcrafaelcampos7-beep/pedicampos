@@ -1,6 +1,6 @@
 # PROJECT_CONTEXT - PediCampos
 
-Atualizado em: 2026-07-08
+Atualizado em: 2026-07-09
 
 Este arquivo e a memoria principal do projeto PediCampos. Ele registra o estado atual do codigo, as decisoes ja tomadas, o que esta implementado, o que esta parcial e o que ainda e pendente.
 
@@ -647,6 +647,25 @@ Ajustes recentes implementados:
   - pagina de acompanhamento separa `Pagamento` e `Status do pagamento`;
   - `Pagamento na entrega` foi removido como status publico e dados antigos sao normalizados para status amigavel;
   - arquivos alterados nesta etapa tambem incluem `src/utils/plans.js`, `src/utils/orderStatus.js` e `src/pages/OrderTrackingPage.jsx`.
+- Auditoria final de termos antigos de pagamento realizada antes da troca de chat:
+  - termos pesquisados: `Pix na entrega`, `Pagamento na entrega`, `Pix online`, `Cartao na entrega`, `pixDelivery`, `cardDelivery`, `paymentOnDelivery`, `pix_delivery`, `pix_on_delivery`, `card_delivery`, `payment_on_delivery`;
+  - nao existem termos antigos visiveis ao cliente final nas telas publicas `/:slug`, `/:slug/checkout`, `/:slug/pedido/:orderId` ou componentes publicos de loja;
+  - ocorrencias restantes em `src/services/storage.js` sao normalizacao/migracao de dados antigos e estao OK;
+  - ocorrencias restantes em `src/pages/CheckoutPage.jsx` sao fallback interno de compatibilidade para `paymentMethods` antigos e exibem publicamente apenas `Pix`/`Cartao`;
+  - ocorrencias restantes em Markdown sao documentacao/memoria explicando a remocao e estao OK;
+  - nenhum BUG publico foi encontrado nesta auditoria.
+- Estado atual real antes da troca de chat:
+  - `formatCurrency` ja corrigido em `src/pages/AdminProducts.jsx`;
+  - localStorage limpo ja testado;
+  - rotas principais ja responderam 200;
+  - precos oficiais mantidos com `,99`;
+  - responsividade inicial revisada;
+  - master testado manualmente e funcionando;
+  - pagamento publico normalizado para `Pix`, `Cartao` e `Dinheiro`;
+  - card "Formas ativas" removido do checkout publico;
+  - adicionais configuraveis validados manualmente: grupo, opcao e vinculo com produto funcionando;
+  - adicional gratis com preco 0 deve aparecer como `Gratis`;
+  - adicional pago deve somar no total.
 - `npm run build` passou apos a correcao do import de `formatCurrency`.
 - Sistema testado com localStorage limpo:
   - `pedicampos.database.v1` foi criado corretamente;
@@ -699,40 +718,33 @@ Build:
 - Build apos a revisao responsiva de `src/styles/global.css` passou com `npm run build`.
 - Build apos ajuste de comunicacao publica de pagamento passou com `npm run build`.
 - Build apos ajuste da regra comercial de pagamentos por plano passou com `npm run build`.
+- Build apos auditoria final de termos antigos de pagamento passou com `npm run build`.
 - Observacao: a primeira tentativa dentro do sandbox falhou por acesso negado ao resolver `vite.config.js`; a repeticao com permissao elevada passou.
 
 ## Proximas etapas recomendadas
 
-1. Testar painel master:
-   - acessar `/master`;
-   - fazer login fake master;
-   - abrir dashboard;
-   - listar lojas;
-   - criar loja;
-   - editar loja;
-   - alterar slug;
-   - alterar plano;
-   - ativar/desativar loja;
-   - testar `/master/configuracoes`;
-   - confirmar reflexo na landing e na loja publica.
-2. Validar visualmente em navegador real a responsividade desktop/mobile da landing, loja, carrinho, checkout, admin e master.
-3. Abrir fluxo completo no navegador:
-   - landing;
-   - loja demo;
-   - produto com adicionais;
+1. Testar fluxo completo de pedido de ponta a ponta:
+   - loja publica;
+   - produto;
+   - adicionais gratis/pagos;
    - carrinho;
    - checkout;
-   - pedido;
-   - admin pedidos.
-4. Testar admin:
+   - pagamento conforme plano;
+   - pedido salvo ou WhatsApp conforme plano;
+   - acompanhamento;
+   - pedido aparecendo no admin;
+   - alteracao de status;
+   - confirmacao de que nao ha termos internos visiveis ao cliente final.
+2. Validar visualmente em navegador real a responsividade desktop/mobile da landing, loja, carrinho, checkout, admin e master.
+3. Testar admin:
    - editar produto/preco;
    - criar categoria;
    - criar adicional;
    - vincular adicional a produto;
    - atualizar status de pedido.
-5. Revisar bloqueios por plano.
-6. Manter precos comerciais finais com gatilho em `,99`.
-7. Preparar deploy Vercel.
-8. Integrar Supabase futuramente.
-9. Integrar Pix real futuramente.
-10. Integrar WhatsApp real futuramente.
+4. Revisar bloqueios por plano.
+5. Manter precos comerciais finais com gatilho em `,99`.
+6. Preparar deploy Vercel.
+7. Integrar Supabase futuramente.
+8. Integrar Pix real futuramente.
+9. Integrar WhatsApp real futuramente.

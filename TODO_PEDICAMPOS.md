@@ -1,6 +1,6 @@
 # TODO - PediCampos
 
-Atualizado em: 2026-07-08
+Atualizado em: 2026-07-09
 
 Legenda:
 
@@ -18,7 +18,10 @@ Legenda:
 - [x] Confirmar criacao de `pedicampos.database.v1` com localStorage limpo.
 - [x] Confirmar mocks iniciais, Neguinho do Acai, Gordinho Burguer e `platform/platformSettings`.
 - [x] Confirmar rotas principais respondendo 200: `/`, `/neguinhodoacai`, `/gordinhoburguer`, `/admin`, `/master`.
-- [ ] Proxima tarefa real: testar painel master de ponta a ponta.
+- [x] Testar painel master manualmente e confirmar funcionamento.
+- [x] Auditar termos antigos de pagamento antes da troca de chat.
+- [x] Confirmar que nao ha termos antigos de pagamento visiveis ao cliente final.
+- [ ] Proxima tarefa real: testar fluxo completo de pedido de ponta a ponta.
 - [ ] Testar fluxo completo com dados ja migrados no localStorage.
 - [ ] Validar em navegador real as rotas principais.
 
@@ -78,6 +81,8 @@ Legenda:
 - [x] Remover `Pagamento na entrega` da area publica e normalizar status antigo para status amigavel.
 - [x] Separar pagamento e status do pagamento na pagina de acompanhamento.
 - [x] Adicionar experiencia simulada de pagamento por Cartao para planos com pagamento automatico.
+- [x] Auditar que `Pix na entrega`, `Pagamento na entrega`, `Pix online`, `Cartao na entrega` e variantes tecnicas nao aparecem para o cliente final.
+- [ ] Testar fluxo completo de pedido com produto, adicionais gratis/pagos, carrinho, checkout, pagamento por plano, acompanhamento e admin.
 - [ ] Testar carrinho apos alteracao de preco do produto no admin.
 - [ ] Testar carrinho com produto desativado depois de ja estar no carrinho.
 - [ ] Testar formas de pagamento desativadas.
@@ -198,6 +203,7 @@ Legenda:
 - [x] LocalStorage limpo inicializa banco mock principal e carrega lojas/plataforma.
 - [x] Normalizacao converte `pixDelivery`/`cardDelivery` e labels antigos de pedidos para `Pix`/`Cartao`.
 - [x] Normalizacao converte status antigo `Pagamento na entrega` para status publico amigavel.
+- [x] Auditoria confirmou que ocorrencias restantes de termos antigos em codigo sao apenas normalizacao/migracao ou fallback interno de compatibilidade.
 - [ ] Criar botao/fluxo de reset de dados se desejado.
 - [ ] Documentar rotina manual para limpar localStorage durante testes.
 - [ ] Preparar modelo para migrar a Supabase.

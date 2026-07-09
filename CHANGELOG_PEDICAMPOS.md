@@ -1,6 +1,6 @@
 # CHANGELOG - PediCampos
 
-Atualizado em: 2026-07-08
+Atualizado em: 2026-07-09
 
 Este changelog registra as principais alteracoes feitas ate o estado atual do projeto. Datas sao aproximadas dentro do ciclo de desenvolvimento local.
 
@@ -430,6 +430,56 @@ Build:
 
 - `npm run build` passou apos a correcao.
 
+## v0.16 - Auditoria final antes da troca de chat
+
+Auditoria realizada:
+
+- Termos pesquisados no projeto inteiro:
+  - `Pix na entrega`;
+  - `Pagamento na entrega`;
+  - `Pix online`;
+  - `Cartao na entrega`;
+  - `pixDelivery`;
+  - `cardDelivery`;
+  - `paymentOnDelivery`;
+  - `pix_delivery`;
+  - `pix_on_delivery`;
+  - `card_delivery`;
+  - `payment_on_delivery`.
+- Resultado:
+  - nao existem termos antigos visiveis ao cliente final nas telas publicas;
+  - ocorrencias restantes em `src/services/storage.js` sao normalizacao/migracao de dados antigos;
+  - ocorrencias restantes em `src/pages/CheckoutPage.jsx` sao fallback interno de compatibilidade para `paymentMethods` antigos e exibem labels publicos simples;
+  - ocorrencias restantes em Markdown sao documentacao/memoria explicando a remocao;
+  - nenhum BUG publico foi encontrado.
+
+Estado real registrado:
+
+- `formatCurrency` ja corrigido.
+- `npm run build` passando.
+- localStorage limpo ja testado.
+- Rotas principais ja responderam 200.
+- Precos oficiais mantidos com gatilho `,99`.
+- Responsividade inicial revisada.
+- Master testado manualmente e funcionando.
+- Planos revisados:
+  - Start = pedido via WhatsApp + pagamento manual;
+  - Pro = pedido no painel + Pix/Cartao automatico simulado;
+  - Premium = tudo do Pro + WhatsApp automatico/automacoes.
+- Pagamento publico normalizado para `Pix`, `Cartao` e `Dinheiro`.
+- Card "Formas ativas" removido do checkout publico.
+- Adicionais configuraveis validados manualmente: grupo, opcao e vinculo com produto funcionando.
+- Opcao gratis com preco 0 deve aparecer como `Gratis`.
+- Opcao paga deve somar no total.
+
+Proxima tarefa registrada:
+
+- Testar fluxo completo de pedido de ponta a ponta: loja publica, produto, adicionais gratis/pagos, carrinho, checkout, pagamento conforme plano, pedido salvo ou WhatsApp conforme plano, acompanhamento, pedido no admin, alteracao de status e confirmacao de que nao ha termos internos visiveis ao cliente final.
+
+Build:
+
+- `npm run build` passou apos a auditoria.
+
 ## Builds e verificacoes
 
 - Build anterior conhecido: `npm run build` passou durante o desenvolvimento.
@@ -438,10 +488,11 @@ Build:
 - Build apos ajustes responsivos em `src/styles/global.css` passou.
 - Build apos ajuste de comunicacao publica de pagamento passou.
 - Build apos ajuste da regra comercial de pagamentos por plano passou.
+- Build apos auditoria final de termos antigos de pagamento passou.
 - Observacao: a primeira tentativa no sandbox falhou por acesso negado ao resolver `vite.config.js`; a tentativa com permissao elevada passou.
 
 ## Pendencias conhecidas registradas
 
 - Necessario teste visual em navegador real.
-- Necessario teste completo de fluxo multi-loja.
+- Necessario teste completo de fluxo de pedido ponta a ponta.
 - Precos comerciais finais confirmados: implantacao R$ 599,99; Start R$ 99,99/mes; Pro R$ 179,99/mes; Premium R$ 199,99/mes.
