@@ -480,6 +480,53 @@ Build:
 
 - `npm run build` passou apos a auditoria.
 
+## v0.17 - Auditoria e plano de migracao para Supabase
+
+Implementado nesta rotina:
+
+- Registrada a nova direcao do projeto: sair de `localStorage` como solucao final e preparar persistencia real online.
+- Supabase definido como banco de dados alvo.
+- `localStorage` definido como fallback temporario durante a migracao.
+- `src/data/mockStores.js` e `src/data/mockOrders.js` mantidos temporariamente como seed/fallback.
+- Criado `SUPABASE_MIGRATION_PLAN.md`.
+- Auditados pontos de leitura e escrita:
+  - `src/services/storage.js`;
+  - `src/hooks/usePediData.js`;
+  - `src/hooks/useCart.js`;
+  - `src/App.jsx`;
+  - telas master;
+  - telas admin;
+  - loja publica;
+  - checkout;
+  - acompanhamento de pedido.
+- Proposto schema SQL inicial para Supabase com tabelas de plataforma, planos, lojas, usuarios de loja, categorias, produtos, adicionais, clientes, pedidos, itens e pagamentos.
+- Registrada estrategia segura:
+  - criar `src/services/database.js`;
+  - manter implementacao local por baixo no inicio;
+  - trocar para Supabase por variaveis de ambiente;
+  - migrar tela por tela.
+- Auditada linguagem publica/comercial que ainda cita termos de simulacao.
+
+Arquivos alterados nesta etapa:
+
+- `SUPABASE_MIGRATION_PLAN.md`
+- `PROJECT_CONTEXT.md`
+- `TODO_PEDICAMPOS.md`
+- `CHANGELOG_PEDICAMPOS.md`
+- `ARCHITECTURE_PEDICAMPOS.md`
+
+Observacoes:
+
+- Nenhum codigo funcional foi alterado.
+- Nenhum mock foi removido.
+- `localStorage` nao foi removido.
+- Pix real, WhatsApp Cloud API e Supabase ainda nao estao integrados; estao planejados para proximas etapas.
+
+Build:
+
+- Primeira tentativa dentro do sandbox falhou por acesso negado ao resolver `vite.config.js`.
+- Repeticao com permissao elevada passou com `npm run build`.
+
 ## Builds e verificacoes
 
 - Build anterior conhecido: `npm run build` passou durante o desenvolvimento.
@@ -489,6 +536,7 @@ Build:
 - Build apos ajuste de comunicacao publica de pagamento passou.
 - Build apos ajuste da regra comercial de pagamentos por plano passou.
 - Build apos auditoria final de termos antigos de pagamento passou.
+- Build apos criacao do plano de migracao Supabase e atualizacao das memorias passou.
 - Observacao: a primeira tentativa no sandbox falhou por acesso negado ao resolver `vite.config.js`; a tentativa com permissao elevada passou.
 
 ## Pendencias conhecidas registradas

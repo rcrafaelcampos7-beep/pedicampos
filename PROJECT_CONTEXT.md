@@ -10,7 +10,7 @@ Este arquivo e a memoria principal do projeto PediCampos. Ele registra o estado 
 - Dominio registrado/planejado: pedicampos.com.br.
 - Proposta principal: oferecer uma plataforma SaaS multi-lojas para negocios locais terem cardapio digital, loja publica por link, carrinho, checkout, pedidos online e painel administrativo proprio.
 - Publico-alvo: acaiterias, hamburguerias, lanchonetes, restaurantes, confeitarias, lojas de delivery local e pequenos negocios que querem vender sem depender apenas de marketplaces.
-- Tipo de sistema: SaaS multi-lojas em uma SPA React/Vite, com dados mockados persistidos em localStorage nesta primeira versao.
+- Tipo de sistema: SaaS multi-lojas em uma SPA React/Vite. A versao atual ainda usa dados mockados persistidos em localStorage, mas a nova direcao do projeto e migrar para banco real online com Supabase.
 - Modelo multi-lojas em dominio unico: cada loja usa um slug proprio no mesmo dominio.
 - Exemplos de slugs:
   - pedicampos.com.br/neguinhodoacai
@@ -41,6 +41,22 @@ A PediCampos e uma plataforma SaaS multi-lojas para:
 - planos por funcionalidades;
 - cada loja em um slug proprio no mesmo dominio.
 
+## Nova direcao tecnica - 2026-07-09
+
+O projeto esta saindo da fase puramente local/mockada e entrando na fase de preparacao para uso real online no dominio `pedicampos.com.br`.
+
+Decisoes registradas:
+
+- Supabase sera o banco de dados alvo.
+- Tudo que for criado no master/admin deve futuramente refletir online no dominio e em outros dispositivos.
+- `localStorage` nao sera removido agora; ele sera mantido temporariamente como fallback durante a migracao.
+- `src/data/mockStores.js` e `src/data/mockOrders.js` nao serao removidos agora; continuam como seed/fallback enquanto a migracao nao estiver validada.
+- A proxima fase tecnica e criar uma camada de acesso a dados, por exemplo `src/services/database.js`, inicialmente usando `storage.js` por baixo.
+- Depois, essa camada deve passar a falar com Supabase usando variaveis de ambiente.
+- Nao deve haver SDK do Supabase espalhado diretamente pelas telas.
+- O plano tecnico completo foi criado em `SUPABASE_MIGRATION_PLAN.md`.
+- A area publica/comercial deve parar de usar linguagem de simulacao antes do uso real. Pix real, WhatsApp Cloud API e Supabase ainda precisam continuar claros na documentacao tecnica como pendentes/em migracao.
+
 ## Estado atual do projeto
 
 Implementado:
@@ -70,7 +86,7 @@ Parcial ou simulado:
 - WhatsApp automatico e apenas simulado por mensagens geradas no painel.
 - Login e fake/localStorage, sem autenticacao real.
 - Upload de imagens nao existe; campos aceitam URL, iniciais ou assets locais.
-- Banco de dados real ainda nao existe; tudo fica em localStorage.
+- Banco de dados real ainda nao existe; tudo fica em localStorage, mas a migracao para Supabase ja foi planejada em `SUPABASE_MIGRATION_PLAN.md`.
 
 ## Rotas existentes
 
@@ -558,6 +574,8 @@ Futuro:
 
 ## LocalStorage e dados
 
+Importante: localStorage continua sendo o mecanismo real do codigo atual, mas deixou de ser a direcao final do produto. A partir de 2026-07-09 ele deve ser tratado como fallback temporario ate a migracao para Supabase.
+
 Chaves usadas:
 
 - `pedicampos.database.v1`: banco mock principal.
@@ -587,6 +605,7 @@ Observacoes:
 
 ## Arquivos importantes
 
+- `SUPABASE_MIGRATION_PLAN.md`: plano tecnico da migracao para Supabase, schema SQL proposto, riscos, fallback e checklist.
 - `src/main.jsx`: entrada React.
 - `src/App.jsx`: roteamento principal e protecao fake de admin/master.
 - `src/routes/router.jsx`: roteador simples com `Link`, `navigate`, `usePath`.
@@ -629,6 +648,14 @@ Observacoes:
 ## Estado atual dos bugs e ajustes recentes
 
 Ajustes recentes implementados:
+
+- Auditoria de migracao para Supabase realizada:
+  - identificado que `src/services/storage.js` concentra carregamento, normalizacao e escrita do banco local;
+  - identificado que `src/hooks/usePediData.js` e a principal entrada de leitura das telas;
+  - identificado que `src/pages/MasterCreateStore.jsx` ainda usa `createEmptyStore` de `src/data/mockStores.js`;
+  - identificado que master/admin/checkout gravam dados por `updateStore`, `mutateDatabase`, `updatePlatform`, `createOrder` e `updateOrder`;
+  - criado `SUPABASE_MIGRATION_PLAN.md` com schema SQL inicial e estrategia segura de migracao;
+  - nenhum codigo funcional foi alterado nesta auditoria.
 
 - Corrigido import ausente de `formatCurrency` em `src/pages/AdminProducts.jsx`:
   - `import { formatCurrency } from "../utils/formatCurrency.js";`
@@ -719,32 +746,18 @@ Build:
 - Build apos ajuste de comunicacao publica de pagamento passou com `npm run build`.
 - Build apos ajuste da regra comercial de pagamentos por plano passou com `npm run build`.
 - Build apos auditoria final de termos antigos de pagamento passou com `npm run build`.
+- Build apos criacao de `SUPABASE_MIGRATION_PLAN.md` e atualizacao das memorias passou com `npm run build`.
 - Observacao: a primeira tentativa dentro do sandbox falhou por acesso negado ao resolver `vite.config.js`; a repeticao com permissao elevada passou.
 
 ## Proximas etapas recomendadas
 
-1. Testar fluxo completo de pedido de ponta a ponta:
-   - loja publica;
-   - produto;
-   - adicionais gratis/pagos;
-   - carrinho;
-   - checkout;
-   - pagamento conforme plano;
-   - pedido salvo ou WhatsApp conforme plano;
-   - acompanhamento;
-   - pedido aparecendo no admin;
-   - alteracao de status;
-   - confirmacao de que nao ha termos internos visiveis ao cliente final.
-2. Validar visualmente em navegador real a responsividade desktop/mobile da landing, loja, carrinho, checkout, admin e master.
-3. Testar admin:
-   - editar produto/preco;
-   - criar categoria;
-   - criar adicional;
-   - vincular adicional a produto;
-   - atualizar status de pedido.
-4. Revisar bloqueios por plano.
-5. Manter precos comerciais finais com gatilho em `,99`.
-6. Preparar deploy Vercel.
-7. Integrar Supabase futuramente.
-8. Integrar Pix real futuramente.
-9. Integrar WhatsApp real futuramente.
+1. Criar `src/services/database.js` como camada de dados, ainda usando `storage.js` por baixo.
+2. Migrar `src/hooks/usePediData.js` para consumir a nova camada.
+3. Criar adaptadores entre o modelo local aninhado e o modelo relacional planejado para Supabase.
+4. Criar projeto Supabase, tabelas e seeds iniciais.
+5. Migrar tela por tela, com localStorage como fallback temporario.
+6. Revisar linguagem publica/comercial para remover termos de simulacao.
+7. Validar visualmente em navegador real a responsividade desktop/mobile da landing, loja, carrinho, checkout, admin e master.
+8. Preparar deploy Vercel e dominio `pedicampos.com.br`.
+9. Integrar Pix real futuramente.
+10. Integrar WhatsApp real futuramente.

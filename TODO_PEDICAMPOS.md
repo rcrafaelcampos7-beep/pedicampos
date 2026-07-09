@@ -9,6 +9,13 @@ Legenda:
 
 ## Urgente
 
+- [x] Registrar nova direcao do projeto: sair de localStorage como solucao final e preparar banco real.
+- [x] Definir Supabase como banco alvo.
+- [x] Auditar onde dados sao carregados e salvos no codigo atual.
+- [x] Auditar quais telas criam/alteram dados.
+- [x] Criar `SUPABASE_MIGRATION_PLAN.md`.
+- [x] Propor schema SQL inicial para Supabase.
+- [x] Registrar localStorage/mocks como fallback temporario.
 - [x] Criar memoria permanente do projeto em arquivos Markdown.
 - [x] Verificar existencia de `PROJECT_CONTEXT.md`, `TODO_PEDICAMPOS.md`, `CHANGELOG_PEDICAMPOS.md` e `ARCHITECTURE_PEDICAMPOS.md`.
 - [x] Rodar `npm run build` no final desta rotina e registrar resultado na resposta final.
@@ -21,9 +28,46 @@ Legenda:
 - [x] Testar painel master manualmente e confirmar funcionamento.
 - [x] Auditar termos antigos de pagamento antes da troca de chat.
 - [x] Confirmar que nao ha termos antigos de pagamento visiveis ao cliente final.
-- [ ] Proxima tarefa real: testar fluxo completo de pedido de ponta a ponta.
+- [x] Testar fluxo completo de pedido de ponta a ponta por validacao automatizada dos modulos reais.
+- [ ] Proxima tarefa real: criar camada de dados `src/services/database.js` usando `storage.js` como fallback.
 - [ ] Testar fluxo completo com dados ja migrados no localStorage.
 - [ ] Validar em navegador real as rotas principais.
+
+## Migracao Supabase
+
+- [x] Decidir que Supabase sera o banco real alvo.
+- [x] Manter `localStorage` temporariamente como fallback.
+- [x] Manter `src/data/mockStores.js` e `src/data/mockOrders.js` temporariamente como seed/fallback.
+- [x] Auditar dependencia de `src/services/storage.js`.
+- [x] Auditar dependencia de `src/hooks/usePediData.js`.
+- [x] Auditar telas que chamam `updateStore`, `mutateDatabase`, `createOrder`, `updateOrder` e `updatePlatform`.
+- [x] Auditar linguagem publica/comercial com termos de simulacao.
+- [x] Criar proposta de tabelas Supabase em `SUPABASE_MIGRATION_PLAN.md`.
+- [ ] Criar `src/services/database.js` com API preparada para Supabase e implementacao local por baixo.
+- [ ] Criar `src/services/supabaseClient.js` quando as variaveis de ambiente existirem.
+- [ ] Definir `VITE_DATA_SOURCE=local|supabase`.
+- [ ] Definir `VITE_SUPABASE_URL`.
+- [ ] Definir `VITE_SUPABASE_ANON_KEY`.
+- [ ] Criar adaptadores de dados local aninhado para modelo relacional.
+- [ ] Migrar `src/hooks/usePediData.js` para a nova camada.
+- [ ] Migrar loja publica para buscar loja por slug pela nova camada.
+- [ ] Migrar master lojas para criar/editar lojas pela nova camada.
+- [ ] Migrar admin produtos.
+- [ ] Migrar admin categorias.
+- [ ] Migrar admin adicionais.
+- [ ] Migrar checkout/pedidos.
+- [ ] Migrar admin pedidos.
+- [ ] Migrar master configuracoes.
+- [ ] Criar projeto Supabase.
+- [ ] Criar tabelas SQL no Supabase.
+- [ ] Popular `plans` e `platform_settings`.
+- [ ] Migrar lojas demo como seed inicial.
+- [ ] Implementar Supabase Auth para master/admin.
+- [ ] Implementar RLS por loja.
+- [ ] Testar que admin de uma loja nao acessa dados de outra.
+- [ ] Testar que master acessa todas as lojas.
+- [ ] Testar fluxo completo online em `pedicampos.com.br`.
+- [ ] Remover localStorage como dependencia obrigatoria somente apos validacao.
 
 ## Bugs visuais
 
@@ -204,13 +248,16 @@ Legenda:
 - [x] Normalizacao converte `pixDelivery`/`cardDelivery` e labels antigos de pedidos para `Pix`/`Cartao`.
 - [x] Normalizacao converte status antigo `Pagamento na entrega` para status publico amigavel.
 - [x] Auditoria confirmou que ocorrencias restantes de termos antigos em codigo sao apenas normalizacao/migracao ou fallback interno de compatibilidade.
+- [x] Nova decisao: localStorage deixa de ser solucao final e passa a ser fallback temporario na migracao para Supabase.
 - [ ] Criar botao/fluxo de reset de dados se desejado.
 - [ ] Documentar rotina manual para limpar localStorage durante testes.
-- [ ] Preparar modelo para migrar a Supabase.
+- [x] Preparar modelo inicial para migrar a Supabase em `SUPABASE_MIGRATION_PLAN.md`.
+- [ ] Implementar camada de dados que substitua acesso direto ao `storage.js` pelas telas.
 
 ## Integracoes futuras
 
-- [ ] Supabase database.
+- [x] Supabase database definido como alvo.
+- [ ] Supabase database implementado.
 - [ ] Autenticacao real.
 - [ ] Regras de seguranca por loja/tenant.
 - [ ] Storage real de imagens/logos/banners.

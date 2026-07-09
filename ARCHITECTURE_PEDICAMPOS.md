@@ -15,6 +15,7 @@ Estado tecnico atual:
 - Dados mockados inicializados a partir de arquivos JS.
 - Persistencia local via localStorage.
 - Preparada conceitualmente para migrar para Supabase/backend real.
+- Nova direcao registrada em 2026-07-09: Supabase sera o banco alvo e localStorage sera mantido temporariamente como fallback.
 - Rewrites SPA configurados em `vercel.json`.
 
 Principais tecnologias:
@@ -25,6 +26,48 @@ Principais tecnologias:
 - JavaScript modules.
 - CSS puro.
 - localStorage.
+
+## Nova arquitetura alvo - Supabase
+
+O projeto deve evoluir de uma SPA com persistencia local para uma SPA conectada a um banco real online no Supabase.
+
+Principios:
+
+- As telas nao devem acessar Supabase diretamente.
+- Uma camada de dados deve ficar entre UI e persistencia.
+- O primeiro arquivo novo recomendado e `src/services/database.js`.
+- A primeira implementacao de `database.js` deve usar `src/services/storage.js` por baixo para preservar o comportamento atual.
+- Depois, `database.js` deve trocar a origem para Supabase com `VITE_DATA_SOURCE=supabase`.
+- `localStorage` e mocks continuam como fallback temporario, nao como arquitetura final.
+- O schema SQL inicial, riscos e checklist estao em `SUPABASE_MIGRATION_PLAN.md`.
+
+API alvo inicial:
+
+```js
+getStores()
+getStoreBySlug(slug)
+createStore(data)
+updateStore(id, data)
+getProductsByStore(storeId)
+createProduct(data)
+updateProduct(id, data)
+getCategoriesByStore(storeId)
+getAdditionalGroupsByStore(storeId)
+createOrder(data)
+getOrdersByStore(storeId)
+updateOrderStatus(orderId, status)
+```
+
+Variaveis de ambiente previstas:
+
+```txt
+VITE_DATA_SOURCE=local
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+```
+
+Quando `VITE_DATA_SOURCE=local`, o app continua usando fallback local.
+Quando `VITE_DATA_SOURCE=supabase`, as funcoes da camada de dados devem buscar e salvar no Supabase.
 
 ## Separacao de areas
 
@@ -175,6 +218,8 @@ Regra importante:
 7. Telas de admin/master usam `updateStore`, `updateOrder`, `updatePlatform` ou `mutateDatabase`.
 8. `saveDatabase()` grava o novo estado e dispara `pedicampos:data-updated`.
 9. Componentes inscritos atualizam a interface automaticamente.
+
+Este e o fluxo real atual. Ele sera preservado temporariamente enquanto a nova camada `database.js` e criada e enquanto cada tela e migrada com seguranca.
 
 Fluxo simplificado:
 
@@ -535,6 +580,28 @@ Funcoes principais em `src/services/storage.js`:
 - `updateOrder(orderId, updater)`: altera pedido.
 - `updatePlatform(updater)`: altera configuracoes da plataforma.
 
+Observacao de migracao:
+
+- `src/services/storage.js` continua critico e nao deve ser apagado agora.
+- A proxima camada deve envolver essas funcoes com nomes preparados para banco real.
+- O objetivo e reduzir chamadas diretas a `storage.js` nas telas antes de conectar Supabase.
+- Depois da migracao, `storage.js` pode virar fallback/dev seed ou ser removido em uma etapa futura.
+
+Funcoes alvo em `src/services/database.js`:
+
+- `getStores()`
+- `getStoreBySlug(slug)`
+- `createStore(data)`
+- `updateStore(id, data)`
+- `getProductsByStore(storeId)`
+- `createProduct(data)`
+- `updateProduct(id, data)`
+- `getCategoriesByStore(storeId)`
+- `getAdditionalGroupsByStore(storeId)`
+- `createOrder(data)`
+- `getOrdersByStore(storeId)`
+- `updateOrderStatus(orderId, status)`
+
 Normalizacoes importantes:
 
 - Planos antigos sao normalizados para `start`, `pro`, `premium`.
@@ -622,20 +689,29 @@ Objetivo:
 
 ### Supabase
 
-Entraria substituindo ou complementando `src/services/storage.js`.
+Supabase passou a ser o banco alvo oficial do projeto em 2026-07-09.
 
-Tabelas provaveis:
+Nao deve substituir tudo de uma vez. Deve entrar por uma camada de service, preservando localStorage/mocks como fallback temporario.
 
-- `stores`;
-- `products`;
-- `categories`;
-- `additional_groups`;
-- `additional_options`;
-- `orders`;
-- `order_items`;
+Tabelas propostas:
+
 - `platform_settings`;
 - `plans`;
-- `profiles/users`.
+- `stores`;
+- `store_users`;
+- `categories`;
+- `products`;
+- `additional_groups`;
+- `additional_options`;
+- `additional_group_products`;
+- `customers`;
+- `orders`;
+- `order_items`;
+- `order_item_additionals`;
+- `payment_methods`;
+- `store_settings`.
+
+O schema SQL inicial esta documentado em `SUPABASE_MIGRATION_PLAN.md`.
 
 ### Autenticacao real
 
@@ -711,8 +787,11 @@ Antes de implementar novas features, ler:
 
 Depois, continuar pela prioridade:
 
-1. Testar fluxo completo de pedido de ponta a ponta.
-2. Validar visualmente em navegador real.
-3. Testar admin e isolamento dos dados.
-4. Preparar deploy.
-5. Planejar backend real.
+1. Criar `src/services/database.js` com fallback local.
+2. Migrar `src/hooks/usePediData.js` para a nova camada.
+3. Criar adaptadores entre modelo local aninhado e modelo relacional Supabase.
+4. Criar schema Supabase e seeds.
+5. Migrar loja publica, master, admin e checkout por etapas.
+6. Revisar linguagem publica/comercial para remover termos de simulacao.
+7. Validar visualmente em navegador real.
+8. Preparar deploy e dominio.
