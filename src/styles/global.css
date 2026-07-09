@@ -11,6 +11,7 @@ body {
   background: var(--color-bg);
   color: var(--color-ink);
   font-family: var(--font-sans);
+  overflow-x: clip;
 }
 
 body.modal-open {
@@ -44,6 +45,15 @@ h2,
 h3,
 p {
   margin-top: 0;
+  overflow-wrap: anywhere;
+}
+
+strong,
+span,
+small,
+td,
+th {
+  min-width: 0;
 }
 
 h1 {
@@ -353,6 +363,7 @@ td {
   color: #475569;
   font-size: 0.9rem;
   font-weight: 750;
+  min-width: 0;
 }
 
 .landing-nav nav a {
@@ -382,6 +393,7 @@ td {
   z-index: 2;
   display: grid;
   align-content: center;
+  min-width: 0;
 }
 
 .landing-hero-content p {
@@ -393,6 +405,7 @@ td {
   position: relative;
   z-index: 1;
   overflow: hidden;
+  min-width: 0;
   border: 1px solid rgba(226, 232, 240, 0.95);
   border-radius: 18px;
   background: white;
@@ -809,6 +822,7 @@ td {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .modal-backdrop {
@@ -817,13 +831,14 @@ td {
   inset: 0;
   display: grid;
   place-items: center;
+  overflow-y: auto;
   background: rgba(15, 23, 42, 0.55);
   padding: 18px;
 }
 
 .modal {
   width: min(100%, 620px);
-  max-height: min(88vh, 860px);
+  max-height: min(88dvh, 860px);
   overflow: auto;
   border-radius: var(--radius);
   background: white;
@@ -850,6 +865,7 @@ td {
 .modal-header h2 {
   margin: 0;
   font-size: 1.2rem;
+  min-width: 0;
 }
 
 .product-modal {
@@ -945,6 +961,7 @@ td {
   display: flex;
   justify-content: space-between;
   gap: 16px;
+  min-width: 0;
 }
 
 .additional-group-card-header h3 {
@@ -1035,6 +1052,7 @@ td {
 .cart-item div,
 .order-item div {
   display: grid;
+  min-width: 0;
   gap: 5px;
 }
 
@@ -1200,6 +1218,7 @@ td {
 
 .summary-line span {
   display: grid;
+  min-width: 0;
   gap: 4px;
 }
 
@@ -1433,7 +1452,9 @@ td {
 }
 
 .table-card {
+  max-width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .split-panel {
@@ -1441,11 +1462,13 @@ td {
   grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
   gap: 18px;
   align-items: start;
+  min-width: 0;
 }
 
 .admin-list {
   display: grid;
   gap: 12px;
+  min-width: 0;
 }
 
 .admin-product-row,
@@ -1563,6 +1586,7 @@ td {
   gap: 6px;
   color: var(--color-muted);
   text-align: right;
+  min-width: 0;
 }
 
 .master-store-card .row-actions {
@@ -1652,7 +1676,26 @@ td {
 
   .landing-nav {
     align-items: flex-start;
+    flex-wrap: wrap;
     padding: 12px 4vw;
+  }
+
+  .landing-nav nav {
+    order: 3;
+    display: flex;
+    width: 100%;
+    gap: 4px;
+    overflow-x: auto;
+    padding-top: 6px;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .landing-nav nav a {
+    flex: 0 0 auto;
+    border-radius: 999px;
+    background: #f1f5f9;
+    padding: 9px 12px;
   }
 
   .nav-actions {
@@ -1738,13 +1781,32 @@ td {
   }
 
   .sidebar {
-    position: static;
+    position: sticky;
+    z-index: 45;
+    top: 0;
     height: auto;
+    gap: 10px;
     grid-template-rows: auto auto auto;
+    padding: 12px;
   }
 
   .sidebar nav {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .sidebar nav a {
+    flex: 0 0 auto;
+    min-height: 38px;
+    white-space: nowrap;
+  }
+
+  .sidebar-footer {
+    padding-top: 10px;
   }
 
   .panel-main {
@@ -1766,6 +1828,12 @@ td {
     grid-template-columns: 82px minmax(0, 1fr);
   }
 
+  .master-store-card .store-card-metrics {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    text-align: left;
+  }
+
   .admin-product-row > strong,
   .admin-product-row .row-actions {
     grid-column: 1 / -1;
@@ -1777,6 +1845,13 @@ td {
 }
 
 @media (max-width: 520px) {
+  .btn {
+    min-height: 42px;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.15;
+  }
+
   .hero-actions,
   .modal-actions,
   .pix-actions,
@@ -1796,15 +1871,63 @@ td {
     display: grid;
   }
 
-  .cart-item,
+  .store-status-card,
+  .store-hero-actions,
+  .additional-group-card-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .cart-item {
+    display: grid;
+    grid-template-columns: 62px minmax(0, 1fr);
+  }
+
+  .cart-item > strong {
+    grid-column: 2;
+  }
+
   .order-item,
   .summary-line,
   .summary-total,
   .summary-grand {
     align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
   }
 
   .category-row {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-backdrop {
+    align-items: start;
+    padding: 10px;
+  }
+
+  .modal {
+    max-height: calc(100dvh - 20px);
+  }
+
+  .modal-header,
+  .product-modal-content,
+  .cart-drawer,
+  .order-detail,
+  .form-section {
+    padding: 14px;
+  }
+
+  .product-modal > img {
+    min-height: 200px;
+    max-height: 230px;
+  }
+
+  .fake-qr {
+    width: 118px;
+    height: 118px;
+  }
+
+  .master-store-card .store-card-metrics {
     grid-template-columns: 1fr;
   }
 }
