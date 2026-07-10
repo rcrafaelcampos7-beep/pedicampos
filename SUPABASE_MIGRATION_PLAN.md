@@ -30,16 +30,16 @@ Decisao tecnica desta etapa:
 - Copy publica foi revisada para remover termos internos ou de simulacao das telas publicas.
 - Projeto foi preparado para teste visual/manual local em `http://127.0.0.1:5174`.
 - Teste visual/manual local encontrou pendencias visuais/mobile que devem ser corrigidas antes da conexao Supabase.
-- A proxima etapa correta e corrigir os ajustes visuais/mobile encontrados no teste manual antes de iniciar Supabase real.
+- O texto repetido de adicionais no acompanhamento do pedido foi corrigido em `src/pages/OrderTrackingPage.jsx`.
+- A proxima etapa correta e corrigir os ajustes visuais/mobile restantes antes de iniciar Supabase real.
 
 ## Pendencias visuais/mobile antes do Supabase
 
 Registrado apos teste manual local em `http://127.0.0.1:5174`:
 
 - Acompanhamento do pedido em desktop:
-  - texto dos adicionais aparece quebrado/repetido;
-  - exemplo observado: `Adicionais: Bacon extra + R$ 5,00, Adicionais: Cheddar + R$ 4,00`;
-  - proxima correcao: renderizar os adicionais como frase limpa ou lista.
+  - corrigido em `src/pages/OrderTrackingPage.jsx`;
+  - adicionais renderizam com prefixo unico, por exemplo `Adicionais: Bacon extra + R$ 5,00, Cheddar + R$ 4,00`.
 - Carrinho mobile:
   - controles de quantidade estao muito largos e pouco centralizados;
   - proxima correcao: melhorar o layout, preferencialmente em linha `[-] [1] [+]`.
@@ -592,7 +592,7 @@ Primeira versao segura:
 6. Projeto foi preparado para teste visual/manual local com `npm run dev` em `http://127.0.0.1:5174`.
 7. Teste visual/manual local foi realizado em navegador real.
 8. Pendencias visuais/mobile foram registradas e devem ser corrigidas antes da conexao Supabase.
-9. Corrigir texto repetido de adicionais no acompanhamento.
+9. Corrigir texto repetido de adicionais no acompanhamento: concluido em `src/pages/OrderTrackingPage.jsx`.
 10. Melhorar carrinho mobile.
 11. Melhorar menu mobile do admin.
 12. Adicionar scroll automatico ao editar produtos.
@@ -705,7 +705,8 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - [x] Concluir teste visual/manual local em navegador real em `http://127.0.0.1:5174`.
 - [x] Registrar pendencias visuais/mobile encontradas no teste manual local.
 - [x] Rodar `npm run build` apos finalizacao das memorias; build passou em 2026-07-10 com permissao elevada apos falha conhecida do sandbox.
-- [ ] Corrigir texto repetido de adicionais no acompanhamento do pedido desktop.
+- [x] Corrigir texto repetido de adicionais no acompanhamento do pedido desktop.
+- [x] Rodar `npm run build` apos a correcao dos adicionais no acompanhamento.
 - [ ] Melhorar carrinho mobile, compactando e centralizando controles de quantidade.
 - [ ] Melhorar menu superior do admin mobile para evitar corte/aperto.
 - [ ] Adicionar scroll automatico ao editar produtos no admin mobile.

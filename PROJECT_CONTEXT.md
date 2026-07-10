@@ -654,6 +654,11 @@ Observacoes:
 
 Ajustes recentes implementados:
 
+- Corrigido o texto repetido de adicionais no acompanhamento do pedido:
+  - arquivo alterado: `src/pages/OrderTrackingPage.jsx`;
+  - os adicionais agora aparecem com o prefixo unico `Adicionais:` seguido das opcoes em linha, por exemplo `Adicionais: Bacon extra + R$ 5,00, Cheddar + R$ 4,00`;
+  - nenhuma regra comercial, preco, plano, logica de pagamento ou Supabase foi alterado;
+  - `npm run build` passou apos a correcao.
 - Teste visual/manual local realizado em `http://127.0.0.1:5174` antes da troca de chat:
   - nenhum ajuste de codigo deve ser iniciado antes da proxima conversa;
   - as pendencias encontradas devem ser corrigidas antes de iniciar Supabase real;
@@ -809,8 +814,7 @@ Ajustes recentes implementados:
 
 Bugs/pendencias conhecidas:
 
-- Pendencias visuais/mobile encontradas no teste manual local:
-  - texto repetido de adicionais na tela de acompanhamento do pedido em desktop;
+- Pendencias visuais/mobile restantes do teste manual local:
   - controles de quantidade do carrinho mobile largos/pouco centralizados;
   - menu superior do admin mobile apertado e com itens espremidos;
   - editar produto no admin mobile nao rola ate o formulario;
@@ -837,15 +841,15 @@ Build:
 - Build apos adaptacao de `src/hooks/usePediData.js` para `database.js` passou com `npm run build`.
 - Build apos teste pos-adaptacao de `usePediData.js` passou com `npm run build`.
 - Build apos revisao de copy publica passou com `npm run build`.
+- Build apos correcao do texto de adicionais no acompanhamento do pedido passou com `npm run build`.
 - Observacao: a primeira tentativa dentro do sandbox falhou por acesso negado ao resolver `vite.config.js`; a repeticao com permissao elevada passou.
 
 ## Proximas etapas recomendadas
 
 1. Corrigir ajustes visuais/mobile encontrados no teste manual antes de iniciar Supabase real.
-2. Corrigir texto repetido de adicionais no acompanhamento do pedido.
-3. Melhorar carrinho mobile.
-4. Melhorar menu mobile do admin.
-5. Adicionar scroll automatico ao editar produtos e adicionais no admin mobile.
-6. Revisar cards/chips de adicionais no mobile.
-7. Rodar `npm run build` e testar novamente no navegador local.
-8. Depois desses ajustes, retomar preparacao/conexao Supabase.
+2. Melhorar carrinho mobile.
+3. Melhorar menu mobile do admin.
+4. Adicionar scroll automatico ao editar produtos e adicionais no admin mobile.
+5. Revisar cards/chips de adicionais no mobile.
+6. Rodar `npm run build` e testar novamente no navegador local.
+7. Depois desses ajustes, retomar preparacao/conexao Supabase.

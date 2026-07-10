@@ -764,6 +764,23 @@ Ordem sugerida para o proximo chat:
 7. Rodar `npm run build`.
 8. Testar novamente no navegador local.
 
+## v0.24 - Correcao dos adicionais no acompanhamento
+
+Implementado:
+
+- Corrigida a renderizacao dos adicionais em `src/pages/OrderTrackingPage.jsx`.
+- O acompanhamento do pedido deixou de repetir o prefixo `Adicionais:` para cada opcao.
+- Os adicionais agora aparecem em linha limpa, por exemplo: `Adicionais: Bacon extra + R$ 5,00, Cheddar + R$ 4,00`.
+- Nenhuma regra comercial, preco, plano, logica de pagamento, fluxo de Supabase ou visual geral foi alterado.
+
+Build:
+
+- `npm run build` passou apos a correcao.
+
+Proxima pendencia visual/mobile:
+
+- Melhorar os controles de quantidade do carrinho mobile.
+
 ## Builds e verificacoes
 
 - Build anterior conhecido: `npm run build` passou durante o desenvolvimento.
@@ -779,10 +796,11 @@ Ordem sugerida para o proximo chat:
 - Build apos teste pos-adaptacao de `usePediData.js` passou.
 - Build apos revisao de copy publica passou.
 - Build apos finalizacao/revisao das memorias antes da troca de chat passou em 2026-07-10.
+- Build apos correcao dos adicionais no acompanhamento passou.
 - Observacao: a primeira tentativa no sandbox falhou por acesso negado ao resolver `vite.config.js`; a tentativa com permissao elevada passou.
 
 ## Pendencias conhecidas registradas
 
 - Teste visual/manual em navegador real foi realizado em `http://127.0.0.1:5174`.
-- Necessario corrigir as pendencias visuais/mobile registradas e testar novamente o fluxo completo.
+- Necessario corrigir as pendencias visuais/mobile restantes e testar novamente o fluxo completo.
 - Precos comerciais finais confirmados: implantacao R$ 599,99; Start R$ 99,99/mes; Pro R$ 179,99/mes; Premium R$ 199,99/mes.

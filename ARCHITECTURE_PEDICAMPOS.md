@@ -849,14 +849,16 @@ Estado em 2026-07-10:
 - `storage.js/localStorage` continuam como fallback.
 - Supabase real ainda nao foi conectado.
 - Build de integridade apos finalizacao das memorias: `npm run build` passou em 2026-07-10 com permissao elevada apos a falha conhecida do sandbox ao resolver `vite.config.js`.
+- Build apos correcao dos adicionais no acompanhamento do pedido: `npm run build` passou.
 
-Pendencias encontradas no teste visual/manual:
+Correcao ja realizada apos o teste visual/manual:
 
 - Acompanhamento do pedido em desktop:
-  - texto de adicionais aparece repetido/mal formatado;
-  - exemplo: `Adicionais: Bacon extra + R$ 5,00, Adicionais: Cheddar + R$ 4,00`;
-  - proxima correcao: renderizar como frase limpa ou lista separada;
-  - arquivo provavel: `src/pages/OrderTrackingPage.jsx`.
+  - texto repetido de adicionais corrigido em `src/pages/OrderTrackingPage.jsx`;
+  - adicionais renderizam em linha com prefixo unico, por exemplo `Adicionais: Bacon extra + R$ 5,00, Cheddar + R$ 4,00`.
+
+Pendencias visuais/mobile restantes:
+
 - Carrinho mobile:
   - controles de quantidade ficam muito largos e pouco centralizados;
   - proxima correcao: melhorar layout, talvez `[-] [1] [+]` em linha;
@@ -900,12 +902,11 @@ Antes de implementar novas features, ler:
 
 Depois, continuar pela prioridade:
 
-1. Corrigir texto repetido de adicionais no acompanhamento.
-2. Melhorar carrinho mobile.
-3. Melhorar menu mobile do admin.
-4. Adicionar scroll automatico ao editar produtos.
-5. Adicionar scroll automatico ao editar adicionais.
-6. Revisar cards/chips de adicionais no mobile.
-7. Rodar `npm run build`.
-8. Testar novamente localmente em `http://127.0.0.1:5174`.
-9. Depois desses ajustes, retomar a preparacao/conexao Supabase.
+1. Melhorar carrinho mobile.
+2. Melhorar menu mobile do admin.
+3. Adicionar scroll automatico ao editar produtos.
+4. Adicionar scroll automatico ao editar adicionais.
+5. Revisar cards/chips de adicionais no mobile.
+6. Rodar `npm run build`.
+7. Testar novamente localmente em `http://127.0.0.1:5174`.
+8. Depois desses ajustes, retomar a preparacao/conexao Supabase.

@@ -36,7 +36,8 @@ Legenda:
 - [x] Preparar projeto para teste visual/manual local com servidor Vite ativo.
 - [x] Registrar pendencias visuais/mobile encontradas no teste manual local.
 - [ ] Proxima tarefa real: corrigir ajustes visuais/mobile encontrados no teste manual antes de iniciar Supabase real.
-- [ ] Corrigir texto repetido de adicionais no acompanhamento do pedido.
+- [x] Corrigir texto repetido de adicionais no acompanhamento do pedido.
+- [x] Rodar `npm run build` apos corrigir o texto de adicionais no acompanhamento.
 - [ ] Melhorar carrinho mobile.
 - [ ] Melhorar menu mobile do admin.
 - [ ] Adicionar scroll automatico ao editar produtos no admin mobile.
@@ -92,8 +93,8 @@ Legenda:
 ## Bugs visuais
 
 - [x] Teste visual/manual realizado no navegador real com servidor local ativo em `http://127.0.0.1:5174`; pendencias abaixo registradas para correcao futura.
-- [ ] Acompanhamento do pedido desktop: corrigir repeticao de `Adicionais:` em cada adicional do item.
-- [ ] Acompanhamento do pedido desktop: melhorar formatacao dos adicionais em linha unica ou lista separada.
+- [x] Acompanhamento do pedido desktop: corrigir repeticao de `Adicionais:` em cada adicional do item.
+- [x] Acompanhamento do pedido desktop: melhorar formatacao dos adicionais em linha unica ou lista separada.
 - [ ] Carrinho mobile: compactar e centralizar controles de quantidade `-`, quantidade e `+`.
 - [ ] Admin mobile: melhorar menu superior/Sidebar responsiva para evitar itens cortados ou espremidos.
 - [ ] Admin produtos mobile: ao tocar em `Editar`, rolar automaticamente ate o formulario.

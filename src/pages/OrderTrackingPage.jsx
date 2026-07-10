@@ -9,7 +9,7 @@ export function OrderTrackingPage({ slug, orderId }) {
   const { orders } = usePediData();
   const order = orders.find((item) => item.id === orderId && item.storeSlug === slug);
   const formatAdditional = (addon) =>
-    `${addon.groupName ? `${addon.groupName}: ` : ""}${addon.optionName || addon.name} ${
+    `${addon.optionName || addon.name} ${
       Number(addon.price) > 0 ? `+ ${formatCurrency(addon.price)}` : "Grátis"
     }`;
 
@@ -75,6 +75,7 @@ export function OrderTrackingPage({ slug, orderId }) {
                   </strong>
                   {(item.selectedAdditionals || item.addons || []).length ? (
                     <small>
+                      Adicionais:{" "}
                       {(item.selectedAdditionals || item.addons || [])
                         .map((addon) => formatAdditional(addon))
                         .join(", ")}
