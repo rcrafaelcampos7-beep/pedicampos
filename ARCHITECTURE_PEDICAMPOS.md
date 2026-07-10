@@ -852,6 +852,7 @@ Estado em 2026-07-10:
 - Build apos correcao dos adicionais no acompanhamento do pedido: `npm run build` passou.
 - Build apos ajuste mobile dos controles de quantidade do carrinho: `npm run build` passou.
 - Build apos ajuste do menu superior do admin mobile: `npm run build` passou.
+- Build apos scroll automatico ao editar produtos no admin: `npm run build` passou.
 
 Correcoes ja realizadas apos o teste visual/manual:
 
@@ -866,13 +867,13 @@ Correcoes ja realizadas apos o teste visual/manual:
   - ajustado em `src/components/admin/AdminLayout.jsx` e `src/styles/global.css`;
   - a navegacao mobile do admin segue como barra horizontal rolavel, com trilho visual, melhor espacamento e links em formato de pilula;
   - desktop, rotas e logica foram preservados.
+- Admin produtos mobile:
+  - scroll automatico ao tocar em `Editar` corrigido em `src/pages/AdminProducts.jsx`;
+  - o formulario de produtos usa `useRef` e `scrollIntoView({ behavior: "smooth", block: "start" })`;
+  - comportamento de criacao/edicao e desktop foram preservados.
 
 Pendencias visuais/mobile restantes:
 
-- Admin produtos mobile:
-  - ao tocar em `Editar`, deve rolar automaticamente ate o formulario;
-  - sugestao tecnica: `scrollIntoView({ behavior: "smooth", block: "start" })`;
-  - arquivo provavel: `src/pages/AdminProducts.jsx`.
 - Admin adicionais mobile:
   - ao tocar em `Editar`, deve rolar automaticamente ate o formulario;
   - sugestao tecnica: `scrollIntoView({ behavior: "smooth", block: "start" })`;
@@ -904,9 +905,8 @@ Antes de implementar novas features, ler:
 
 Depois, continuar pela prioridade:
 
-1. Adicionar scroll automatico ao editar produtos.
-2. Adicionar scroll automatico ao editar adicionais.
-3. Revisar cards/chips de adicionais no mobile.
-4. Rodar `npm run build`.
-5. Testar novamente localmente em `http://127.0.0.1:5174`.
-6. Depois desses ajustes, retomar a preparacao/conexao Supabase.
+1. Adicionar scroll automatico ao editar adicionais.
+2. Revisar cards/chips de adicionais no mobile.
+3. Rodar `npm run build`.
+4. Testar novamente localmente em `http://127.0.0.1:5174`.
+5. Depois desses ajustes, retomar a preparacao/conexao Supabase.

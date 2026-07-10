@@ -33,6 +33,7 @@ Decisao tecnica desta etapa:
 - O texto repetido de adicionais no acompanhamento do pedido foi corrigido em `src/pages/OrderTrackingPage.jsx`.
 - O layout mobile dos controles de quantidade do carrinho foi ajustado em `src/styles/global.css`.
 - O menu superior do admin mobile foi ajustado em `src/components/admin/AdminLayout.jsx` e `src/styles/global.css`.
+- O scroll automatico ao editar produtos no admin foi ajustado em `src/pages/AdminProducts.jsx`.
 - A proxima etapa correta e corrigir os ajustes visuais/mobile restantes antes de iniciar Supabase real.
 
 ## Pendencias visuais/mobile antes do Supabase
@@ -51,8 +52,9 @@ Registrado apos teste manual local em `http://127.0.0.1:5174`:
   - navegacao mobile mantida como barra horizontal rolavel, com trilho visual, melhor espacamento e links em formato de pilula;
   - desktop, rotas e logica foram preservados.
 - Admin produtos mobile:
-  - ao tocar em `Editar`, a tela deve rolar automaticamente ate o formulario;
-  - sugestao tecnica: `scrollIntoView`.
+  - corrigido em `src/pages/AdminProducts.jsx`;
+  - ao tocar em `Editar`, a tela rola suavemente ate o formulario de produto;
+  - comportamento de criacao/edicao e desktop foram preservados.
 - Admin adicionais mobile:
   - ao tocar em `Editar`, a tela deve rolar automaticamente ate o formulario;
   - sugestao tecnica: `scrollIntoView`.
@@ -599,7 +601,7 @@ Primeira versao segura:
 9. Corrigir texto repetido de adicionais no acompanhamento: concluido em `src/pages/OrderTrackingPage.jsx`.
 10. Melhorar carrinho mobile: concluido em `src/styles/global.css`.
 11. Melhorar menu mobile do admin: concluido em `src/components/admin/AdminLayout.jsx` e `src/styles/global.css`.
-12. Adicionar scroll automatico ao editar produtos.
+12. Adicionar scroll automatico ao editar produtos: concluido em `src/pages/AdminProducts.jsx`.
 13. Adicionar scroll automatico ao editar adicionais.
 14. Revisar cards/chips de adicionais no mobile.
 15. Rodar `npm run build` e testar novamente localmente.
@@ -715,7 +717,8 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - [x] Rodar `npm run build` apos ajuste mobile do carrinho.
 - [x] Melhorar menu superior do admin mobile para evitar corte/aperto.
 - [x] Rodar `npm run build` apos ajuste do menu superior do admin mobile.
-- [ ] Adicionar scroll automatico ao editar produtos no admin mobile.
+- [x] Adicionar scroll automatico ao editar produtos no admin mobile.
+- [x] Rodar `npm run build` apos scroll automatico ao editar produtos.
 - [ ] Adicionar scroll automatico ao editar adicionais no admin mobile.
 - [ ] Revisar cards/chips de adicionais no mobile.
 - [ ] Rodar `npm run build` apos as correcoes visuais/mobile e testar novamente localmente.

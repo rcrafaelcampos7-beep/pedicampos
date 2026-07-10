@@ -42,7 +42,8 @@ Legenda:
 - [x] Rodar `npm run build` apos ajustar o carrinho mobile.
 - [x] Melhorar menu mobile do admin.
 - [x] Rodar `npm run build` apos ajustar o menu mobile do admin.
-- [ ] Adicionar scroll automatico ao editar produtos no admin mobile.
+- [x] Adicionar scroll automatico ao editar produtos no admin mobile.
+- [x] Rodar `npm run build` apos adicionar scroll automatico ao editar produtos.
 - [ ] Adicionar scroll automatico ao editar adicionais no admin mobile.
 - [ ] Revisar cards/chips de adicionais no mobile.
 - [ ] Rodar `npm run build` apos as correcoes visuais/mobile.
@@ -99,7 +100,7 @@ Legenda:
 - [x] Acompanhamento do pedido desktop: melhorar formatacao dos adicionais em linha unica ou lista separada.
 - [x] Carrinho mobile: compactar e centralizar controles de quantidade `-`, quantidade e `+`.
 - [x] Admin mobile: melhorar menu superior/Sidebar responsiva para evitar itens cortados ou espremidos.
-- [ ] Admin produtos mobile: ao tocar em `Editar`, rolar automaticamente ate o formulario.
+- [x] Admin produtos mobile: ao tocar em `Editar`, rolar automaticamente ate o formulario.
 - [ ] Admin adicionais mobile: ao tocar em `Editar`, rolar automaticamente ate o formulario.
 - [ ] Admin adicionais mobile: revisar espacamento, quebra de linha, tamanho dos chips e organizacao dos cards.
 - [x] Reestruturar hero/landing para evitar sobreposicao de cards no desktop.
@@ -218,8 +219,8 @@ Legenda:
 - [ ] Impedir conflito de slug no admin ou aplicar `uniqueSlug` tambem no admin.
 - [ ] Melhorar feedback "salvo com sucesso".
 - [ ] Melhorar confirmacao antes de excluir produto/categoria/adicional.
-- [ ] Melhorar menu mobile do admin.
-- [ ] Fazer `Editar` em produtos rolar ate o formulario no mobile.
+- [x] Melhorar menu mobile do admin.
+- [x] Fazer `Editar` em produtos rolar ate o formulario no mobile.
 - [ ] Fazer `Editar` em adicionais rolar ate o formulario no mobile.
 
 ## Painel Master

@@ -654,6 +654,12 @@ Observacoes:
 
 Ajustes recentes implementados:
 
+- Adicionado scroll automatico ao editar produtos no admin:
+  - arquivo alterado: `src/pages/AdminProducts.jsx`;
+  - ao tocar em `Editar`, a tela rola suavemente ate o formulario do produto com `scrollIntoView`;
+  - comportamento de criacao/edicao de produtos foi preservado;
+  - desktop, regras de produto, calculo, precos, planos, checkout, pedidos e Supabase nao foram alterados;
+  - `npm run build` passou apos a correcao.
 - Ajustado o menu superior do admin no mobile:
   - arquivos alterados: `src/components/admin/AdminLayout.jsx` e `src/styles/global.css`;
   - a navegacao mobile do admin foi mantida como barra horizontal rolavel, agora com trilho visual, espacamento melhor e links em formato de pilula;
@@ -827,7 +833,6 @@ Ajustes recentes implementados:
 Bugs/pendencias conhecidas:
 
 - Pendencias visuais/mobile restantes do teste manual local:
-  - editar produto no admin mobile nao rola ate o formulario;
   - editar grupo/adicional no admin mobile nao rola ate o formulario;
   - cards/chips de adicionais no mobile precisam de melhor espacamento e organizacao.
 - Produtos inativos aparecem como "Indisponivel" na loja publica, nao somem. Isso atende uma das possibilidades pedidas anteriormente, mas deve ser revisado se a decisao final for esconder.
@@ -854,13 +859,13 @@ Build:
 - Build apos correcao do texto de adicionais no acompanhamento do pedido passou com `npm run build`.
 - Build apos ajuste mobile dos controles de quantidade do carrinho passou com `npm run build`.
 - Build apos ajuste do menu superior do admin mobile passou com `npm run build`.
+- Build apos scroll automatico ao editar produtos no admin passou com `npm run build`.
 - Observacao: a primeira tentativa dentro do sandbox falhou por acesso negado ao resolver `vite.config.js`; a repeticao com permissao elevada passou.
 
 ## Proximas etapas recomendadas
 
 1. Corrigir ajustes visuais/mobile encontrados no teste manual antes de iniciar Supabase real.
-2. Adicionar scroll automatico ao editar produtos no admin mobile.
-3. Adicionar scroll automatico ao editar adicionais no admin mobile.
-4. Revisar cards/chips de adicionais no mobile.
-5. Rodar `npm run build` e testar novamente no navegador local.
-6. Depois desses ajustes, retomar preparacao/conexao Supabase.
+2. Adicionar scroll automatico ao editar adicionais no admin mobile.
+3. Revisar cards/chips de adicionais no mobile.
+4. Rodar `npm run build` e testar novamente no navegador local.
+5. Depois desses ajustes, retomar preparacao/conexao Supabase.

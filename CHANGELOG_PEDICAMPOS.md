@@ -816,6 +816,23 @@ Proxima pendencia visual/mobile:
 
 - Adicionar scroll automatico ao editar produtos no admin mobile.
 
+## v0.27 - Scroll automatico ao editar produtos
+
+Implementado:
+
+- Adicionado `useRef` ao formulario de produtos em `src/pages/AdminProducts.jsx`.
+- Ao tocar em `Editar`, `editProduct` preenche o formulario e chama `scrollIntoView({ behavior: "smooth", block: "start" })`.
+- O comportamento de criacao e edicao de produtos foi preservado.
+- Desktop, regras de produto, calculo, precos, planos, checkout, pedidos e Supabase nao foram alterados.
+
+Build:
+
+- `npm run build` passou apos a correcao.
+
+Proxima pendencia visual/mobile:
+
+- Adicionar scroll automatico ao editar adicionais no admin mobile.
+
 ## Builds e verificacoes
 
 - Build anterior conhecido: `npm run build` passou durante o desenvolvimento.
@@ -834,6 +851,7 @@ Proxima pendencia visual/mobile:
 - Build apos correcao dos adicionais no acompanhamento passou.
 - Build apos ajuste mobile dos controles de quantidade do carrinho passou.
 - Build apos ajuste do menu superior do admin mobile passou.
+- Build apos scroll automatico ao editar produtos no admin passou.
 - Observacao: a primeira tentativa no sandbox falhou por acesso negado ao resolver `vite.config.js`; a tentativa com permissao elevada passou.
 
 ## Pendencias conhecidas registradas

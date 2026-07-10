@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AdminLayout } from "../components/admin/AdminLayout.jsx";
 import { Button } from "../components/ui/Button.jsx";
 import { Card } from "../components/ui/Card.jsx";
@@ -20,6 +20,7 @@ const emptyProduct = {
 export function AdminProducts({ activePath, store }) {
   const [editingId, setEditingId] = useState("");
   const [form, setForm] = useState(emptyProduct);
+  const productFormRef = useRef(null);
 
   useEffect(() => {
     setForm((current) => ({
@@ -40,6 +41,9 @@ export function AdminProducts({ activePath, store }) {
       additionalGroupIds: (store.additionalGroups || [])
         .filter((group) => group.productIds?.includes(product.id))
         .map((group) => group.id),
+    });
+    window.requestAnimationFrame(() => {
+      productFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   }
 
@@ -117,7 +121,7 @@ export function AdminProducts({ activePath, store }) {
         <Card className="form-section">
           <span className="eyebrow">Produtos</span>
           <h2>{editingId ? "Editar produto" : "Novo produto"}</h2>
-          <form onSubmit={saveProduct}>
+          <form ref={productFormRef} onSubmit={saveProduct}>
             <Input label="Nome" value={form.name} onChange={(event) => updateForm("name", event.target.value)} required />
             <Textarea
               label="Descrição"
