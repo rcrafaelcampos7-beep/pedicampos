@@ -1,6 +1,6 @@
 # CHANGELOG - PediCampos
 
-Atualizado em: 2026-07-09
+Atualizado em: 2026-07-10
 
 Este changelog registra as principais alteracoes feitas ate o estado atual do projeto. Datas sao aproximadas dentro do ciclo de desenvolvimento local.
 
@@ -602,6 +602,50 @@ Build:
 - Primeira tentativa dentro do sandbox falhou por acesso negado ao resolver `vite.config.js`.
 - Repeticao com permissao elevada passou com `npm run build`.
 
+## v0.20 - Teste pos-adaptacao de usePediData
+
+Validado nesta rotina:
+
+- Rotas principais responderam 200 no Vite local:
+  - `/`;
+  - `/neguinhodoacai`;
+  - `/gordinhoburguer`;
+  - `/admin`;
+  - `/master`.
+- Lojas demo carregaram corretamente via `database.js`.
+- Carrinho validado por simulacao isolada:
+  - adicionar item;
+  - manter adicionais;
+  - alterar quantidade;
+  - recalcular total;
+  - remover item.
+- Adicionais validados:
+  - grupo vinculado ao produto aparece nos dados;
+  - adicional gratis tem preco 0;
+  - adicional pago soma no total.
+- Checkout e pedidos validados por modulo:
+  - Pix, Cartao e Dinheiro continuam disponiveis nas lojas demo;
+  - entrega e retirada seguem no modelo esperado;
+  - Start continua sem checkout salvo e com fluxo WhatsApp/manual;
+  - Pro continua com pedido salvo no painel;
+  - Premium continua com pedido salvo e previa de WhatsApp automatico/automacoes.
+- `database.subscribeDatabase` recebeu eventos de criacao/alteracao vindos de `storage.js`, preservando o comportamento do hook central.
+- Pedido Pro apareceu em `getOrdersByStore`, e alteracao de status refletiu em `getOrderById`.
+- Master continuou carregando lojas, planos e configuracoes.
+
+Resultado:
+
+- Nenhum bug causado pela troca de `usePediData.js` para `database.js` foi encontrado.
+- Pendencia de copy publica, nao causada pela troca do hook:
+  - `src/pages/CheckoutPage.jsx` ainda contem textos com `simulado`;
+  - `src/pages/LandingPage.jsx` ainda contem `mock` e `localStorage`.
+- O navegador interno do Codex nao estava disponivel nesta sessao; a validacao foi feita por HTTP local, Vite SSR com localStorage fake e inspecao de codigo.
+
+Build:
+
+- Primeira tentativa dentro do sandbox falhou por acesso negado ao resolver `vite.config.js`.
+- Repeticao com permissao elevada passou com `npm run build`.
+
 ## Builds e verificacoes
 
 - Build anterior conhecido: `npm run build` passou durante o desenvolvimento.
@@ -614,6 +658,7 @@ Build:
 - Build apos criacao do plano de migracao Supabase e atualizacao das memorias passou.
 - Build apos criacao de `src/services/database.js` passou.
 - Build apos adaptacao de `src/hooks/usePediData.js` para `database.js` passou.
+- Build apos teste pos-adaptacao de `usePediData.js` passou.
 - Observacao: a primeira tentativa no sandbox falhou por acesso negado ao resolver `vite.config.js`; a tentativa com permissao elevada passou.
 
 ## Pendencias conhecidas registradas

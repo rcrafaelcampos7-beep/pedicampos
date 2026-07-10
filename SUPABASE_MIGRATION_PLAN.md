@@ -1,6 +1,6 @@
 # SUPABASE_MIGRATION_PLAN - PediCampos
 
-Atualizado em: 2026-07-09
+Atualizado em: 2026-07-10
 
 Este documento registra a primeira entrega da mudanca de direcao do PediCampos: sair gradualmente de uma persistencia local baseada em mocks/localStorage e preparar o projeto para persistencia real online, com Supabase como banco alvo.
 
@@ -26,7 +26,8 @@ Decisao tecnica desta etapa:
 - Supabase real ainda nao foi conectado.
 - `src/hooks/usePediData.js` foi adaptado para consumir `database.js`.
 - Nenhuma tela foi migrada diretamente para `database.js` nesta etapa.
-- A proxima etapa correta e testar rotas principais e fluxo completo novamente.
+- Teste pos-adaptacao do hook central foi realizado sem conectar Supabase real.
+- A proxima etapa correta e corrigir/revisar a copy publica que ainda exibe termos internos ou de simulacao.
 
 ## Auditoria do estado atual
 
@@ -557,34 +558,35 @@ Primeira versao segura:
 1. Manter o app atual funcionando com localStorage e mocks.
 2. `src/services/database.js` foi criado usando `storage.js` por baixo como fallback.
 3. `src/hooks/usePediData.js` foi migrado para a fachada local.
-4. Testar rotas principais e fluxo completo novamente.
-5. Migrar leituras centrais restantes:
+4. Rotas principais e fluxo critico foram testados novamente apos a troca do hook central.
+5. Corrigir/revisar copy publica que ainda expoe termos internos ou de simulacao.
+6. Migrar leituras centrais restantes:
    - primeiro `src/pages/StorePage.jsx`;
    - depois `src/pages/CheckoutPage.jsx`;
    - depois `src/pages/OrderTrackingPage.jsx`.
-6. Criar adaptadores de formato entre modelo atual e modelo relacional antes de ativar Supabase real.
-7. Migrar master lojas:
+7. Criar adaptadores de formato entre modelo atual e modelo relacional antes de ativar Supabase real.
+8. Migrar master lojas:
    - `src/pages/MasterCreateStore.jsx`;
    - `src/pages/MasterStores.jsx`;
    - `src/pages/MasterPlans.jsx`.
-8. Migrar admin produtos/categorias/adicionais:
+9. Migrar admin produtos/categorias/adicionais:
    - `src/pages/AdminProducts.jsx`;
    - `src/pages/AdminCategories.jsx`;
    - `src/pages/AdminAdditionals.jsx`.
-9. Migrar checkout e pedidos:
+10. Migrar checkout e pedidos:
    - `src/pages/CheckoutPage.jsx`;
    - `src/pages/AdminOrders.jsx`;
    - `src/pages/MasterOrders.jsx`.
-10. Migrar configuracoes:
+11. Migrar configuracoes:
    - `src/pages/AdminSettings.jsx`;
    - `src/pages/MasterSettings.jsx`.
-11. Ativar Supabase por variavel de ambiente:
+12. Ativar Supabase por variavel de ambiente:
    - `VITE_DATA_SOURCE=local` ou `VITE_DATA_SOURCE=supabase`;
    - `VITE_SUPABASE_URL`;
    - `VITE_SUPABASE_ANON_KEY`.
-12. Criar scripts de seed/migracao dos mocks para Supabase.
-13. Habilitar RLS e autenticacao real.
-14. Remover mocks/localStorage apenas depois de validacao em producao.
+13. Criar scripts de seed/migracao dos mocks para Supabase.
+14. Habilitar RLS e autenticacao real.
+15. Remover mocks/localStorage apenas depois de validacao em producao.
 
 ## Plano de fallback
 
@@ -656,7 +658,9 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - [x] Rodar `npm run build` apos a criacao de `database.js`; build passou com permissao elevada apos falha conhecida do sandbox.
 - [x] Migrar `usePediData` para a nova camada.
 - [x] Rodar `npm run build` apos migrar `usePediData`; build passou com permissao elevada apos falha conhecida do sandbox.
-- [ ] Testar rotas principais e fluxo completo novamente apos a troca do hook central.
+- [x] Testar rotas principais e fluxo critico novamente apos a troca do hook central.
+- [x] Confirmar que nao houve bug causado pela troca de `usePediData.js` para `database.js`.
+- [ ] Corrigir/revisar copy publica que ainda exibe `simulado`, `mock` e `localStorage`.
 - [ ] Criar adaptadores entre modelo local aninhado e modelo relacional.
 - [ ] Criar projeto Supabase.
 - [ ] Criar tabelas no Supabase.

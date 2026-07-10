@@ -1,6 +1,6 @@
 # PROJECT_CONTEXT - PediCampos
 
-Atualizado em: 2026-07-09
+Atualizado em: 2026-07-10
 
 Este arquivo e a memoria principal do projeto PediCampos. Ele registra o estado atual do codigo, as decisoes ja tomadas, o que esta implementado, o que esta parcial e o que ainda e pendente.
 
@@ -654,10 +654,24 @@ Observacoes:
 
 Ajustes recentes implementados:
 
+- Teste pos-adaptacao de `src/hooks/usePediData.js` realizado em 2026-07-10:
+  - rotas principais responderam 200 via Vite local: `/`, `/neguinhodoacai`, `/gordinhoburguer`, `/admin` e `/master`;
+  - lojas `neguinhodoacai` e `gordinhoburguer` carregaram corretamente via `database.js`;
+  - validacao isolada com Vite SSR e localStorage fake confirmou adicionais vinculados a produto, adicional gratis com preco 0 e adicional pago somando no total;
+  - carrinho foi validado com adicionar item, manter adicionais, alterar quantidade, recalcular total e remover item;
+  - checkout foi validado por regras/dados para Pix, Cartao, Dinheiro, entrega e retirada;
+  - regras por plano continuam preservadas: Start sem checkout salvo e com WhatsApp/manual; Pro com pedido salvo; Premium com pedido salvo e previa de WhatsApp automatico/automacoes;
+  - pedidos criados por `storage.js` continuaram visiveis por `database.js`, confirmando compatibilidade do hook central;
+  - `database.subscribeDatabase` recebeu criacao/alteracao de pedidos feitas por `storage.js`;
+  - `/admin/pedidos` foi validado por `getOrdersByStore` e alteracao de status refletiu em `getOrderById`;
+  - master continuou carregando lojas, planos e configuracoes;
+  - nenhum bug causado pela troca de `usePediData.js` para `database.js` foi encontrado;
+  - pendencia nao causada pela troca do hook: ainda existem termos publicos de simulacao/copy tecnica em `src/pages/CheckoutPage.jsx` e `src/pages/LandingPage.jsx` (`simulado`, `mock`, `localStorage`);
+  - o navegador interno do Codex nao estava disponivel nesta sessao, entao a validacao foi feita por HTTP local, Vite SSR e inspecao de codigo.
 - Adaptado `src/hooks/usePediData.js` para consumir `src/services/database.js`:
   - `getDatabase` agora vem de `database.js`;
   - `subscribeDatabase` agora vem de `database.js`;
-  - `database.js` expõe `subscribeDatabase` como wrapper temporario sobre `storage.js`;
+  - `database.js` expoe `subscribeDatabase` como wrapper temporario sobre `storage.js`;
   - formato retornado pelo hook foi mantido: `database`, `stores`, `orders` e `platform`;
   - nenhuma tela foi migrada diretamente nesta etapa;
   - Supabase real ainda nao foi conectado;
@@ -770,16 +784,17 @@ Build:
 - Build apos criacao de `SUPABASE_MIGRATION_PLAN.md` e atualizacao das memorias passou com `npm run build`.
 - Build apos criacao de `src/services/database.js` passou com `npm run build`.
 - Build apos adaptacao de `src/hooks/usePediData.js` para `database.js` passou com `npm run build`.
+- Build apos teste pos-adaptacao de `usePediData.js` passou com `npm run build`.
 - Observacao: a primeira tentativa dentro do sandbox falhou por acesso negado ao resolver `vite.config.js`; a repeticao com permissao elevada passou.
 
 ## Proximas etapas recomendadas
 
-1. Testar rotas principais e fluxo completo novamente apos a troca do hook central.
-2. Manter `storage.js/localStorage` como fallback durante a adaptacao.
-3. Criar adaptadores entre o modelo local aninhado e o modelo relacional planejado para Supabase.
-4. Criar projeto Supabase, tabelas e seeds iniciais.
-5. Migrar tela por tela, com localStorage como fallback temporario.
-6. Revisar linguagem publica/comercial para remover termos de simulacao.
+1. Corrigir/revisar a copy publica que ainda exibe termos internos ou de simulacao (`simulado`, `mock`, `localStorage`) antes do uso real.
+2. Fazer teste visual/manual em navegador real do fluxo completo.
+3. Manter `storage.js/localStorage` como fallback durante a adaptacao.
+4. Criar adaptadores entre o modelo local aninhado e o modelo relacional planejado para Supabase.
+5. Criar projeto Supabase, tabelas e seeds iniciais.
+6. Migrar tela por tela, com localStorage como fallback temporario.
 7. Validar visualmente em navegador real a responsividade desktop/mobile da landing, loja, carrinho, checkout, admin e master.
 8. Preparar deploy Vercel e dominio `pedicampos.com.br`.
 9. Integrar Pix real futuramente.

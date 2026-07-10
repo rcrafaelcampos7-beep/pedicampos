@@ -1,6 +1,6 @@
 # TODO - PediCampos
 
-Atualizado em: 2026-07-09
+Atualizado em: 2026-07-10
 
 Legenda:
 
@@ -31,7 +31,8 @@ Legenda:
 - [x] Testar fluxo completo de pedido de ponta a ponta por validacao automatizada dos modulos reais.
 - [x] Criar camada de dados `src/services/database.js` usando `storage.js` como fallback.
 - [x] Adaptar `src/hooks/usePediData.js` para usar `src/services/database.js`.
-- [ ] Proxima tarefa real: testar rotas principais e fluxo completo novamente apos a troca do hook central.
+- [x] Testar rotas principais e fluxo critico novamente apos a troca do hook central.
+- [ ] Proxima tarefa real: remover/revisar termos publicos de simulacao/copy tecnica (`simulado`, `mock`, `localStorage`) das areas publicas.
 - [ ] Testar fluxo completo com dados ja migrados no localStorage.
 - [ ] Validar em navegador real as rotas principais.
 
@@ -50,6 +51,7 @@ Legenda:
 - [x] Confirmar que Supabase real ainda nao foi conectado.
 - [x] Confirmar que nenhuma tela foi migrada para `database.js` nesta etapa.
 - [x] Migrar `src/hooks/usePediData.js` para importar `getDatabase` e `subscribeDatabase` de `database.js`.
+- [x] Testar pos-migracao do hook central sem conectar Supabase real.
 - [ ] Criar `src/services/supabaseClient.js` quando as variaveis de ambiente existirem.
 - [ ] Definir `VITE_DATA_SOURCE=local|supabase`.
 - [ ] Definir `VITE_SUPABASE_URL`.
@@ -132,6 +134,7 @@ Legenda:
 - [x] Separar pagamento e status do pagamento na pagina de acompanhamento.
 - [x] Adicionar experiencia simulada de pagamento por Cartao para planos com pagamento automatico.
 - [x] Auditar que `Pix na entrega`, `Pagamento na entrega`, `Pix online`, `Cartao na entrega` e variantes tecnicas nao aparecem para o cliente final.
+- [ ] Remover/revisar ocorrencias publicas restantes de `simulado`, `mock` e `localStorage` em `CheckoutPage.jsx` e `LandingPage.jsx`.
 - [ ] Testar fluxo completo de pedido com produto, adicionais gratis/pagos, carrinho, checkout, pagamento por plano, acompanhamento e admin.
 - [ ] Testar carrinho apos alteracao de preco do produto no admin.
 - [ ] Testar carrinho com produto desativado depois de ja estar no carrinho.
