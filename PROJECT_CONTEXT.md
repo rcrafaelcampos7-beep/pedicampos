@@ -78,6 +78,7 @@ Implementado:
 - Planos Start, Pro e Premium com recursos por plano.
 - Adicionais configuraveis por loja, vinculados a produtos.
 - Fachada inicial de dados criada em `src/services/database.js`, ainda usando `storage.js/localStorage`.
+- `src/hooks/usePediData.js` passou a consumir `src/services/database.js` para leitura e assinatura de atualizacoes.
 - Persistencia via localStorage.
 - Dados mockados iniciais.
 - Rewrites de SPA para Vercel em `vercel.json`.
@@ -612,6 +613,7 @@ Observacoes:
 - `src/App.jsx`: roteamento principal e protecao fake de admin/master.
 - `src/routes/router.jsx`: roteador simples com `Link`, `navigate`, `usePath`.
 - `src/services/database.js`: fachada/adapter temporario de dados para preparar Supabase sem alterar telas ainda.
+- `src/hooks/usePediData.js`: hook central de leitura das telas; agora consome `database.js`.
 - `src/services/storage.js`: inicializacao, normalizacao, localStorage, updates de loja, pedido e plataforma.
 - `src/data/mockStores.js`: lojas demo, produtos, categorias, adicionais e criacao de loja vazia.
 - `src/data/mockOrders.js`: pedidos iniciais mockados.
@@ -652,6 +654,14 @@ Observacoes:
 
 Ajustes recentes implementados:
 
+- Adaptado `src/hooks/usePediData.js` para consumir `src/services/database.js`:
+  - `getDatabase` agora vem de `database.js`;
+  - `subscribeDatabase` agora vem de `database.js`;
+  - `database.js` expõe `subscribeDatabase` como wrapper temporario sobre `storage.js`;
+  - formato retornado pelo hook foi mantido: `database`, `stores`, `orders` e `platform`;
+  - nenhuma tela foi migrada diretamente nesta etapa;
+  - Supabase real ainda nao foi conectado;
+  - localStorage segue como fallback por baixo de `storage.js`.
 - Criada a primeira camada de abstracao de dados:
   - arquivo: `src/services/database.js`;
   - atua como fachada/adapter temporario;
@@ -759,11 +769,12 @@ Build:
 - Build apos auditoria final de termos antigos de pagamento passou com `npm run build`.
 - Build apos criacao de `SUPABASE_MIGRATION_PLAN.md` e atualizacao das memorias passou com `npm run build`.
 - Build apos criacao de `src/services/database.js` passou com `npm run build`.
+- Build apos adaptacao de `src/hooks/usePediData.js` para `database.js` passou com `npm run build`.
 - Observacao: a primeira tentativa dentro do sandbox falhou por acesso negado ao resolver `vite.config.js`; a repeticao com permissao elevada passou.
 
 ## Proximas etapas recomendadas
 
-1. Migrar `src/hooks/usePediData.js` para consumir `src/services/database.js`.
+1. Testar rotas principais e fluxo completo novamente apos a troca do hook central.
 2. Manter `storage.js/localStorage` como fallback durante a adaptacao.
 3. Criar adaptadores entre o modelo local aninhado e o modelo relacional planejado para Supabase.
 4. Criar projeto Supabase, tabelas e seeds iniciais.

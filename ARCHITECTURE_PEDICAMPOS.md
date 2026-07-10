@@ -15,6 +15,7 @@ Estado tecnico atual:
 - Dados mockados inicializados a partir de arquivos JS.
 - Persistencia local via localStorage.
 - `src/services/database.js` criado como fachada/adapter temporario sobre `storage.js`.
+- `src/hooks/usePediData.js` ja consome `database.js` para leitura e assinatura de atualizacoes.
 - Preparada conceitualmente para migrar para Supabase/backend real.
 - Nova direcao registrada em 2026-07-09: Supabase sera o banco alvo e localStorage sera mantido temporariamente como fallback.
 - Rewrites SPA configurados em `vercel.json`.
@@ -41,13 +42,15 @@ Principios:
 - Depois, `database.js` deve trocar a origem para Supabase com `VITE_DATA_SOURCE=supabase`.
 - `localStorage` e mocks continuam como fallback temporario, nao como arquitetura final.
 - Supabase real ainda nao foi conectado.
-- Nenhuma tela foi migrada para `database.js` ainda.
+- Nenhuma tela foi migrada diretamente para `database.js` ainda.
+- O hook central `usePediData.js` ja foi migrado para a fachada.
 - O schema SQL inicial, riscos e checklist estao em `SUPABASE_MIGRATION_PLAN.md`.
 
 API inicial criada:
 
 ```js
 getDatabase()
+subscribeDatabase(callback)
 getStores()
 getStoreBySlug(slug)
 getStoreById(id)
@@ -235,7 +238,7 @@ Regra importante:
 3. `src/services/storage.js` cria o banco inicial com `createInitialDatabase()`.
 4. Na primeira carga, `getDatabase()` salva tudo em `localStorage` na chave `pedicampos.database.v1`.
 5. Depois disso, a aplicacao passa a ler do localStorage.
-6. `usePediData()` assina as mudancas com `subscribeDatabase`.
+6. `usePediData()` le e assina as mudancas por `src/services/database.js`.
 7. Telas de admin/master usam `updateStore`, `updateOrder`, `updatePlatform` ou `mutateDatabase`.
 8. `saveDatabase()` grava o novo estado e dispara `pedicampos:data-updated`.
 9. Componentes inscritos atualizam a interface automaticamente.
@@ -261,6 +264,8 @@ localStorage atualizado
         ↓
 interface reflete mudanca
 ```
+
+Observacao: no codigo atual, `usePediData()` importa `getDatabase` e `subscribeDatabase` de `src/services/database.js`; a fachada ainda encaminha para `storage.js/localStorage`.
 
 ## Modelo de dados principal
 
@@ -607,13 +612,15 @@ Observacao de migracao:
 - `src/services/database.js` ja envolve essas funcoes com nomes preparados para banco real.
 - `src/services/database.js` ainda usa `storage.js/localStorage` como adapter temporario.
 - Supabase real ainda nao foi conectado.
-- Nenhuma tela foi migrada para `database.js` nesta etapa.
+- `src/hooks/usePediData.js` foi migrado para `database.js` nesta etapa.
+- Nenhuma tela foi migrada diretamente para `database.js` nesta etapa.
 - O objetivo e reduzir chamadas diretas a `storage.js` nas telas antes de conectar Supabase.
 - Depois da migracao, `storage.js` pode virar fallback/dev seed ou ser removido em uma etapa futura.
 
 Funcoes exportadas por `src/services/database.js`:
 
 - `getDatabase()`
+- `subscribeDatabase(callback)`
 - `getStores()`
 - `getStoreBySlug(slug)`
 - `getStoreById(id)`
@@ -665,8 +672,10 @@ Validacoes atuais:
 - Rotas principais responderam 200: `/`, `/neguinhodoacai`, `/gordinhoburguer`, `/admin` e `/master`.
 - `src/pages/AdminProducts.jsx` importa `formatCurrency` de `../utils/formatCurrency.js`.
 - `node --check src/services/database.js` passou sem erro de sintaxe.
+- `src/hooks/usePediData.js` importa `getDatabase` e `subscribeDatabase` de `src/services/database.js`.
 - `npm run build` passou apos a correcao de `formatCurrency` e apos os ajustes responsivos.
 - `npm run build` passou apos a criacao de `src/services/database.js`.
+- `npm run build` passou apos a migracao de `src/hooks/usePediData.js` para `database.js`.
 - Loja publica/checkout nao deve expor plano, upgrade, "Pix online" ou "Pix na entrega" para o consumidor final.
 - Checkout publico deve mostrar formas de pagamento apenas como `Pix`, `Dinheiro` e `Cartao`.
 - Resumo lateral do checkout deve mostrar somente itens, subtotal, entrega e total.
@@ -830,7 +839,7 @@ Antes de implementar novas features, ler:
 
 Depois, continuar pela prioridade:
 
-1. Migrar `src/hooks/usePediData.js` para consumir `src/services/database.js`.
+1. Testar rotas principais e fluxo completo novamente apos a troca do hook central.
 2. Manter `storage.js/localStorage` como fallback durante a adaptacao.
 3. Criar adaptadores entre modelo local aninhado e modelo relacional Supabase.
 4. Criar schema Supabase e seeds.

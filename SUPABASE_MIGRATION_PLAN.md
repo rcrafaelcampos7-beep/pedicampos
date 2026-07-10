@@ -24,15 +24,17 @@ Decisao tecnica desta etapa:
 - A primeira camada de service foi criada em `src/services/database.js`.
 - `src/services/database.js` funciona como fachada/adapter temporario e ainda usa `src/services/storage.js` por baixo.
 - Supabase real ainda nao foi conectado.
-- Nenhuma tela foi migrada para `database.js` nesta etapa.
-- A proxima etapa correta e adaptar `src/hooks/usePediData.js` para consumir `database.js`.
+- `src/hooks/usePediData.js` foi adaptado para consumir `database.js`.
+- Nenhuma tela foi migrada diretamente para `database.js` nesta etapa.
+- A proxima etapa correta e testar rotas principais e fluxo completo novamente.
 
 ## Auditoria do estado atual
 
 ### Onde os dados sao carregados
 
 - `src/hooks/usePediData.js`
-  - chama `getDatabase()` de `src/services/storage.js`;
+  - chama `getDatabase()` de `src/services/database.js`;
+  - assina atualizacoes com `subscribeDatabase()` de `src/services/database.js`;
   - expoe `database`, `stores`, `orders` e `platform` para as telas.
 - `src/services/storage.js`
   - importa `initialStores` de `src/data/mockStores.js`;
@@ -513,6 +515,7 @@ API inicial exposta:
 
 ```js
 getDatabase()
+subscribeDatabase(callback)
 getStores()
 getStoreBySlug(slug)
 getStoreById(id)
@@ -553,34 +556,35 @@ Primeira versao segura:
 
 1. Manter o app atual funcionando com localStorage e mocks.
 2. `src/services/database.js` foi criado usando `storage.js` por baixo como fallback.
-3. Migrar leituras centrais para a fachada local:
-   - primeiro `src/hooks/usePediData.js`;
-   - depois `src/pages/StorePage.jsx`;
+3. `src/hooks/usePediData.js` foi migrado para a fachada local.
+4. Testar rotas principais e fluxo completo novamente.
+5. Migrar leituras centrais restantes:
+   - primeiro `src/pages/StorePage.jsx`;
    - depois `src/pages/CheckoutPage.jsx`;
    - depois `src/pages/OrderTrackingPage.jsx`.
-4. Criar adaptadores de formato entre modelo atual e modelo relacional antes de ativar Supabase real.
-5. Migrar master lojas:
+6. Criar adaptadores de formato entre modelo atual e modelo relacional antes de ativar Supabase real.
+7. Migrar master lojas:
    - `src/pages/MasterCreateStore.jsx`;
    - `src/pages/MasterStores.jsx`;
    - `src/pages/MasterPlans.jsx`.
-6. Migrar admin produtos/categorias/adicionais:
+8. Migrar admin produtos/categorias/adicionais:
    - `src/pages/AdminProducts.jsx`;
    - `src/pages/AdminCategories.jsx`;
    - `src/pages/AdminAdditionals.jsx`.
-7. Migrar checkout e pedidos:
+9. Migrar checkout e pedidos:
    - `src/pages/CheckoutPage.jsx`;
    - `src/pages/AdminOrders.jsx`;
    - `src/pages/MasterOrders.jsx`.
-8. Migrar configuracoes:
+10. Migrar configuracoes:
    - `src/pages/AdminSettings.jsx`;
    - `src/pages/MasterSettings.jsx`.
-9. Ativar Supabase por variavel de ambiente:
+11. Ativar Supabase por variavel de ambiente:
    - `VITE_DATA_SOURCE=local` ou `VITE_DATA_SOURCE=supabase`;
    - `VITE_SUPABASE_URL`;
    - `VITE_SUPABASE_ANON_KEY`.
-10. Criar scripts de seed/migracao dos mocks para Supabase.
-11. Habilitar RLS e autenticacao real.
-12. Remover mocks/localStorage apenas depois de validacao em producao.
+12. Criar scripts de seed/migracao dos mocks para Supabase.
+13. Habilitar RLS e autenticacao real.
+14. Remover mocks/localStorage apenas depois de validacao em producao.
 
 ## Plano de fallback
 
@@ -648,9 +652,11 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - [x] Revisar `src/services/database.js` com `node --check`.
 - [x] Confirmar que `database.js` ainda usa `storage.js/localStorage` por baixo.
 - [x] Confirmar que Supabase real ainda nao foi conectado.
-- [x] Confirmar que nenhuma tela foi migrada para `database.js`.
+- [x] Confirmar que nenhuma tela foi migrada diretamente para `database.js`.
 - [x] Rodar `npm run build` apos a criacao de `database.js`; build passou com permissao elevada apos falha conhecida do sandbox.
-- [ ] Migrar `usePediData` para a nova camada.
+- [x] Migrar `usePediData` para a nova camada.
+- [x] Rodar `npm run build` apos migrar `usePediData`; build passou com permissao elevada apos falha conhecida do sandbox.
+- [ ] Testar rotas principais e fluxo completo novamente apos a troca do hook central.
 - [ ] Criar adaptadores entre modelo local aninhado e modelo relacional.
 - [ ] Criar projeto Supabase.
 - [ ] Criar tabelas no Supabase.

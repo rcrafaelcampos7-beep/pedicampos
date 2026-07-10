@@ -563,6 +563,45 @@ Build:
 - Primeira tentativa dentro do sandbox falhou por acesso negado ao resolver `vite.config.js`.
 - Repeticao com permissao elevada passou com `npm run build`.
 
+## v0.19 - usePediData consumindo a fachada de dados
+
+Implementado nesta rotina:
+
+- `src/hooks/usePediData.js` passou a importar `getDatabase` e `subscribeDatabase` de `src/services/database.js`.
+- `src/services/database.js` passou a exportar `subscribeDatabase` como wrapper temporario sobre `src/services/storage.js`.
+- O hook manteve o mesmo formato de retorno usado pelas telas:
+  - `database`;
+  - `stores`;
+  - `orders`;
+  - `platform`.
+- Nenhuma tela foi migrada diretamente nesta etapa.
+- Supabase real ainda nao foi conectado.
+- `storage.js/localStorage` continuam sendo a persistencia real por baixo da fachada.
+
+Chamadas migradas:
+
+- `getDatabase`: de `storage.js` para `database.js` no hook.
+- `subscribeDatabase`: de `storage.js` para `database.js` no hook.
+
+Arquivos alterados nesta etapa:
+
+- `src/hooks/usePediData.js`
+- `src/services/database.js`
+- `PROJECT_CONTEXT.md`
+- `TODO_PEDICAMPOS.md`
+- `CHANGELOG_PEDICAMPOS.md`
+- `ARCHITECTURE_PEDICAMPOS.md`
+- `SUPABASE_MIGRATION_PLAN.md`
+
+Proxima etapa registrada:
+
+- Testar rotas principais e fluxo completo novamente.
+
+Build:
+
+- Primeira tentativa dentro do sandbox falhou por acesso negado ao resolver `vite.config.js`.
+- Repeticao com permissao elevada passou com `npm run build`.
+
 ## Builds e verificacoes
 
 - Build anterior conhecido: `npm run build` passou durante o desenvolvimento.
@@ -574,6 +613,7 @@ Build:
 - Build apos auditoria final de termos antigos de pagamento passou.
 - Build apos criacao do plano de migracao Supabase e atualizacao das memorias passou.
 - Build apos criacao de `src/services/database.js` passou.
+- Build apos adaptacao de `src/hooks/usePediData.js` para `database.js` passou.
 - Observacao: a primeira tentativa no sandbox falhou por acesso negado ao resolver `vite.config.js`; a tentativa com permissao elevada passou.
 
 ## Pendencias conhecidas registradas

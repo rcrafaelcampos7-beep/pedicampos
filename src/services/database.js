@@ -4,6 +4,7 @@ import {
   createOrder as createStorageOrder,
   getDatabase as getStorageDatabase,
   mutateDatabase,
+  subscribeDatabase as subscribeStorageDatabase,
   updateOrder as updateStorageOrder,
   updatePlatform as updateStoragePlatform,
   updateStore as updateStorageStore,
@@ -30,6 +31,10 @@ function getAdditionalGroupStore(groupId) {
 
 export function getDatabase() {
   return getStorageDatabase();
+}
+
+export function subscribeDatabase(callback) {
+  return subscribeStorageDatabase(callback);
 }
 
 export function getStores() {
@@ -295,4 +300,3 @@ export function updatePlan(planId, data) {
 
   return getPlans()[planId] || null;
 }
-

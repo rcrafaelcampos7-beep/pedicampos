@@ -30,7 +30,8 @@ Legenda:
 - [x] Confirmar que nao ha termos antigos de pagamento visiveis ao cliente final.
 - [x] Testar fluxo completo de pedido de ponta a ponta por validacao automatizada dos modulos reais.
 - [x] Criar camada de dados `src/services/database.js` usando `storage.js` como fallback.
-- [ ] Proxima tarefa real: adaptar `src/hooks/usePediData.js` para usar `src/services/database.js`.
+- [x] Adaptar `src/hooks/usePediData.js` para usar `src/services/database.js`.
+- [ ] Proxima tarefa real: testar rotas principais e fluxo completo novamente apos a troca do hook central.
 - [ ] Testar fluxo completo com dados ja migrados no localStorage.
 - [ ] Validar em navegador real as rotas principais.
 
@@ -48,12 +49,13 @@ Legenda:
 - [x] Confirmar que `src/services/database.js` ainda usa `storage.js/localStorage` como adapter temporario.
 - [x] Confirmar que Supabase real ainda nao foi conectado.
 - [x] Confirmar que nenhuma tela foi migrada para `database.js` nesta etapa.
+- [x] Migrar `src/hooks/usePediData.js` para importar `getDatabase` e `subscribeDatabase` de `database.js`.
 - [ ] Criar `src/services/supabaseClient.js` quando as variaveis de ambiente existirem.
 - [ ] Definir `VITE_DATA_SOURCE=local|supabase`.
 - [ ] Definir `VITE_SUPABASE_URL`.
 - [ ] Definir `VITE_SUPABASE_ANON_KEY`.
 - [ ] Criar adaptadores de dados local aninhado para modelo relacional.
-- [ ] Migrar `src/hooks/usePediData.js` para a nova camada.
+- [x] Migrar `src/hooks/usePediData.js` para a nova camada.
 - [ ] Migrar loja publica para buscar loja por slug pela nova camada.
 - [ ] Migrar master lojas para criar/editar lojas pela nova camada.
 - [ ] Migrar admin produtos.
@@ -257,7 +259,8 @@ Legenda:
 - [ ] Documentar rotina manual para limpar localStorage durante testes.
 - [x] Preparar modelo inicial para migrar a Supabase em `SUPABASE_MIGRATION_PLAN.md`.
 - [x] Criar camada de dados inicial como fachada sobre `storage.js`.
-- [ ] Migrar telas e hooks para substituir acesso direto ao `storage.js` pela fachada `database.js`.
+- [x] Migrar `src/hooks/usePediData.js` para substituir acesso direto ao `storage.js` pela fachada `database.js`.
+- [ ] Migrar telas restantes para substituir acesso direto ao `storage.js` pela fachada `database.js`.
 
 ## Integracoes futuras
 

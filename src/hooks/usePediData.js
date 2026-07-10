@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { getDatabase, subscribeDatabase } from "../services/storage.js";
+import { getDatabase, subscribeDatabase } from "../services/database.js";
 
 export function usePediData() {
   const [database, setDatabase] = useState(() => getDatabase());
