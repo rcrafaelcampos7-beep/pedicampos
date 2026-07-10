@@ -33,9 +33,19 @@ Legenda:
 - [x] Adaptar `src/hooks/usePediData.js` para usar `src/services/database.js`.
 - [x] Testar rotas principais e fluxo critico novamente apos a troca do hook central.
 - [x] Remover/revisar termos publicos de simulacao/copy tecnica (`simulado`, `mock`, `localStorage`) das areas publicas.
-- [ ] Proxima tarefa real: fazer teste visual/manual em navegador real do fluxo completo.
+- [x] Preparar projeto para teste visual/manual local com servidor Vite ativo.
+- [x] Registrar pendencias visuais/mobile encontradas no teste manual local.
+- [ ] Proxima tarefa real: corrigir ajustes visuais/mobile encontrados no teste manual antes de iniciar Supabase real.
+- [ ] Corrigir texto repetido de adicionais no acompanhamento do pedido.
+- [ ] Melhorar carrinho mobile.
+- [ ] Melhorar menu mobile do admin.
+- [ ] Adicionar scroll automatico ao editar produtos no admin mobile.
+- [ ] Adicionar scroll automatico ao editar adicionais no admin mobile.
+- [ ] Revisar cards/chips de adicionais no mobile.
+- [ ] Rodar `npm run build` apos as correcoes visuais/mobile.
+- [ ] Testar novamente no navegador local apos as correcoes visuais/mobile.
 - [ ] Testar fluxo completo com dados ja migrados no localStorage.
-- [ ] Validar em navegador real as rotas principais.
+- [x] Validar em navegador real as rotas principais usando `http://127.0.0.1:5174`.
 
 ## Migracao Supabase
 
@@ -81,6 +91,14 @@ Legenda:
 
 ## Bugs visuais
 
+- [x] Teste visual/manual realizado no navegador real com servidor local ativo em `http://127.0.0.1:5174`; pendencias abaixo registradas para correcao futura.
+- [ ] Acompanhamento do pedido desktop: corrigir repeticao de `Adicionais:` em cada adicional do item.
+- [ ] Acompanhamento do pedido desktop: melhorar formatacao dos adicionais em linha unica ou lista separada.
+- [ ] Carrinho mobile: compactar e centralizar controles de quantidade `-`, quantidade e `+`.
+- [ ] Admin mobile: melhorar menu superior/Sidebar responsiva para evitar itens cortados ou espremidos.
+- [ ] Admin produtos mobile: ao tocar em `Editar`, rolar automaticamente ate o formulario.
+- [ ] Admin adicionais mobile: ao tocar em `Editar`, rolar automaticamente ate o formulario.
+- [ ] Admin adicionais mobile: revisar espacamento, quebra de linha, tamanho dos chips e organizacao dos cards.
 - [x] Reestruturar hero/landing para evitar sobreposicao de cards no desktop.
 - [x] Fazer hero desktop em grid de duas colunas.
 - [x] Fazer hero mobile em uma coluna.
@@ -103,6 +121,7 @@ Legenda:
 
 - [x] Loja publica por slug em `/:slug`.
 - [x] Lojas demo acessiveis por `/neguinhodoacai` e `/gordinhoburguer`.
+- [ ] Testar manualmente `http://127.0.0.1:5174/neguinhodoacai` e `http://127.0.0.1:5174/gordinhoburguer`.
 - [x] Loja criada no master funciona pelo slug.
 - [x] Loja inativa mostra "Esta loja esta temporariamente indisponivel.".
 - [x] Cor principal da loja altera detalhes/botoes via CSS variable `--store-color`.
@@ -116,6 +135,7 @@ Legenda:
 ## Carrinho e checkout
 
 - [x] Carrinho por loja via `pedicampos.cart.${storeId}`.
+- [ ] Corrigir layout dos controles de quantidade no carrinho mobile.
 - [x] Produto adicionado com quantidade, observacao e adicionais.
 - [x] Quantidade recalcula total do item.
 - [x] Checkout valida nome, telefone e endereco para entrega.
@@ -170,6 +190,7 @@ Legenda:
 - [ ] Testar adicional gratis em carrinho/pedido.
 - [ ] Testar adicional pago em subtotal/pedido.
 - [ ] Revisar UX de radio/checkbox no modal.
+- [ ] Revisar chips/opcoes de adicionais no admin mobile.
 
 ## Painel Admin
 
@@ -194,6 +215,9 @@ Legenda:
 - [ ] Impedir conflito de slug no admin ou aplicar `uniqueSlug` tambem no admin.
 - [ ] Melhorar feedback "salvo com sucesso".
 - [ ] Melhorar confirmacao antes de excluir produto/categoria/adicional.
+- [ ] Melhorar menu mobile do admin.
+- [ ] Fazer `Editar` em produtos rolar ate o formulario no mobile.
+- [ ] Fazer `Editar` em adicionais rolar ate o formulario no mobile.
 
 ## Painel Master
 

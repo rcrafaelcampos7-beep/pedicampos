@@ -687,6 +687,83 @@ Build:
 - Primeira tentativa dentro do sandbox falhou por acesso negado ao resolver `vite.config.js`.
 - Repeticao com permissao elevada passou com `npm run build`.
 
+## v0.22 - Preparacao para teste manual local
+
+Realizado nesta rotina:
+
+- Projeto preparado para teste visual/manual no navegador real.
+- Comando solicitado: `npm run dev`.
+- O servidor Vite ja estava ativo e respondeu 200.
+- Endereco local confirmado: `http://127.0.0.1:5174`.
+- Observacao: a porta correta do projeto e 5174 porque `package.json` define `vite --host 127.0.0.1 --port 5174 --strictPort`.
+- Rotas verificadas por HTTP local:
+  - `/`;
+  - `/neguinhodoacai`;
+  - `/gordinhoburguer`;
+  - `/admin`;
+  - `/master`.
+
+Logins disponiveis para teste:
+
+- Admin Neguinho do Acai: `admin@neguinho.com` / `123456`.
+- Admin Gordinho Burguer: `admin@gordinho.com` / `123456`.
+- Admin tambem aceita selecionar uma loja e usar senha `123456`.
+- Master: `master@pedicampos.com.br` / `123456`.
+
+Estado tecnico registrado:
+
+- Copy publica ja foi revisada para linguagem de produto real.
+- `src/services/database.js` existe como fachada temporaria.
+- `src/hooks/usePediData.js` ja consome `database.js`.
+- `storage.js/localStorage` continuam como fallback.
+- Supabase real ainda nao foi conectado.
+- Servidor local nao deve ser encerrado ate o teste manual terminar.
+
+Proxima etapa:
+
+- Corrigir as pendencias visuais/mobile encontradas no teste manual antes de iniciar a conexao Supabase.
+
+## v0.23 - Registro de pendencias do teste visual/manual
+
+Registrado antes da troca de chat:
+
+- Teste visual/manual foi realizado no navegador local em `http://127.0.0.1:5174`.
+- Nenhuma correcao foi implementada nesta etapa.
+- Nenhum codigo funcional, visual, regra comercial, preco, plano ou integracao foi alterado.
+- Supabase real continua pendente.
+- A proxima conversa deve comecar por correcoes visuais/mobile antes de iniciar Supabase real.
+
+Pendencias visuais registradas:
+
+- Acompanhamento do pedido em desktop:
+  - texto de adicionais aparece repetido/mal formatado;
+  - exemplo: `Adicionais: Bacon extra + R$ 5,00, Adicionais: Cheddar + R$ 4,00`;
+  - arquivo provavel: `src/pages/OrderTrackingPage.jsx`.
+- Carrinho mobile:
+  - controles de quantidade ficam muito largos e pouco centralizados;
+  - arquivos provaveis: `src/components/store/CartDrawer.jsx` e `src/styles/global.css`.
+- Menu superior do admin no mobile:
+  - navegacao fica apertada e com itens cortados/espremidos;
+  - arquivos provaveis: `src/components/admin/AdminLayout.jsx` e `src/styles/global.css`.
+- Admin produtos mobile:
+  - ao tocar em `Editar`, a tela nao rola automaticamente ate o formulario;
+  - arquivo provavel: `src/pages/AdminProducts.jsx`.
+- Admin adicionais mobile:
+  - ao tocar em `Editar`, a tela nao rola automaticamente ate o formulario;
+  - cards e chips/opcoes podem ficar carregados visualmente;
+  - arquivos provaveis: `src/pages/AdminAdditionals.jsx` e `src/styles/global.css`.
+
+Ordem sugerida para o proximo chat:
+
+1. Corrigir texto repetido de adicionais no acompanhamento.
+2. Melhorar carrinho mobile.
+3. Melhorar menu mobile do admin.
+4. Adicionar scroll automatico ao editar produtos.
+5. Adicionar scroll automatico ao editar adicionais.
+6. Revisar cards/chips de adicionais no mobile.
+7. Rodar `npm run build`.
+8. Testar novamente no navegador local.
+
 ## Builds e verificacoes
 
 - Build anterior conhecido: `npm run build` passou durante o desenvolvimento.
@@ -701,10 +778,11 @@ Build:
 - Build apos adaptacao de `src/hooks/usePediData.js` para `database.js` passou.
 - Build apos teste pos-adaptacao de `usePediData.js` passou.
 - Build apos revisao de copy publica passou.
+- Build apos finalizacao/revisao das memorias antes da troca de chat passou em 2026-07-10.
 - Observacao: a primeira tentativa no sandbox falhou por acesso negado ao resolver `vite.config.js`; a tentativa com permissao elevada passou.
 
 ## Pendencias conhecidas registradas
 
-- Necessario teste visual em navegador real.
-- Necessario teste completo de fluxo de pedido ponta a ponta.
+- Teste visual/manual em navegador real foi realizado em `http://127.0.0.1:5174`.
+- Necessario corrigir as pendencias visuais/mobile registradas e testar novamente o fluxo completo.
 - Precos comerciais finais confirmados: implantacao R$ 599,99; Start R$ 99,99/mes; Pro R$ 179,99/mes; Premium R$ 199,99/mes.

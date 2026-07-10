@@ -28,7 +28,35 @@ Decisao tecnica desta etapa:
 - Nenhuma tela foi migrada diretamente para `database.js` nesta etapa.
 - Teste pos-adaptacao do hook central foi realizado sem conectar Supabase real.
 - Copy publica foi revisada para remover termos internos ou de simulacao das telas publicas.
-- A proxima etapa correta e fazer teste visual/manual em navegador real do fluxo completo.
+- Projeto foi preparado para teste visual/manual local em `http://127.0.0.1:5174`.
+- Teste visual/manual local encontrou pendencias visuais/mobile que devem ser corrigidas antes da conexao Supabase.
+- A proxima etapa correta e corrigir os ajustes visuais/mobile encontrados no teste manual antes de iniciar Supabase real.
+
+## Pendencias visuais/mobile antes do Supabase
+
+Registrado apos teste manual local em `http://127.0.0.1:5174`:
+
+- Acompanhamento do pedido em desktop:
+  - texto dos adicionais aparece quebrado/repetido;
+  - exemplo observado: `Adicionais: Bacon extra + R$ 5,00, Adicionais: Cheddar + R$ 4,00`;
+  - proxima correcao: renderizar os adicionais como frase limpa ou lista.
+- Carrinho mobile:
+  - controles de quantidade estao muito largos e pouco centralizados;
+  - proxima correcao: melhorar o layout, preferencialmente em linha `[-] [1] [+]`.
+- Menu superior do admin mobile:
+  - menu esta apertado/cortado;
+  - proxima correcao: avaliar menu hamburguer, dropdown ou barra com scroll mais clara.
+- Admin produtos mobile:
+  - ao tocar em `Editar`, a tela deve rolar automaticamente ate o formulario;
+  - sugestao tecnica: `scrollIntoView`.
+- Admin adicionais mobile:
+  - ao tocar em `Editar`, a tela deve rolar automaticamente ate o formulario;
+  - sugestao tecnica: `scrollIntoView`.
+- Admin adicionais mobile:
+  - cards/chips de opcoes estao carregados visualmente;
+  - proxima correcao: melhorar espacamento, quebra de linha e chips.
+
+Supabase real deve comecar somente depois desses ajustes visuais/mobile e de novo build/teste local.
 
 ## Auditoria do estado atual
 
@@ -561,34 +589,43 @@ Primeira versao segura:
 3. `src/hooks/usePediData.js` foi migrado para a fachada local.
 4. Rotas principais e fluxo critico foram testados novamente apos a troca do hook central.
 5. Copy publica foi revisada para remover termos internos ou de simulacao.
-6. Fazer teste visual/manual em navegador real do fluxo completo.
-7. Migrar leituras centrais restantes:
+6. Projeto foi preparado para teste visual/manual local com `npm run dev` em `http://127.0.0.1:5174`.
+7. Teste visual/manual local foi realizado em navegador real.
+8. Pendencias visuais/mobile foram registradas e devem ser corrigidas antes da conexao Supabase.
+9. Corrigir texto repetido de adicionais no acompanhamento.
+10. Melhorar carrinho mobile.
+11. Melhorar menu mobile do admin.
+12. Adicionar scroll automatico ao editar produtos.
+13. Adicionar scroll automatico ao editar adicionais.
+14. Revisar cards/chips de adicionais no mobile.
+15. Rodar `npm run build` e testar novamente localmente.
+16. Migrar leituras centrais restantes:
    - primeiro `src/pages/StorePage.jsx`;
    - depois `src/pages/CheckoutPage.jsx`;
    - depois `src/pages/OrderTrackingPage.jsx`.
-8. Criar adaptadores de formato entre modelo atual e modelo relacional antes de ativar Supabase real.
-9. Migrar master lojas:
+17. Criar adaptadores de formato entre modelo atual e modelo relacional antes de ativar Supabase real.
+18. Migrar master lojas:
    - `src/pages/MasterCreateStore.jsx`;
    - `src/pages/MasterStores.jsx`;
    - `src/pages/MasterPlans.jsx`.
-10. Migrar admin produtos/categorias/adicionais:
+19. Migrar admin produtos/categorias/adicionais:
    - `src/pages/AdminProducts.jsx`;
    - `src/pages/AdminCategories.jsx`;
    - `src/pages/AdminAdditionals.jsx`.
-11. Migrar checkout e pedidos:
+20. Migrar checkout e pedidos:
    - `src/pages/CheckoutPage.jsx`;
    - `src/pages/AdminOrders.jsx`;
    - `src/pages/MasterOrders.jsx`.
-12. Migrar configuracoes:
+21. Migrar configuracoes:
    - `src/pages/AdminSettings.jsx`;
    - `src/pages/MasterSettings.jsx`.
-13. Ativar Supabase por variavel de ambiente:
+22. Ativar Supabase por variavel de ambiente:
    - `VITE_DATA_SOURCE=local` ou `VITE_DATA_SOURCE=supabase`;
    - `VITE_SUPABASE_URL`;
    - `VITE_SUPABASE_ANON_KEY`.
-14. Criar scripts de seed/migracao dos mocks para Supabase.
-15. Habilitar RLS e autenticacao real.
-16. Remover mocks/localStorage apenas depois de validacao em producao.
+23. Criar scripts de seed/migracao dos mocks para Supabase.
+24. Habilitar RLS e autenticacao real.
+25. Remover mocks/localStorage apenas depois de validacao em producao.
 
 ## Plano de fallback
 
@@ -664,7 +701,17 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - [x] Confirmar que nao houve bug causado pela troca de `usePediData.js` para `database.js`.
 - [x] Corrigir/revisar copy publica que ainda exibia `simulado`, `mock` e `localStorage`.
 - [x] Manter termos tecnicos apenas em documentacao, codigo, comentarios e normalizacao de legado.
-- [ ] Fazer teste visual/manual em navegador real do fluxo completo.
+- [x] Preparar servidor local para teste visual/manual em `http://127.0.0.1:5174`.
+- [x] Concluir teste visual/manual local em navegador real em `http://127.0.0.1:5174`.
+- [x] Registrar pendencias visuais/mobile encontradas no teste manual local.
+- [x] Rodar `npm run build` apos finalizacao das memorias; build passou em 2026-07-10 com permissao elevada apos falha conhecida do sandbox.
+- [ ] Corrigir texto repetido de adicionais no acompanhamento do pedido desktop.
+- [ ] Melhorar carrinho mobile, compactando e centralizando controles de quantidade.
+- [ ] Melhorar menu superior do admin mobile para evitar corte/aperto.
+- [ ] Adicionar scroll automatico ao editar produtos no admin mobile.
+- [ ] Adicionar scroll automatico ao editar adicionais no admin mobile.
+- [ ] Revisar cards/chips de adicionais no mobile.
+- [ ] Rodar `npm run build` apos as correcoes visuais/mobile e testar novamente localmente.
 - [ ] Criar adaptadores entre modelo local aninhado e modelo relacional.
 - [ ] Criar projeto Supabase.
 - [ ] Criar tabelas no Supabase.

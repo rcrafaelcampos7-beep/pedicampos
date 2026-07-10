@@ -825,6 +825,60 @@ Passos futuros:
 - validar localStorage em HTTPS;
 - preparar migracao para backend.
 
+## Teste local manual
+
+Estado em 2026-07-10:
+
+- Servidor local preparado para teste visual/manual.
+- Comando usado pelo projeto: `npm run dev`.
+- Endereco confirmado: `http://127.0.0.1:5174`.
+- O `package.json` fixa Vite em `127.0.0.1:5174` com `--strictPort`; portanto 5174 e a porta correta neste projeto.
+- Rotas que devem ser abertas no teste:
+  - `http://127.0.0.1:5174/`;
+  - `http://127.0.0.1:5174/neguinhodoacai`;
+  - `http://127.0.0.1:5174/gordinhoburguer`;
+  - `http://127.0.0.1:5174/admin`;
+  - `http://127.0.0.1:5174/master`.
+- Logins:
+  - Admin Neguinho do Acai: `admin@neguinho.com` / `123456`;
+  - Admin Gordinho Burguer: `admin@gordinho.com` / `123456`;
+  - Admin com loja selecionada: senha `123456`;
+  - Master: `master@pedicampos.com.br` / `123456`.
+- Checklist manual: landing, loja publica, produto, adicionais gratis/pagos, carrinho, checkout, acompanhamento, admin pedidos, alteracao de status, master lojas/configuracoes, responsividade mobile e ausencia de termos publicos como `simulado`, `mock`, `localStorage`, `teste` ou `dados ficticios`.
+- `database.js` segue como fachada temporaria e `usePediData.js` ja usa essa fachada.
+- `storage.js/localStorage` continuam como fallback.
+- Supabase real ainda nao foi conectado.
+- Build de integridade apos finalizacao das memorias: `npm run build` passou em 2026-07-10 com permissao elevada apos a falha conhecida do sandbox ao resolver `vite.config.js`.
+
+Pendencias encontradas no teste visual/manual:
+
+- Acompanhamento do pedido em desktop:
+  - texto de adicionais aparece repetido/mal formatado;
+  - exemplo: `Adicionais: Bacon extra + R$ 5,00, Adicionais: Cheddar + R$ 4,00`;
+  - proxima correcao: renderizar como frase limpa ou lista separada;
+  - arquivo provavel: `src/pages/OrderTrackingPage.jsx`.
+- Carrinho mobile:
+  - controles de quantidade ficam muito largos e pouco centralizados;
+  - proxima correcao: melhorar layout, talvez `[-] [1] [+]` em linha;
+  - arquivos provaveis: `src/components/store/CartDrawer.jsx` e `src/styles/global.css`.
+- Menu superior do admin mobile:
+  - menu fica apertado/cortado;
+  - proxima correcao: avaliar menu hamburguer, dropdown ou barra com scroll mais clara;
+  - arquivos provaveis: `src/components/admin/AdminLayout.jsx` e `src/styles/global.css`.
+- Admin produtos mobile:
+  - ao tocar em `Editar`, deve rolar automaticamente ate o formulario;
+  - sugestao tecnica: `scrollIntoView({ behavior: "smooth", block: "start" })`;
+  - arquivo provavel: `src/pages/AdminProducts.jsx`.
+- Admin adicionais mobile:
+  - ao tocar em `Editar`, deve rolar automaticamente ate o formulario;
+  - sugestao tecnica: `scrollIntoView({ behavior: "smooth", block: "start" })`;
+  - arquivo provavel: `src/pages/AdminAdditionals.jsx`.
+- Admin adicionais mobile:
+  - cards/chips de opcoes estao carregados visualmente;
+  - proxima correcao: melhorar espacamento, quebra de linha e chips;
+  - arquivos provaveis: `src/pages/AdminAdditionals.jsx` e `src/styles/global.css`.
+- Nenhuma dessas correcoes foi iniciada antes da troca de chat.
+
 ## Riscos tecnicos atuais
 
 - localStorage nao e banco real e pode ser apagado pelo navegador.
@@ -846,10 +900,12 @@ Antes de implementar novas features, ler:
 
 Depois, continuar pela prioridade:
 
-1. Fazer teste visual/manual em navegador real do fluxo completo.
-2. Manter `storage.js/localStorage` como fallback durante a adaptacao.
-3. Criar adaptadores entre modelo local aninhado e modelo relacional Supabase.
-4. Criar schema Supabase e seeds.
-5. Migrar loja publica, master, admin e checkout por etapas.
-6. Validar visualmente em navegador real.
-7. Preparar deploy e dominio.
+1. Corrigir texto repetido de adicionais no acompanhamento.
+2. Melhorar carrinho mobile.
+3. Melhorar menu mobile do admin.
+4. Adicionar scroll automatico ao editar produtos.
+5. Adicionar scroll automatico ao editar adicionais.
+6. Revisar cards/chips de adicionais no mobile.
+7. Rodar `npm run build`.
+8. Testar novamente localmente em `http://127.0.0.1:5174`.
+9. Depois desses ajustes, retomar a preparacao/conexao Supabase.

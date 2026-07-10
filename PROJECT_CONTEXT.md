@@ -654,6 +654,42 @@ Observacoes:
 
 Ajustes recentes implementados:
 
+- Teste visual/manual local realizado em `http://127.0.0.1:5174` antes da troca de chat:
+  - nenhum ajuste de codigo deve ser iniciado antes da proxima conversa;
+  - as pendencias encontradas devem ser corrigidas antes de iniciar Supabase real;
+  - acompanhamento do pedido em desktop tem texto de adicionais repetido/mal formatado, por exemplo `Adicionais: Bacon extra + R$ 5,00, Adicionais: Cheddar + R$ 4,00`;
+  - carrinho mobile tem controles de quantidade muito largos e pouco centralizados;
+  - menu superior do admin no mobile fica apertado, com itens cortados/espremidos;
+  - em `AdminProducts`, ao tocar em Editar no mobile, a tela nao rola automaticamente ate o formulario;
+  - em `AdminAdditionals`, ao tocar em Editar no mobile, a tela nao rola automaticamente ate o formulario;
+  - em `AdminAdditionals` mobile, cards e chips/opcoes funcionam, mas ficam visualmente carregados;
+  - arquivos provaveis: `src/pages/OrderTrackingPage.jsx`, `src/components/store/CartDrawer.jsx`, `src/components/admin/AdminLayout.jsx`, `src/pages/AdminProducts.jsx`, `src/pages/AdminAdditionals.jsx` e `src/styles/global.css`;
+  - ordem sugerida para a proxima conversa: corrigir texto repetido de adicionais no acompanhamento; melhorar carrinho mobile; melhorar menu mobile do admin; adicionar scroll automatico ao editar produtos; adicionar scroll automatico ao editar adicionais; revisar cards/chips de adicionais no mobile; rodar `npm run build`; testar novamente no navegador local.
+- Projeto preparado para teste visual/manual local em 2026-07-10:
+  - comando solicitado: `npm run dev`;
+  - o servidor Vite ja estava ativo e respondeu 200;
+  - endereco local confirmado: `http://127.0.0.1:5174`;
+  - observacao: o script `npm run dev` usa `vite --host 127.0.0.1 --port 5174 --strictPort`, portanto a porta correta neste projeto e 5174;
+  - rotas verificadas com resposta 200: `/`, `/neguinhodoacai`, `/gordinhoburguer`, `/admin` e `/master`;
+  - servidor nao deve ser encerrado ate o teste manual terminar;
+  - links para teste manual:
+    - `http://127.0.0.1:5174/`;
+    - `http://127.0.0.1:5174/neguinhodoacai`;
+    - `http://127.0.0.1:5174/gordinhoburguer`;
+    - `http://127.0.0.1:5174/admin`;
+    - `http://127.0.0.1:5174/master`;
+  - logins disponiveis:
+    - Admin Neguinho do Acai: `admin@neguinho.com` / `123456`;
+    - Admin Gordinho Burguer: `admin@gordinho.com` / `123456`;
+    - Admin tambem aceita selecionar uma loja e usar senha `123456`;
+    - Master: `master@pedicampos.com.br` / `123456`;
+  - checklist manual recomendado: landing, loja publica, produto, adicionais gratis/pagos, carrinho, checkout, acompanhamento, admin pedidos, alteracao de status, master lojas/configuracoes, responsividade mobile e ausencia de termos publicos como `simulado`, `mock`, `localStorage`, `teste` ou `dados ficticios`;
+  - copy publica ja foi revisada para linguagem de produto real;
+  - `src/services/database.js` continua como fachada temporaria;
+  - `src/hooks/usePediData.js` ja consome `database.js`;
+  - `src/services/storage.js` e `localStorage` continuam como fallback;
+  - Supabase real ainda nao foi conectado;
+  - proxima etapa apos o teste manual: corrigir qualquer bug visual encontrado ou iniciar a conexao Supabase.
 - Copy publica revisada em 2026-07-10 para remover linguagem de teste/simulacao:
   - `src/pages/LandingPage.jsx` deixou de exibir `mock`, `localStorage`, `Loja demo` e "Demonstração real no mock";
   - `src/pages/CheckoutPage.jsx` deixou de exibir `simulado`, `ficticio` e `DEMO` no Pix/Cartao;
@@ -773,6 +809,13 @@ Ajustes recentes implementados:
 
 Bugs/pendencias conhecidas:
 
+- Pendencias visuais/mobile encontradas no teste manual local:
+  - texto repetido de adicionais na tela de acompanhamento do pedido em desktop;
+  - controles de quantidade do carrinho mobile largos/pouco centralizados;
+  - menu superior do admin mobile apertado e com itens espremidos;
+  - editar produto no admin mobile nao rola ate o formulario;
+  - editar grupo/adicional no admin mobile nao rola ate o formulario;
+  - cards/chips de adicionais no mobile precisam de melhor espacamento e organizacao.
 - Produtos inativos aparecem como "Indisponivel" na loja publica, nao somem. Isso atende uma das possibilidades pedidas anteriormente, mas deve ser revisado se a decisao final for esconder.
 - Necessario testar visualmente desktop/mobile em navegador real.
 - Necessario testar fluxo completo apos migrar dados antigos.
@@ -798,12 +841,11 @@ Build:
 
 ## Proximas etapas recomendadas
 
-1. Fazer teste visual/manual em navegador real do fluxo completo.
-2. Manter `storage.js/localStorage` como fallback durante a adaptacao.
-3. Criar adaptadores entre o modelo local aninhado e o modelo relacional planejado para Supabase.
-4. Criar projeto Supabase, tabelas e seeds iniciais.
-5. Migrar tela por tela, com localStorage como fallback temporario.
-6. Validar visualmente em navegador real a responsividade desktop/mobile da landing, loja, carrinho, checkout, admin e master.
-7. Preparar deploy Vercel e dominio `pedicampos.com.br`.
-8. Integrar Pix real futuramente.
-9. Integrar WhatsApp real futuramente.
+1. Corrigir ajustes visuais/mobile encontrados no teste manual antes de iniciar Supabase real.
+2. Corrigir texto repetido de adicionais no acompanhamento do pedido.
+3. Melhorar carrinho mobile.
+4. Melhorar menu mobile do admin.
+5. Adicionar scroll automatico ao editar produtos e adicionais no admin mobile.
+6. Revisar cards/chips de adicionais no mobile.
+7. Rodar `npm run build` e testar novamente no navegador local.
+8. Depois desses ajustes, retomar preparacao/conexao Supabase.
