@@ -676,11 +676,13 @@ Validacoes atuais:
 - Teste pos-adaptacao de `usePediData.js` confirmou que `database.subscribeDatabase` recebe eventos disparados por escritas ainda feitas em `storage.js`.
 - Rotas principais responderam 200 via Vite local apos a adaptacao do hook: `/`, `/neguinhodoacai`, `/gordinhoburguer`, `/admin` e `/master`.
 - Validacao isolada confirmou lojas, adicionais, carrinho, checkout por regras, pedidos Pro/Premium, status de pedido e dados do master sem regressao causada pela troca do hook.
-- Pendencia de copy publica: `CheckoutPage.jsx` ainda contem textos com `simulado`; `LandingPage.jsx` ainda contem `mock` e `localStorage`.
+- Copy publica revisada: `CheckoutPage.jsx`, `LandingPage.jsx` e defaults publicos de `storage.js` nao devem exibir `simulado`, `mock`, `localStorage`, `ficticio` ou `DEMO` para cliente final.
+- Termos tecnicos como `localStorage`, `mock` e `simulado` ainda podem aparecer em documentacao, codigo, comentarios e normalizacao de legado.
 - `npm run build` passou apos a correcao de `formatCurrency` e apos os ajustes responsivos.
 - `npm run build` passou apos a criacao de `src/services/database.js`.
 - `npm run build` passou apos a migracao de `src/hooks/usePediData.js` para `database.js`.
 - `npm run build` passou apos o teste pos-adaptacao de `usePediData.js`.
+- `npm run build` passou apos a revisao de copy publica.
 - Loja publica/checkout nao deve expor plano, upgrade, "Pix online" ou "Pix na entrega" para o consumidor final.
 - Checkout publico deve mostrar formas de pagamento apenas como `Pix`, `Dinheiro` e `Cartao`.
 - Resumo lateral do checkout deve mostrar somente itens, subtotal, entrega e total.
@@ -844,11 +846,10 @@ Antes de implementar novas features, ler:
 
 Depois, continuar pela prioridade:
 
-1. Corrigir/revisar a copy publica que ainda exibe termos internos ou de simulacao.
-2. Fazer teste visual/manual em navegador real do fluxo completo.
-3. Manter `storage.js/localStorage` como fallback durante a adaptacao.
-4. Criar adaptadores entre modelo local aninhado e modelo relacional Supabase.
-5. Criar schema Supabase e seeds.
-6. Migrar loja publica, master, admin e checkout por etapas.
-7. Validar visualmente em navegador real.
-8. Preparar deploy e dominio.
+1. Fazer teste visual/manual em navegador real do fluxo completo.
+2. Manter `storage.js/localStorage` como fallback durante a adaptacao.
+3. Criar adaptadores entre modelo local aninhado e modelo relacional Supabase.
+4. Criar schema Supabase e seeds.
+5. Migrar loja publica, master, admin e checkout por etapas.
+6. Validar visualmente em navegador real.
+7. Preparar deploy e dominio.

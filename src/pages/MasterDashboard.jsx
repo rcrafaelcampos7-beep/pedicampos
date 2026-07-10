@@ -23,7 +23,7 @@ export function MasterDashboard({ activePath }) {
         <MetricCard label="Lojas ativas" value={activeStores} tone="green" />
         <MetricCard label="Lojas inativas" value={stores.length - activeStores} tone="orange" />
         <MetricCard label="Pedidos totais" value={orders.length} tone="blue" />
-        <MetricCard label="Faturamento simulado" value={formatCurrency(revenue)} tone="purple" />
+        <MetricCard label="Faturamento" value={formatCurrency(revenue)} tone="purple" />
         <MetricCard label="Plano mais usado" value={getPlanName(platform, topPlan)} tone="green" />
       </section>
 

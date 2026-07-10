@@ -24,7 +24,7 @@ export function MasterLogin() {
       <Card className="auth-card">
         <span className="eyebrow">Painel master</span>
         <h1>Entrar na central PediCampos</h1>
-        <p>Controle todas as lojas, planos e pedidos simulados da plataforma.</p>
+        <p>Controle todas as lojas, planos e pedidos da plataforma.</p>
         {error ? <div className="form-error">{error}</div> : null}
         <form onSubmit={handleSubmit}>
           <Input label="E-mail" value={email} onChange={(event) => setEmail(event.target.value)} />

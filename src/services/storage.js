@@ -19,7 +19,7 @@ export const defaultPlatformSettings = {
   heroTitle: "Seu delivery próprio em um link.",
   heroSubtitle:
     "Crie um cardápio digital profissional, receba pedidos online, aceite Pix e mantenha seus clientes atualizados pelo WhatsApp.",
-  heroPrimaryButton: "Ver loja demo",
+  heroPrimaryButton: "Ver loja exemplo",
   heroSecondaryButton: "Quero para minha loja",
   about: "Delivery próprio, cardápio digital e pedidos online para negócios locais.",
   howItWorksTitle: "Do link da loja ao pedido acompanhado em tempo real.",
@@ -69,7 +69,7 @@ export const defaultPlatformSettings = {
     { question: "Funciona no celular?", answer: "Sim. A experiência é pensada primeiro para celular." },
     { question: "Posso alterar produtos?", answer: "Sim. O painel da loja permite editar produtos, preços e categorias." },
     { question: "O pedido chega onde?", answer: "Depende do plano: via WhatsApp no Start e pelo painel nos planos Pro e Premium." },
-    { question: "Tem Pix?", answer: "Sim. O cliente vê Pix como forma de pagamento, e os planos Pro e Premium liberam pagamento automático simulado." },
+    { question: "Tem Pix?", answer: "Sim. O cliente vê Pix como forma de pagamento, e os planos Pro e Premium liberam pagamento online no checkout." },
   ],
   plans: {
     start: {
@@ -87,14 +87,14 @@ export const defaultPlatformSettings = {
       name: "Pro",
       price: 179.99,
       priceLabel: "R$ 179,99/mês",
-      description: "Pedidos no site, painel de pedidos, status, adicionais e pagamento automático simulado.",
+      description: "Pedidos no site, painel de pedidos, status, adicionais e pagamento online no checkout.",
       features: [
         "Tudo do Start",
         "Pedido salvo no painel",
         "Status dos pedidos",
         "Adicionais configuráveis",
-        "Pix automático simulado",
-        "Cartão automático simulado",
+        "Pix automático",
+        "Cartão automático",
         "Relatórios simples",
       ],
       active: true,
@@ -107,7 +107,7 @@ export const defaultPlatformSettings = {
       price: 199.99,
       priceLabel: "R$ 199,99/mês",
       description: "Plano completo com pagamento automático, WhatsApp automático e automações.",
-      features: ["Tudo do Pro", "WhatsApp automático simulado", "Mensagens por status", "Cupons", "Automações"],
+      features: ["Tudo do Pro", "WhatsApp automático", "Mensagens por status", "Cupons", "Automações"],
       active: true,
       highlighted: true,
       badge: "Melhor escolha",
@@ -237,6 +237,7 @@ function normalizePlanConfig(key, plan = {}) {
   };
   const rawPrice = Number(plan.price ?? fallback.price) || fallback.price;
   const shouldUseFallbackPrice = legacyPrices[key].includes(rawPrice);
+  const features = Array.isArray(plan.features) ? plan.features : fallback.features;
   return {
     ...fallback,
     ...plan,
@@ -245,10 +246,27 @@ function normalizePlanConfig(key, plan = {}) {
       shouldUseFallbackPrice || !plan.priceLabel || legacyLabels[key].includes(plan.priceLabel)
         ? fallback.priceLabel
         : plan.priceLabel,
+    description: normalizePublicCopy(plan.description || fallback.description),
     active: plan.active !== false,
     highlighted: Boolean(plan.highlighted ?? fallback.highlighted),
-    features: Array.isArray(plan.features) ? plan.features : fallback.features,
+    features: features.map(normalizePublicCopy),
   };
+}
+
+function normalizePublicCopy(value) {
+  if (typeof value !== "string") return value;
+
+  return value
+    .replace(/ver loja demo/gi, "Ver loja exemplo")
+    .replace(/loja demo/gi, "Loja exemplo")
+    .replace(/pagamento automático simulado/gi, "pagamento online no checkout")
+    .replace(/pagamento automatico simulado/gi, "pagamento online no checkout")
+    .replace(/pix automático simulado/gi, "Pix automático")
+    .replace(/pix automatico simulado/gi, "Pix automático")
+    .replace(/cartão automático simulado/gi, "Cartão automático")
+    .replace(/cartao automatico simulado/gi, "Cartão automático")
+    .replace(/whatsapp automático simulado/gi, "WhatsApp automático")
+    .replace(/whatsapp automatico simulado/gi, "WhatsApp automático");
 }
 
 function normalizeFeaturesByPlan(featuresByPlan = {}) {
@@ -277,14 +295,21 @@ function normalizePlatform(platform = {}) {
   };
 
   merged.logo = merged.logo || merged.name?.slice(0, 2).toUpperCase() || "PC";
+  merged.heroPrimaryButton = normalizePublicCopy(merged.heroPrimaryButton);
   merged.featureHighlights = Array.isArray(merged.featureHighlights)
-    ? merged.featureHighlights
+    ? merged.featureHighlights.map(normalizePublicCopy)
     : defaultPlatformSettings.featureHighlights;
-  merged.features = Array.isArray(merged.features) ? merged.features : defaultPlatformSettings.features;
+  merged.features = Array.isArray(merged.features) ? merged.features.map(normalizePublicCopy) : defaultPlatformSettings.features;
   merged.howItWorksSteps = Array.isArray(merged.howItWorksSteps)
-    ? merged.howItWorksSteps
+    ? merged.howItWorksSteps.map(normalizePublicCopy)
     : defaultPlatformSettings.howItWorksSteps;
-  merged.faq = Array.isArray(merged.faq) ? merged.faq : defaultPlatformSettings.faq;
+  merged.faq = Array.isArray(merged.faq)
+    ? merged.faq.map((item) => ({
+        ...item,
+        question: normalizePublicCopy(item.question),
+        answer: normalizePublicCopy(item.answer),
+      }))
+    : defaultPlatformSettings.faq;
   return merged;
 }
 

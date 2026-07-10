@@ -32,7 +32,8 @@ Legenda:
 - [x] Criar camada de dados `src/services/database.js` usando `storage.js` como fallback.
 - [x] Adaptar `src/hooks/usePediData.js` para usar `src/services/database.js`.
 - [x] Testar rotas principais e fluxo critico novamente apos a troca do hook central.
-- [ ] Proxima tarefa real: remover/revisar termos publicos de simulacao/copy tecnica (`simulado`, `mock`, `localStorage`) das areas publicas.
+- [x] Remover/revisar termos publicos de simulacao/copy tecnica (`simulado`, `mock`, `localStorage`) das areas publicas.
+- [ ] Proxima tarefa real: fazer teste visual/manual em navegador real do fluxo completo.
 - [ ] Testar fluxo completo com dados ja migrados no localStorage.
 - [ ] Validar em navegador real as rotas principais.
 
@@ -45,6 +46,7 @@ Legenda:
 - [x] Auditar dependencia de `src/hooks/usePediData.js`.
 - [x] Auditar telas que chamam `updateStore`, `mutateDatabase`, `createOrder`, `updateOrder` e `updatePlatform`.
 - [x] Auditar linguagem publica/comercial com termos de simulacao.
+- [x] Revisar copy publica para remover termos de teste/simulacao das telas publicas.
 - [x] Criar proposta de tabelas Supabase em `SUPABASE_MIGRATION_PLAN.md`.
 - [x] Criar `src/services/database.js` com API preparada para Supabase e implementacao local por baixo.
 - [x] Confirmar que `src/services/database.js` ainda usa `storage.js/localStorage` como adapter temporario.
@@ -134,7 +136,7 @@ Legenda:
 - [x] Separar pagamento e status do pagamento na pagina de acompanhamento.
 - [x] Adicionar experiencia simulada de pagamento por Cartao para planos com pagamento automatico.
 - [x] Auditar que `Pix na entrega`, `Pagamento na entrega`, `Pix online`, `Cartao na entrega` e variantes tecnicas nao aparecem para o cliente final.
-- [ ] Remover/revisar ocorrencias publicas restantes de `simulado`, `mock` e `localStorage` em `CheckoutPage.jsx` e `LandingPage.jsx`.
+- [x] Remover/revisar ocorrencias publicas restantes de `simulado`, `mock` e `localStorage` em `CheckoutPage.jsx` e `LandingPage.jsx`.
 - [ ] Testar fluxo completo de pedido com produto, adicionais gratis/pagos, carrinho, checkout, pagamento por plano, acompanhamento e admin.
 - [ ] Testar carrinho apos alteracao de preco do produto no admin.
 - [ ] Testar carrinho com produto desativado depois de ja estar no carrinho.

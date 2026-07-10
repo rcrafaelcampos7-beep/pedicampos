@@ -35,13 +35,13 @@ export function LandingPage() {
         <nav>
           <a href="#funcionalidades">Funcionalidades</a>
           <a href="#como-funciona">Como funciona</a>
-          <a href="#demonstracao">Demonstração</a>
+          <a href="#demonstracao">Loja exemplo</a>
           <a href="#planos">Planos</a>
           <a href="#contato">Contato</a>
         </nav>
         <div className="nav-actions">
           <Link className="btn btn-secondary btn-md" to={`/${demoStore?.slug || "neguinhodoacai"}`}>
-            Ver demonstração
+            Ver loja exemplo
           </Link>
           <a className="btn btn-primary btn-md" href={whatsappUrl} target="_blank" rel="noreferrer">
             Falar no WhatsApp
@@ -134,11 +134,11 @@ export function LandingPage() {
         {sections.demo !== false ? (
           <section className="section demo-section" id="demonstracao">
             <div>
-              <span className="eyebrow">Demonstração real no mock</span>
-              <h2>{demoStore?.name || "Loja demo"}</h2>
+              <span className="eyebrow">Loja exemplo</span>
+              <h2>{demoStore?.name || "Loja exemplo"}</h2>
               <p>
-                Essa loja vem do mock/localStorage, aparece no master, pode ser editada no admin e reflete
-                as mudanças na vitrine pública.
+                Veja como uma vitrine da PediCampos apresenta produtos, categorias, adicionais e pedidos
+                para o cliente final.
               </p>
             </div>
             {demoStore ? (
@@ -148,7 +148,7 @@ export function LandingPage() {
                   <strong>{demoStore.name}</strong>
                   <span>{demoStore.segment}</span>
                   <Link className="btn btn-primary btn-md" to={`/${demoStore.slug}`}>
-                    Acessar demonstração
+                    Acessar loja exemplo
                   </Link>
                 </div>
               </Card>

@@ -654,6 +654,14 @@ Observacoes:
 
 Ajustes recentes implementados:
 
+- Copy publica revisada em 2026-07-10 para remover linguagem de teste/simulacao:
+  - `src/pages/LandingPage.jsx` deixou de exibir `mock`, `localStorage`, `Loja demo` e "Demonstração real no mock";
+  - `src/pages/CheckoutPage.jsx` deixou de exibir `simulado`, `ficticio` e `DEMO` no Pix/Cartao;
+  - `src/services/storage.js` teve defaults publicos revisados para landing, FAQ e planos;
+  - `src/services/storage.js` tambem normaliza copies legadas ja salvas em `pedicampos.database.v1`;
+  - rotulos internos muito visiveis no admin/master foram profissionalizados;
+  - termos como `localStorage`, `mock` e `simulado` continuam permitidos em documentacao tecnica, codigo, comentarios e normalizacao de legado;
+  - Supabase real ainda nao foi conectado.
 - Teste pos-adaptacao de `src/hooks/usePediData.js` realizado em 2026-07-10:
   - rotas principais responderam 200 via Vite local: `/`, `/neguinhodoacai`, `/gordinhoburguer`, `/admin` e `/master`;
   - lojas `neguinhodoacai` e `gordinhoburguer` carregaram corretamente via `database.js`;
@@ -666,7 +674,7 @@ Ajustes recentes implementados:
   - `/admin/pedidos` foi validado por `getOrdersByStore` e alteracao de status refletiu em `getOrderById`;
   - master continuou carregando lojas, planos e configuracoes;
   - nenhum bug causado pela troca de `usePediData.js` para `database.js` foi encontrado;
-  - pendencia nao causada pela troca do hook: ainda existem termos publicos de simulacao/copy tecnica em `src/pages/CheckoutPage.jsx` e `src/pages/LandingPage.jsx` (`simulado`, `mock`, `localStorage`);
+  - pendencia de copy publica foi corrigida na etapa seguinte;
   - o navegador interno do Codex nao estava disponivel nesta sessao, entao a validacao foi feita por HTTP local, Vite SSR e inspecao de codigo.
 - Adaptado `src/hooks/usePediData.js` para consumir `src/services/database.js`:
   - `getDatabase` agora vem de `database.js`;
@@ -785,17 +793,17 @@ Build:
 - Build apos criacao de `src/services/database.js` passou com `npm run build`.
 - Build apos adaptacao de `src/hooks/usePediData.js` para `database.js` passou com `npm run build`.
 - Build apos teste pos-adaptacao de `usePediData.js` passou com `npm run build`.
+- Build apos revisao de copy publica passou com `npm run build`.
 - Observacao: a primeira tentativa dentro do sandbox falhou por acesso negado ao resolver `vite.config.js`; a repeticao com permissao elevada passou.
 
 ## Proximas etapas recomendadas
 
-1. Corrigir/revisar a copy publica que ainda exibe termos internos ou de simulacao (`simulado`, `mock`, `localStorage`) antes do uso real.
-2. Fazer teste visual/manual em navegador real do fluxo completo.
-3. Manter `storage.js/localStorage` como fallback durante a adaptacao.
-4. Criar adaptadores entre o modelo local aninhado e o modelo relacional planejado para Supabase.
-5. Criar projeto Supabase, tabelas e seeds iniciais.
-6. Migrar tela por tela, com localStorage como fallback temporario.
-7. Validar visualmente em navegador real a responsividade desktop/mobile da landing, loja, carrinho, checkout, admin e master.
-8. Preparar deploy Vercel e dominio `pedicampos.com.br`.
-9. Integrar Pix real futuramente.
-10. Integrar WhatsApp real futuramente.
+1. Fazer teste visual/manual em navegador real do fluxo completo.
+2. Manter `storage.js/localStorage` como fallback durante a adaptacao.
+3. Criar adaptadores entre o modelo local aninhado e o modelo relacional planejado para Supabase.
+4. Criar projeto Supabase, tabelas e seeds iniciais.
+5. Migrar tela por tela, com localStorage como fallback temporario.
+6. Validar visualmente em navegador real a responsividade desktop/mobile da landing, loja, carrinho, checkout, admin e master.
+7. Preparar deploy Vercel e dominio `pedicampos.com.br`.
+8. Integrar Pix real futuramente.
+9. Integrar WhatsApp real futuramente.

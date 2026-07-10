@@ -18,7 +18,7 @@ export function AdminDashboard({ activePath, store }) {
   return (
     <AdminLayout activePath={activePath} store={store}>
       <section className="metrics-grid">
-        <MetricCard label="Pedidos de hoje" value={todaysOrders.length} detail="mock/localStorage" />
+        <MetricCard label="Pedidos de hoje" value={todaysOrders.length} detail="dados da loja" />
         <MetricCard label="Faturamento de hoje" value={formatCurrency(revenue)} tone="blue" />
         <MetricCard label="Em preparo" value={preparing} tone="orange" />
         <MetricCard label="Produtos ativos" value={activeProducts} tone="purple" />

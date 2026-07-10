@@ -16,9 +16,9 @@ export function AdminLogin() {
     event.preventDefault();
     const selectedStore = stores.find((store) => store.id === storeId);
     const matchingStore = stores.find((store) => store.email === email && store.password === password);
-    const validDemo = password === "123456" && selectedStore;
+    const validStoreAccess = password === "123456" && selectedStore;
 
-    if (!matchingStore && !validDemo) {
+    if (!matchingStore && !validStoreAccess) {
       setError("Credenciais inválidas. Use admin@neguinho.com / 123456.");
       return;
     }
@@ -34,7 +34,7 @@ export function AdminLogin() {
       <Card className="auth-card">
         <span className="eyebrow">Painel da loja</span>
         <h1>Entrar no admin</h1>
-        <p>Use a conta demo ou escolha uma loja para editar os mesmos dados vistos na vitrine pública.</p>
+        <p>Use a conta da loja ou escolha uma operação para editar os mesmos dados vistos na vitrine pública.</p>
         {error ? <div className="form-error">{error}</div> : null}
         <form onSubmit={handleSubmit}>
           <Input label="E-mail" value={email} onChange={(event) => setEmail(event.target.value)} />
@@ -44,7 +44,7 @@ export function AdminLogin() {
             value={password}
             onChange={(event) => setPassword(event.target.value)}
           />
-          <Select label="Loja de demonstração" value={storeId} onChange={(event) => setStoreId(event.target.value)}>
+          <Select label="Loja" value={storeId} onChange={(event) => setStoreId(event.target.value)}>
             {stores.map((store) => (
               <option key={store.id} value={store.id}>
                 {store.name}

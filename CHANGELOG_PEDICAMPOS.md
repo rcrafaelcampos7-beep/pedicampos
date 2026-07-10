@@ -646,6 +646,47 @@ Build:
 - Primeira tentativa dentro do sandbox falhou por acesso negado ao resolver `vite.config.js`.
 - Repeticao com permissao elevada passou com `npm run build`.
 
+## v0.21 - Revisao de copy publica
+
+Implementado nesta rotina:
+
+- Removida linguagem publica que fazia o produto parecer teste, mock ou simulacao.
+- Landing passou a usar "Loja exemplo" e texto de vitrine real da PediCampos.
+- Checkout deixou de mostrar `simulado`, `ficticio` e `DEMO` no fluxo de Pix/Cartao.
+- Defaults publicos da plataforma em `src/services/storage.js` foram revisados:
+  - botao principal da landing;
+  - FAQ;
+  - descricao e features dos planos Pro/Premium.
+- `storage.js` passou a normalizar copies legadas ja salvas no banco local, sem alterar regras comerciais.
+- Rotulos internos muito visiveis no admin/master foram profissionalizados.
+
+Arquivos alterados nesta etapa:
+
+- `src/pages/LandingPage.jsx`
+- `src/pages/CheckoutPage.jsx`
+- `src/services/storage.js`
+- `src/pages/AdminDashboard.jsx`
+- `src/pages/AdminLogin.jsx`
+- `src/pages/MasterLogin.jsx`
+- `src/pages/MasterDashboard.jsx`
+- `src/components/admin/AdminLayout.jsx`
+- `PROJECT_CONTEXT.md`
+- `TODO_PEDICAMPOS.md`
+- `CHANGELOG_PEDICAMPOS.md`
+- `ARCHITECTURE_PEDICAMPOS.md`
+- `SUPABASE_MIGRATION_PLAN.md`
+
+Observacoes:
+
+- Documentacao tecnica, codigo, comentarios e normalizacao de legado podem manter termos como `localStorage`, `mock` e `simulado` quando necessario.
+- Supabase real ainda nao foi conectado.
+- Precos, planos, regras comerciais e logica de pagamento nao foram alterados.
+
+Build:
+
+- Primeira tentativa dentro do sandbox falhou por acesso negado ao resolver `vite.config.js`.
+- Repeticao com permissao elevada passou com `npm run build`.
+
 ## Builds e verificacoes
 
 - Build anterior conhecido: `npm run build` passou durante o desenvolvimento.
@@ -659,6 +700,7 @@ Build:
 - Build apos criacao de `src/services/database.js` passou.
 - Build apos adaptacao de `src/hooks/usePediData.js` para `database.js` passou.
 - Build apos teste pos-adaptacao de `usePediData.js` passou.
+- Build apos revisao de copy publica passou.
 - Observacao: a primeira tentativa no sandbox falhou por acesso negado ao resolver `vite.config.js`; a tentativa com permissao elevada passou.
 
 ## Pendencias conhecidas registradas

@@ -87,7 +87,7 @@ export function CheckoutPage({ slug }) {
   const paymentOptions = useMemo(() => (store ? getPaymentOptions(store) : []), [store]);
   const deliveryFee = form.fulfillment === "delivery" ? store?.deliveryFee || 0 : 0;
   const total = cart.totals.subtotal + deliveryFee;
-  const pixCode = `000201PEDICAMPOS-${store?.slug || "loja"}-${Math.round(total * 100)}-DEMO`;
+  const pixCode = `000201PEDICAMPOS-${store?.slug || "loja"}-${Math.round(total * 100)}-PEDIDO`;
   const formatAdditional = (addon) =>
     `${addon.groupName ? `${addon.groupName}: ` : ""}${addon.optionName || addon.name} ${
       Number(addon.price) > 0 ? `+ ${formatCurrency(addon.price)}` : "Grátis"
@@ -372,13 +372,13 @@ export function CheckoutPage({ slug }) {
             ) : null}
             {canShowPixQrCode ? (
               <div className="pix-box">
-                <div className="fake-qr" aria-label="QR Code Pix simulado">
+                <div className="fake-qr" aria-label="QR Code Pix">
                   {Array.from({ length: 49 }).map((_, index) => (
                     <span key={index} className={index % 2 === 0 || index % 5 === 0 ? "dark" : ""} />
                   ))}
                 </div>
                 <div>
-                  <strong>Pix copia e cola fictício</strong>
+                  <strong>Pix copia e cola</strong>
                   <code>{pixCode}</code>
                   <div className="pix-actions">
                     <Button variant="secondary" onClick={() => navigator.clipboard?.writeText(pixCode)}>
@@ -388,7 +388,7 @@ export function CheckoutPage({ slug }) {
                       variant={automaticPaymentApproved ? "success" : "primary"}
                       onClick={() => setAutomaticPaymentApproved(true)}
                     >
-                      {automaticPaymentApproved ? "Pagamento aprovado" : "Simular pagamento aprovado"}
+                      {automaticPaymentApproved ? "Pagamento aprovado" : "Confirmar pagamento"}
                     </Button>
                   </div>
                   <p className="muted">
@@ -399,20 +399,20 @@ export function CheckoutPage({ slug }) {
             ) : null}
             {canShowCardSimulation ? (
               <div className="pix-box">
-                <div className="fake-qr" aria-label="Pagamento com cartão simulado">
+                <div className="fake-qr" aria-label="Pagamento com cartão">
                   {Array.from({ length: 49 }).map((_, index) => (
                     <span key={index} className={index % 3 === 0 || index % 7 === 0 ? "dark" : ""} />
                   ))}
                 </div>
                 <div>
-                  <strong>Pagamento com cartão simulado</strong>
+                  <strong>Pagamento com cartão</strong>
                   <p className="muted">Confirme o pagamento para prosseguir com o pedido.</p>
                   <div className="pix-actions">
                     <Button
                       variant={automaticPaymentApproved ? "success" : "primary"}
                       onClick={() => setAutomaticPaymentApproved(true)}
                     >
-                      {automaticPaymentApproved ? "Pagamento aprovado" : "Simular pagamento aprovado"}
+                      {automaticPaymentApproved ? "Pagamento aprovado" : "Confirmar pagamento"}
                     </Button>
                   </div>
                   <p className="muted">

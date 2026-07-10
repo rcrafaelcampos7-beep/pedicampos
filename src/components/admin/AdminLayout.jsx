@@ -46,7 +46,7 @@ export function AdminLayout({ children, activePath, store }) {
             <h1>{store?.name || "Loja"}</h1>
           </div>
           <Select
-            label="Loja de demonstração"
+            label="Loja"
             value={store?.id || ""}
             onChange={(event) => changeStore(event.target.value)}
           >
