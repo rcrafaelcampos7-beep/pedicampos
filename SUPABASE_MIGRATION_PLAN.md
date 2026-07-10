@@ -31,6 +31,8 @@ Decisao tecnica desta etapa:
 - Projeto foi preparado para teste visual/manual local em `http://127.0.0.1:5174`.
 - Teste visual/manual local encontrou pendencias visuais/mobile que devem ser corrigidas antes da conexao Supabase.
 - O texto repetido de adicionais no acompanhamento do pedido foi corrigido em `src/pages/OrderTrackingPage.jsx`.
+- O layout mobile dos controles de quantidade do carrinho foi ajustado em `src/styles/global.css`.
+- O menu superior do admin mobile foi ajustado em `src/components/admin/AdminLayout.jsx` e `src/styles/global.css`.
 - A proxima etapa correta e corrigir os ajustes visuais/mobile restantes antes de iniciar Supabase real.
 
 ## Pendencias visuais/mobile antes do Supabase
@@ -41,11 +43,13 @@ Registrado apos teste manual local em `http://127.0.0.1:5174`:
   - corrigido em `src/pages/OrderTrackingPage.jsx`;
   - adicionais renderizam com prefixo unico, por exemplo `Adicionais: Bacon extra + R$ 5,00, Cheddar + R$ 4,00`.
 - Carrinho mobile:
-  - controles de quantidade estao muito largos e pouco centralizados;
-  - proxima correcao: melhorar o layout, preferencialmente em linha `[-] [1] [+]`.
+  - corrigido em `src/styles/global.css`;
+  - controles de quantidade ficam mais compactos em linha, no formato `[-] [quantidade] [+]`;
+  - calculo e comportamento foram preservados.
 - Menu superior do admin mobile:
-  - menu esta apertado/cortado;
-  - proxima correcao: avaliar menu hamburguer, dropdown ou barra com scroll mais clara.
+  - corrigido em `src/components/admin/AdminLayout.jsx` e `src/styles/global.css`;
+  - navegacao mobile mantida como barra horizontal rolavel, com trilho visual, melhor espacamento e links em formato de pilula;
+  - desktop, rotas e logica foram preservados.
 - Admin produtos mobile:
   - ao tocar em `Editar`, a tela deve rolar automaticamente ate o formulario;
   - sugestao tecnica: `scrollIntoView`.
@@ -593,8 +597,8 @@ Primeira versao segura:
 7. Teste visual/manual local foi realizado em navegador real.
 8. Pendencias visuais/mobile foram registradas e devem ser corrigidas antes da conexao Supabase.
 9. Corrigir texto repetido de adicionais no acompanhamento: concluido em `src/pages/OrderTrackingPage.jsx`.
-10. Melhorar carrinho mobile.
-11. Melhorar menu mobile do admin.
+10. Melhorar carrinho mobile: concluido em `src/styles/global.css`.
+11. Melhorar menu mobile do admin: concluido em `src/components/admin/AdminLayout.jsx` e `src/styles/global.css`.
 12. Adicionar scroll automatico ao editar produtos.
 13. Adicionar scroll automatico ao editar adicionais.
 14. Revisar cards/chips de adicionais no mobile.
@@ -707,8 +711,10 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - [x] Rodar `npm run build` apos finalizacao das memorias; build passou em 2026-07-10 com permissao elevada apos falha conhecida do sandbox.
 - [x] Corrigir texto repetido de adicionais no acompanhamento do pedido desktop.
 - [x] Rodar `npm run build` apos a correcao dos adicionais no acompanhamento.
-- [ ] Melhorar carrinho mobile, compactando e centralizando controles de quantidade.
-- [ ] Melhorar menu superior do admin mobile para evitar corte/aperto.
+- [x] Melhorar carrinho mobile, compactando e centralizando controles de quantidade.
+- [x] Rodar `npm run build` apos ajuste mobile do carrinho.
+- [x] Melhorar menu superior do admin mobile para evitar corte/aperto.
+- [x] Rodar `npm run build` apos ajuste do menu superior do admin mobile.
 - [ ] Adicionar scroll automatico ao editar produtos no admin mobile.
 - [ ] Adicionar scroll automatico ao editar adicionais no admin mobile.
 - [ ] Revisar cards/chips de adicionais no mobile.

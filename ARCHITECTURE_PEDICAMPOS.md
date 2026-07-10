@@ -850,23 +850,25 @@ Estado em 2026-07-10:
 - Supabase real ainda nao foi conectado.
 - Build de integridade apos finalizacao das memorias: `npm run build` passou em 2026-07-10 com permissao elevada apos a falha conhecida do sandbox ao resolver `vite.config.js`.
 - Build apos correcao dos adicionais no acompanhamento do pedido: `npm run build` passou.
+- Build apos ajuste mobile dos controles de quantidade do carrinho: `npm run build` passou.
+- Build apos ajuste do menu superior do admin mobile: `npm run build` passou.
 
-Correcao ja realizada apos o teste visual/manual:
+Correcoes ja realizadas apos o teste visual/manual:
 
 - Acompanhamento do pedido em desktop:
   - texto repetido de adicionais corrigido em `src/pages/OrderTrackingPage.jsx`;
   - adicionais renderizam em linha com prefixo unico, por exemplo `Adicionais: Bacon extra + R$ 5,00, Cheddar + R$ 4,00`.
+- Carrinho mobile:
+  - controles de quantidade ajustados em `src/styles/global.css`;
+  - no mobile, os controles ficam compactos em linha, no formato `[-] [quantidade] [+]`;
+  - calculo e comportamento do carrinho foram preservados.
+- Menu superior do admin mobile:
+  - ajustado em `src/components/admin/AdminLayout.jsx` e `src/styles/global.css`;
+  - a navegacao mobile do admin segue como barra horizontal rolavel, com trilho visual, melhor espacamento e links em formato de pilula;
+  - desktop, rotas e logica foram preservados.
 
 Pendencias visuais/mobile restantes:
 
-- Carrinho mobile:
-  - controles de quantidade ficam muito largos e pouco centralizados;
-  - proxima correcao: melhorar layout, talvez `[-] [1] [+]` em linha;
-  - arquivos provaveis: `src/components/store/CartDrawer.jsx` e `src/styles/global.css`.
-- Menu superior do admin mobile:
-  - menu fica apertado/cortado;
-  - proxima correcao: avaliar menu hamburguer, dropdown ou barra com scroll mais clara;
-  - arquivos provaveis: `src/components/admin/AdminLayout.jsx` e `src/styles/global.css`.
 - Admin produtos mobile:
   - ao tocar em `Editar`, deve rolar automaticamente ate o formulario;
   - sugestao tecnica: `scrollIntoView({ behavior: "smooth", block: "start" })`;
@@ -902,11 +904,9 @@ Antes de implementar novas features, ler:
 
 Depois, continuar pela prioridade:
 
-1. Melhorar carrinho mobile.
-2. Melhorar menu mobile do admin.
-3. Adicionar scroll automatico ao editar produtos.
-4. Adicionar scroll automatico ao editar adicionais.
-5. Revisar cards/chips de adicionais no mobile.
-6. Rodar `npm run build`.
-7. Testar novamente localmente em `http://127.0.0.1:5174`.
-8. Depois desses ajustes, retomar a preparacao/conexao Supabase.
+1. Adicionar scroll automatico ao editar produtos.
+2. Adicionar scroll automatico ao editar adicionais.
+3. Revisar cards/chips de adicionais no mobile.
+4. Rodar `npm run build`.
+5. Testar novamente localmente em `http://127.0.0.1:5174`.
+6. Depois desses ajustes, retomar a preparacao/conexao Supabase.

@@ -654,6 +654,18 @@ Observacoes:
 
 Ajustes recentes implementados:
 
+- Ajustado o menu superior do admin no mobile:
+  - arquivos alterados: `src/components/admin/AdminLayout.jsx` e `src/styles/global.css`;
+  - a navegacao mobile do admin foi mantida como barra horizontal rolavel, agora com trilho visual, espacamento melhor e links em formato de pilula;
+  - desktop, rotas, login, permissoes, carrinho, checkout, planos, precos, pagamentos e Supabase foram preservados;
+  - o master nao foi alterado; o ajuste foi escopado com a classe `admin-shell`;
+  - `npm run build` passou apos a correcao.
+- Ajustado o layout mobile dos controles de quantidade no carrinho:
+  - arquivo alterado: `src/styles/global.css`;
+  - no mobile, os controles ficam mais compactos em linha, no formato `[-] [quantidade] [+]`;
+  - calculo do carrinho, checkout, planos, precos, pagamentos e Supabase nao foram alterados;
+  - desktop foi preservado porque o ajuste ficou restrito ao breakpoint mobile;
+  - `npm run build` passou apos a correcao.
 - Corrigido o texto repetido de adicionais no acompanhamento do pedido:
   - arquivo alterado: `src/pages/OrderTrackingPage.jsx`;
   - os adicionais agora aparecem com o prefixo unico `Adicionais:` seguido das opcoes em linha, por exemplo `Adicionais: Bacon extra + R$ 5,00, Cheddar + R$ 4,00`;
@@ -815,8 +827,6 @@ Ajustes recentes implementados:
 Bugs/pendencias conhecidas:
 
 - Pendencias visuais/mobile restantes do teste manual local:
-  - controles de quantidade do carrinho mobile largos/pouco centralizados;
-  - menu superior do admin mobile apertado e com itens espremidos;
   - editar produto no admin mobile nao rola ate o formulario;
   - editar grupo/adicional no admin mobile nao rola ate o formulario;
   - cards/chips de adicionais no mobile precisam de melhor espacamento e organizacao.
@@ -842,14 +852,15 @@ Build:
 - Build apos teste pos-adaptacao de `usePediData.js` passou com `npm run build`.
 - Build apos revisao de copy publica passou com `npm run build`.
 - Build apos correcao do texto de adicionais no acompanhamento do pedido passou com `npm run build`.
+- Build apos ajuste mobile dos controles de quantidade do carrinho passou com `npm run build`.
+- Build apos ajuste do menu superior do admin mobile passou com `npm run build`.
 - Observacao: a primeira tentativa dentro do sandbox falhou por acesso negado ao resolver `vite.config.js`; a repeticao com permissao elevada passou.
 
 ## Proximas etapas recomendadas
 
 1. Corrigir ajustes visuais/mobile encontrados no teste manual antes de iniciar Supabase real.
-2. Melhorar carrinho mobile.
-3. Melhorar menu mobile do admin.
-4. Adicionar scroll automatico ao editar produtos e adicionais no admin mobile.
-5. Revisar cards/chips de adicionais no mobile.
-6. Rodar `npm run build` e testar novamente no navegador local.
-7. Depois desses ajustes, retomar preparacao/conexao Supabase.
+2. Adicionar scroll automatico ao editar produtos no admin mobile.
+3. Adicionar scroll automatico ao editar adicionais no admin mobile.
+4. Revisar cards/chips de adicionais no mobile.
+5. Rodar `npm run build` e testar novamente no navegador local.
+6. Depois desses ajustes, retomar preparacao/conexao Supabase.

@@ -38,8 +38,10 @@ Legenda:
 - [ ] Proxima tarefa real: corrigir ajustes visuais/mobile encontrados no teste manual antes de iniciar Supabase real.
 - [x] Corrigir texto repetido de adicionais no acompanhamento do pedido.
 - [x] Rodar `npm run build` apos corrigir o texto de adicionais no acompanhamento.
-- [ ] Melhorar carrinho mobile.
-- [ ] Melhorar menu mobile do admin.
+- [x] Melhorar carrinho mobile.
+- [x] Rodar `npm run build` apos ajustar o carrinho mobile.
+- [x] Melhorar menu mobile do admin.
+- [x] Rodar `npm run build` apos ajustar o menu mobile do admin.
 - [ ] Adicionar scroll automatico ao editar produtos no admin mobile.
 - [ ] Adicionar scroll automatico ao editar adicionais no admin mobile.
 - [ ] Revisar cards/chips de adicionais no mobile.
@@ -95,8 +97,8 @@ Legenda:
 - [x] Teste visual/manual realizado no navegador real com servidor local ativo em `http://127.0.0.1:5174`; pendencias abaixo registradas para correcao futura.
 - [x] Acompanhamento do pedido desktop: corrigir repeticao de `Adicionais:` em cada adicional do item.
 - [x] Acompanhamento do pedido desktop: melhorar formatacao dos adicionais em linha unica ou lista separada.
-- [ ] Carrinho mobile: compactar e centralizar controles de quantidade `-`, quantidade e `+`.
-- [ ] Admin mobile: melhorar menu superior/Sidebar responsiva para evitar itens cortados ou espremidos.
+- [x] Carrinho mobile: compactar e centralizar controles de quantidade `-`, quantidade e `+`.
+- [x] Admin mobile: melhorar menu superior/Sidebar responsiva para evitar itens cortados ou espremidos.
 - [ ] Admin produtos mobile: ao tocar em `Editar`, rolar automaticamente ate o formulario.
 - [ ] Admin adicionais mobile: ao tocar em `Editar`, rolar automaticamente ate o formulario.
 - [ ] Admin adicionais mobile: revisar espacamento, quebra de linha, tamanho dos chips e organizacao dos cards.
@@ -136,7 +138,7 @@ Legenda:
 ## Carrinho e checkout
 
 - [x] Carrinho por loja via `pedicampos.cart.${storeId}`.
-- [ ] Corrigir layout dos controles de quantidade no carrinho mobile.
+- [x] Corrigir layout dos controles de quantidade no carrinho mobile.
 - [x] Produto adicionado com quantidade, observacao e adicionais.
 - [x] Quantidade recalcula total do item.
 - [x] Checkout valida nome, telefone e endereco para entrega.

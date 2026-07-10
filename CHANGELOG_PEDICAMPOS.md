@@ -781,6 +781,41 @@ Proxima pendencia visual/mobile:
 
 - Melhorar os controles de quantidade do carrinho mobile.
 
+## v0.25 - Ajuste do carrinho mobile
+
+Implementado:
+
+- Ajustado o layout mobile dos controles de quantidade do carrinho em `src/styles/global.css`.
+- No mobile, os controles ficam mais compactos e alinhados em linha, no formato `[-] [quantidade] [+]`.
+- O ajuste ficou restrito ao breakpoint mobile e preserva o desktop.
+- Calculo do carrinho, checkout, planos, precos, pagamentos, componente inteiro e Supabase nao foram alterados.
+
+Build:
+
+- `npm run build` passou apos a correcao.
+
+Proxima pendencia visual/mobile:
+
+- Melhorar o menu superior do admin mobile.
+
+## v0.26 - Ajuste do menu admin mobile
+
+Implementado:
+
+- Adicionada a classe `admin-shell` em `src/components/admin/AdminLayout.jsx` para escopar o ajuste ao admin.
+- Melhorada a navegacao mobile do admin em `src/styles/global.css`.
+- A barra horizontal rolavel foi preservada, agora com trilho visual, melhor espacamento e links em formato de pilula.
+- Desktop, rotas, login, permissoes, carrinho, checkout, planos, precos, pagamentos e Supabase nao foram alterados.
+- O master nao foi alterado.
+
+Build:
+
+- `npm run build` passou apos a correcao.
+
+Proxima pendencia visual/mobile:
+
+- Adicionar scroll automatico ao editar produtos no admin mobile.
+
 ## Builds e verificacoes
 
 - Build anterior conhecido: `npm run build` passou durante o desenvolvimento.
@@ -797,6 +832,8 @@ Proxima pendencia visual/mobile:
 - Build apos revisao de copy publica passou.
 - Build apos finalizacao/revisao das memorias antes da troca de chat passou em 2026-07-10.
 - Build apos correcao dos adicionais no acompanhamento passou.
+- Build apos ajuste mobile dos controles de quantidade do carrinho passou.
+- Build apos ajuste do menu superior do admin mobile passou.
 - Observacao: a primeira tentativa no sandbox falhou por acesso negado ao resolver `vite.config.js`; a tentativa com permissao elevada passou.
 
 ## Pendencias conhecidas registradas

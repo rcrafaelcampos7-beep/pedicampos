@@ -28,7 +28,7 @@ export function AdminLayout({ children, activePath, store }) {
   }
 
   return (
-    <div className="app-shell">
+    <div className="app-shell admin-shell">
       <Sidebar
         brand="Admin loja"
         links={adminLinks}
