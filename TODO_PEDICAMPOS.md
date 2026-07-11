@@ -1,6 +1,6 @@
 # TODO - PediCampos
 
-Atualizado em: 2026-07-10
+Atualizado em: 2026-07-11
 
 Legenda:
 
@@ -35,7 +35,7 @@ Legenda:
 - [x] Remover/revisar termos publicos de simulacao/copy tecnica (`simulado`, `mock`, `localStorage`) das areas publicas.
 - [x] Preparar projeto para teste visual/manual local com servidor Vite ativo.
 - [x] Registrar pendencias visuais/mobile encontradas no teste manual local.
-- [ ] Proxima tarefa real: corrigir ajustes visuais/mobile encontrados no teste manual antes de iniciar Supabase real.
+- [x] Corrigir ajustes visuais/mobile encontrados no teste manual antes de iniciar a proxima etapa Supabase.
 - [x] Corrigir texto repetido de adicionais no acompanhamento do pedido.
 - [x] Rodar `npm run build` apos corrigir o texto de adicionais no acompanhamento.
 - [x] Melhorar carrinho mobile.
@@ -44,12 +44,18 @@ Legenda:
 - [x] Rodar `npm run build` apos ajustar o menu mobile do admin.
 - [x] Adicionar scroll automatico ao editar produtos no admin mobile.
 - [x] Rodar `npm run build` apos adicionar scroll automatico ao editar produtos.
-- [ ] Adicionar scroll automatico ao editar adicionais no admin mobile.
-- [ ] Revisar cards/chips de adicionais no mobile.
-- [ ] Rodar `npm run build` apos as correcoes visuais/mobile.
+- [x] Adicionar scroll automatico ao editar adicionais no admin mobile.
+- [x] Rodar `npm run build` apos adicionar scroll automatico ao editar adicionais.
+- [x] Revisar cards/chips de adicionais no mobile.
+- [x] Rodar `npm run build` apos as correcoes visuais/mobile.
 - [ ] Testar novamente no navegador local apos as correcoes visuais/mobile.
 - [ ] Testar fluxo completo com dados ja migrados no localStorage.
 - [x] Validar em navegador real as rotas principais usando `http://127.0.0.1:5174`.
+- [x] Criar projeto Supabase `pedicampos` na regiao Oeste dos EUA (Oregon) / `us-west-2`.
+- [x] Executar `supabase/schema.sql` no SQL Editor do Supabase.
+- [x] Confirmar retorno `Sucesso. Nenhuma linha retornada.` como esperado.
+- [x] Rodar `npm run build` apos atualizar as memorias com o estado real do Supabase.
+- [ ] Proxima tarefa real: conferir tabelas, RLS, policies, indices e triggers no painel do Supabase.
 
 ## Migracao Supabase
 
@@ -62,6 +68,8 @@ Legenda:
 - [x] Auditar linguagem publica/comercial com termos de simulacao.
 - [x] Revisar copy publica para remover termos de teste/simulacao das telas publicas.
 - [x] Criar proposta de tabelas Supabase em `SUPABASE_MIGRATION_PLAN.md`.
+- [x] Criar `supabase/schema.sql` com SQL inicial real para o Supabase.
+- [x] Criar `supabase/README.md` com instrucoes para executar o SQL.
 - [x] Criar `src/services/database.js` com API preparada para Supabase e implementacao local por baixo.
 - [x] Confirmar que `src/services/database.js` ainda usa `storage.js/localStorage` como adapter temporario.
 - [x] Confirmar que Supabase real ainda nao foi conectado.
@@ -82,10 +90,24 @@ Legenda:
 - [ ] Migrar checkout/pedidos.
 - [ ] Migrar admin pedidos.
 - [ ] Migrar master configuracoes.
-- [ ] Criar projeto Supabase.
-- [ ] Criar tabelas SQL no Supabase.
+- [x] Criar projeto Supabase.
+- [x] Criar tabelas SQL no Supabase pelo SQL Editor.
+- [x] Executar `supabase/schema.sql` no SQL Editor do Supabase.
+- [x] Confirmar que o retorno `Sucesso. Nenhuma linha retornada.` e esperado para criacao de schema.
+- [x] Rodar `npm run build` apos atualizacao das memorias Supabase.
+- [ ] Conferir as 15 tabelas no Table Editor com RLS ativo.
+- [ ] Conferir policies criadas em `Authentication > Policies`.
+- [ ] Conferir indices criados no Supabase.
+- [ ] Conferir triggers de `updated_at`.
+- [ ] Instalar `@supabase/supabase-js`.
 - [ ] Popular `plans` e `platform_settings`.
 - [ ] Migrar lojas demo como seed inicial.
+- [ ] Criar `.env.local` com `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
+- [ ] Garantir que senha do banco nao seja colocada no React.
+- [ ] Criar `src/services/supabaseClient.js`.
+- [ ] Criar conexao Supabase sem migrar dados ainda.
+- [ ] Manter `database.js` com `storage.js/localStorage` como fallback.
+- [ ] Migrar primeiro `getStores()`, `getStoreBySlug()`, `createStore()` e `updateStore()`.
 - [ ] Implementar Supabase Auth para master/admin.
 - [ ] Implementar RLS por loja.
 - [ ] Testar que admin de uma loja nao acessa dados de outra.
@@ -101,8 +123,9 @@ Legenda:
 - [x] Carrinho mobile: compactar e centralizar controles de quantidade `-`, quantidade e `+`.
 - [x] Admin mobile: melhorar menu superior/Sidebar responsiva para evitar itens cortados ou espremidos.
 - [x] Admin produtos mobile: ao tocar em `Editar`, rolar automaticamente ate o formulario.
-- [ ] Admin adicionais mobile: ao tocar em `Editar`, rolar automaticamente ate o formulario.
-- [ ] Admin adicionais mobile: revisar espacamento, quebra de linha, tamanho dos chips e organizacao dos cards.
+- [x] Admin adicionais mobile: ao tocar em `Editar`, rolar automaticamente ate o formulario.
+- [x] Admin adicionais mobile: revisar espacamento, quebra de linha, tamanho dos chips e organizacao dos cards.
+- [ ] Redesenhar futuramente o layout do admin mobile, pois ainda nao ficou exatamente como Rafael deseja; nao bloquear a etapa Supabase por isso.
 - [x] Reestruturar hero/landing para evitar sobreposicao de cards no desktop.
 - [x] Fazer hero desktop em grid de duas colunas.
 - [x] Fazer hero mobile em uma coluna.
@@ -221,7 +244,7 @@ Legenda:
 - [ ] Melhorar confirmacao antes de excluir produto/categoria/adicional.
 - [x] Melhorar menu mobile do admin.
 - [x] Fazer `Editar` em produtos rolar ate o formulario no mobile.
-- [ ] Fazer `Editar` em adicionais rolar ate o formulario no mobile.
+- [x] Fazer `Editar` em adicionais rolar ate o formulario no mobile.
 
 ## Painel Master
 
@@ -298,6 +321,7 @@ Legenda:
 ## Integracoes futuras
 
 - [x] Supabase database definido como alvo.
+- [x] SQL inicial real criado em `supabase/schema.sql`.
 - [ ] Supabase database implementado.
 - [ ] Autenticacao real.
 - [ ] Regras de seguranca por loja/tenant.

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AdminLayout } from "../components/admin/AdminLayout.jsx";
 import { Button } from "../components/ui/Button.jsx";
 import { Card } from "../components/ui/Card.jsx";
@@ -32,6 +32,7 @@ function makeOption() {
 export function AdminAdditionals({ activePath, store }) {
   const [editingId, setEditingId] = useState("");
   const [form, setForm] = useState(emptyGroup);
+  const additionalFormRef = useRef(null);
 
   useEffect(() => {
     resetForm();
@@ -52,6 +53,9 @@ export function AdminAdditionals({ activePath, store }) {
       ...group,
       productIds: group.productIds || [],
       options: group.options?.length ? group.options : [makeOption()],
+    });
+    window.requestAnimationFrame(() => {
+      additionalFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   }
 
@@ -134,7 +138,7 @@ export function AdminAdditionals({ activePath, store }) {
         <Card className="form-section">
           <span className="eyebrow">Adicionais</span>
           <h2>{editingId ? "Editar grupo" : "Novo grupo"}</h2>
-          <form onSubmit={saveGroup}>
+          <form ref={additionalFormRef} onSubmit={saveGroup}>
             <Input label="Nome do grupo" value={form.name} onChange={(event) => updateForm("name", event.target.value)} required />
             <Textarea
               label="Descrição"

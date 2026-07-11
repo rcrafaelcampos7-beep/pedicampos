@@ -1,6 +1,6 @@
 # SUPABASE_MIGRATION_PLAN - PediCampos
 
-Atualizado em: 2026-07-10
+Atualizado em: 2026-07-11
 
 Este documento registra a primeira entrega da mudanca de direcao do PediCampos: sair gradualmente de uma persistencia local baseada em mocks/localStorage e preparar o projeto para persistencia real online, com Supabase como banco alvo.
 
@@ -18,12 +18,20 @@ Objetivo da migracao:
 Decisao tecnica desta etapa:
 
 - Supabase sera o banco alvo.
+- O projeto Supabase `pedicampos` ja foi criado.
+- Regiao escolhida: Oeste dos EUA (Oregon) / `us-west-2`.
+- URL visivel no painel: `https://tkoo...supabase.co`.
 - `localStorage` continua temporariamente como fallback.
 - `src/data/mockStores.js` e `src/data/mockOrders.js` continuam existindo ate a migracao estar validada.
 - Nenhuma tela deve passar a depender diretamente do SDK do Supabase.
 - A primeira camada de service foi criada em `src/services/database.js`.
 - `src/services/database.js` funciona como fachada/adapter temporario e ainda usa `src/services/storage.js` por baixo.
 - Supabase real ainda nao foi conectado.
+- O arquivo `supabase/schema.sql` foi criado para execucao manual no SQL Editor.
+- O arquivo `supabase/README.md` foi criado com instrucoes de execucao e conferencia.
+- `supabase/schema.sql` ja foi executado no SQL Editor do Supabase.
+- O retorno `Sucesso. Nenhuma linha retornada.` foi recebido e e correto para criacao de tabelas, funcoes, triggers, RLS e policies.
+- A proxima verificacao deve ser feita no Table Editor, nas policies, nos indices e nos triggers.
 - `src/hooks/usePediData.js` foi adaptado para consumir `database.js`.
 - Nenhuma tela foi migrada diretamente para `database.js` nesta etapa.
 - Teste pos-adaptacao do hook central foi realizado sem conectar Supabase real.
@@ -34,7 +42,11 @@ Decisao tecnica desta etapa:
 - O layout mobile dos controles de quantidade do carrinho foi ajustado em `src/styles/global.css`.
 - O menu superior do admin mobile foi ajustado em `src/components/admin/AdminLayout.jsx` e `src/styles/global.css`.
 - O scroll automatico ao editar produtos no admin foi ajustado em `src/pages/AdminProducts.jsx`.
-- A proxima etapa correta e corrigir os ajustes visuais/mobile restantes antes de iniciar Supabase real.
+- O scroll automatico ao editar adicionais no admin foi ajustado em `src/pages/AdminAdditionals.jsx`.
+- Os cards/chips de adicionais no admin mobile foram revisados em `src/styles/global.css`.
+- O ciclo de ajustes visuais/mobile registrado no teste manual foi concluido no codigo.
+- Observacao: o layout do admin mobile ainda nao ficou exatamente como Rafael deseja, mas sera redesenhado futuramente; por enquanto a prioridade volta para Supabase.
+- A proxima etapa correta e conferir o schema executado no painel do Supabase e iniciar a conexao do client sem migrar dados ainda.
 
 ## Pendencias visuais/mobile antes do Supabase
 
@@ -56,13 +68,28 @@ Registrado apos teste manual local em `http://127.0.0.1:5174`:
   - ao tocar em `Editar`, a tela rola suavemente ate o formulario de produto;
   - comportamento de criacao/edicao e desktop foram preservados.
 - Admin adicionais mobile:
-  - ao tocar em `Editar`, a tela deve rolar automaticamente ate o formulario;
-  - sugestao tecnica: `scrollIntoView`.
+  - corrigido em `src/pages/AdminAdditionals.jsx`;
+  - ao tocar em `Editar`, a tela rola suavemente ate o formulario de grupo/adicional;
+  - comportamento de criacao/edicao, vinculos e opcoes foram preservados.
 - Admin adicionais mobile:
-  - cards/chips de opcoes estao carregados visualmente;
-  - proxima correcao: melhorar espacamento, quebra de linha e chips.
+  - corrigido em `src/styles/global.css`;
+  - cards ganharam melhor espacamento;
+  - chips/opcoes usam grade responsiva, com quebra de linha mais legivel.
 
-Supabase real deve comecar somente depois desses ajustes visuais/mobile e de novo build/teste local.
+Os ajustes visuais/mobile registrados foram concluidos no codigo. Um novo teste visual/local ainda e recomendado, mas nao bloqueia a proxima etapa tecnica de Supabase: conferir o schema no painel e criar a conexao do client sem migrar dados.
+
+## Proximo objetivo real
+
+Criar a conexao Supabase no projeto sem migrar dados ainda.
+
+Depois da conexao criada e validada, migrar primeiro:
+
+- `getStores()`
+- `getStoreBySlug()`
+- `createStore()`
+- `updateStore()`
+
+Durante essa etapa, `database.js` deve manter `storage.js/localStorage` como fallback. Supabase Auth, policies finais de master/admin e migracao das lojas ficam para etapas posteriores.
 
 ## Auditoria do estado atual
 
@@ -225,12 +252,37 @@ Regra para a proxima etapa de copy:
 
 Observacoes:
 
-- Este schema e uma proposta inicial.
+- O SQL pronto para execucao esta em `supabase/schema.sql`.
+- Este schema e a primeira versao real para criar as tabelas no projeto Supabase `pedicampos`.
+- O SQL ja foi executado no SQL Editor do Supabase.
+- Retorno recebido: `Sucesso. Nenhuma linha retornada.`.
+- Esse retorno e esperado porque o script cria estrutura e nao executa uma consulta com linhas de resultado.
+- Proximo passo no painel: conferir Table Editor, RLS, policies, indices e triggers de `updated_at`.
 - IDs usam `uuid`.
 - `store_id` aparece em todo dado pertencente a uma loja.
 - `stores.slug` deve ser unico.
 - RLS deve ser habilitado antes de producao.
 - A tabela `additional_group_products` e uma tabela ponte recomendada, mesmo nao existindo no modelo local atual, porque o vinculo grupo-produto e muitos-para-muitos.
+- O React ainda nao foi conectado ao Supabase nesta etapa.
+- `localStorage` e mocks continuam como fallback/estado real atual do app.
+
+Tabelas esperadas no Table Editor:
+
+- `platform_settings`
+- `plans`
+- `stores`
+- `store_users`
+- `store_settings`
+- `categories`
+- `products`
+- `additional_groups`
+- `additional_options`
+- `additional_group_products`
+- `customers`
+- `orders`
+- `order_items`
+- `order_item_additionals`
+- `payment_methods`
 
 ```sql
 create extension if not exists pgcrypto;
@@ -602,36 +654,52 @@ Primeira versao segura:
 10. Melhorar carrinho mobile: concluido em `src/styles/global.css`.
 11. Melhorar menu mobile do admin: concluido em `src/components/admin/AdminLayout.jsx` e `src/styles/global.css`.
 12. Adicionar scroll automatico ao editar produtos: concluido em `src/pages/AdminProducts.jsx`.
-13. Adicionar scroll automatico ao editar adicionais.
-14. Revisar cards/chips de adicionais no mobile.
-15. Rodar `npm run build` e testar novamente localmente.
-16. Migrar leituras centrais restantes:
+13. Adicionar scroll automatico ao editar adicionais: concluido em `src/pages/AdminAdditionals.jsx`.
+14. Revisar cards/chips de adicionais no mobile: concluido em `src/styles/global.css`.
+15. Rodar `npm run build`: concluido.
+16. `supabase/schema.sql` foi executado no SQL Editor do projeto `pedicampos`.
+17. Conferir no Table Editor se as 15 tabelas esperadas existem.
+18. Conferir RLS, policies, indices e triggers de `updated_at`.
+19. Instalar `@supabase/supabase-js`.
+20. Criar `.env.local` com:
+   - `VITE_SUPABASE_URL`;
+   - `VITE_SUPABASE_ANON_KEY`.
+21. Nao colocar senha do banco no React.
+22. Criar `src/services/supabaseClient.js`.
+23. Criar conexao Supabase no projeto sem migrar dados ainda.
+24. Manter `database.js` com `storage.js/localStorage` como fallback.
+25. Migrar primeiro funcoes de lojas:
+   - `getStores()`;
+   - `getStoreBySlug()`;
+   - `createStore()`;
+   - `updateStore()`.
+26. Criar adaptadores de formato entre modelo atual e modelo relacional antes de ativar mais telas.
+27. Migrar leituras centrais restantes:
    - primeiro `src/pages/StorePage.jsx`;
    - depois `src/pages/CheckoutPage.jsx`;
    - depois `src/pages/OrderTrackingPage.jsx`.
-17. Criar adaptadores de formato entre modelo atual e modelo relacional antes de ativar Supabase real.
-18. Migrar master lojas:
+28. Migrar master lojas:
    - `src/pages/MasterCreateStore.jsx`;
    - `src/pages/MasterStores.jsx`;
    - `src/pages/MasterPlans.jsx`.
-19. Migrar admin produtos/categorias/adicionais:
+29. Migrar admin produtos/categorias/adicionais:
    - `src/pages/AdminProducts.jsx`;
    - `src/pages/AdminCategories.jsx`;
    - `src/pages/AdminAdditionals.jsx`.
-20. Migrar checkout e pedidos:
+30. Migrar checkout e pedidos:
    - `src/pages/CheckoutPage.jsx`;
    - `src/pages/AdminOrders.jsx`;
    - `src/pages/MasterOrders.jsx`.
-21. Migrar configuracoes:
+31. Migrar configuracoes:
    - `src/pages/AdminSettings.jsx`;
    - `src/pages/MasterSettings.jsx`.
-22. Ativar Supabase por variavel de ambiente:
+32. Ativar Supabase por variavel de ambiente:
    - `VITE_DATA_SOURCE=local` ou `VITE_DATA_SOURCE=supabase`;
    - `VITE_SUPABASE_URL`;
    - `VITE_SUPABASE_ANON_KEY`.
-23. Criar scripts de seed/migracao dos mocks para Supabase.
-24. Habilitar RLS e autenticacao real.
-25. Remover mocks/localStorage apenas depois de validacao em producao.
+33. Criar scripts de seed/migracao dos mocks para Supabase.
+34. Habilitar autenticacao real.
+35. Remover mocks/localStorage apenas depois de validacao em producao.
 
 ## Plano de fallback
 
@@ -688,12 +756,24 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - Pix real e WhatsApp Cloud API ainda nao existem; textos publicos devem evitar prometer integracao real antes da entrega.
 - Imagens ainda sao URL/assets; Supabase Storage sera necessario para upload real.
 
+## Seguranca Supabase
+
+- Nao colocar senha do banco no codigo.
+- Nao colocar senha do banco em `.env.local` usado pelo React.
+- A `anon public key` pode ir para o frontend.
+- A seguranca real deve vir de RLS, policies e Supabase Auth.
+- As policies atuais sao iniciais e temporarias para desenvolvimento.
+- Policies reais de master/admin serao refinadas depois, quando autenticacao real substituir os logins fake.
+
 ## Checklist de migracao
 
 - [x] Auditar pontos de leitura e escrita atuais.
 - [x] Definir Supabase como banco alvo.
+- [x] Criar projeto Supabase `pedicampos`.
 - [x] Manter localStorage/mocks como fallback temporario.
 - [x] Propor schema SQL inicial.
+- [x] Criar `supabase/schema.sql` com 15 tabelas, indices, triggers, RLS e policies temporarias.
+- [x] Criar `supabase/README.md` com instrucoes para executar o SQL no Supabase.
 - [x] Registrar arquivos criticos.
 - [x] Criar `src/services/database.js` com backend local.
 - [x] Revisar `src/services/database.js` com `node --check`.
@@ -719,12 +799,26 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - [x] Rodar `npm run build` apos ajuste do menu superior do admin mobile.
 - [x] Adicionar scroll automatico ao editar produtos no admin mobile.
 - [x] Rodar `npm run build` apos scroll automatico ao editar produtos.
-- [ ] Adicionar scroll automatico ao editar adicionais no admin mobile.
-- [ ] Revisar cards/chips de adicionais no mobile.
-- [ ] Rodar `npm run build` apos as correcoes visuais/mobile e testar novamente localmente.
+- [x] Adicionar scroll automatico ao editar adicionais no admin mobile.
+- [x] Rodar `npm run build` apos scroll automatico ao editar adicionais.
+- [x] Revisar cards/chips de adicionais no mobile.
+- [x] Rodar `npm run build` apos as correcoes visuais/mobile.
+- [ ] Testar novamente localmente no navegador real apos as correcoes visuais/mobile.
+- [x] Executar `supabase/schema.sql` no SQL Editor do Supabase.
+- [x] Confirmar retorno `Sucesso. Nenhuma linha retornada.` como esperado.
+- [x] Rodar `npm run build` apos atualizacao das memorias com o estado real do Supabase.
+- [ ] Conferir as 15 tabelas no Table Editor com RLS ativo.
+- [ ] Conferir policies no painel do Supabase.
+- [ ] Conferir indices criados.
+- [ ] Conferir triggers de `updated_at`.
+- [ ] Instalar `@supabase/supabase-js`.
+- [ ] Criar `.env.local` com `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
+- [ ] Garantir que senha do banco nao va para o React.
+- [ ] Criar `src/services/supabaseClient.js`.
+- [ ] Criar conexao Supabase sem migrar dados ainda.
+- [ ] Manter `database.js` com `storage.js/localStorage` como fallback.
 - [ ] Criar adaptadores entre modelo local aninhado e modelo relacional.
-- [ ] Criar projeto Supabase.
-- [ ] Criar tabelas no Supabase.
+- [ ] Migrar primeiro `getStores()`, `getStoreBySlug()`, `createStore()` e `updateStore()`.
 - [ ] Popular `plans` e `platform_settings`.
 - [ ] Criar seed das lojas demo.
 - [ ] Criar Supabase Auth para master/admin.

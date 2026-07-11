@@ -1,6 +1,6 @@
 # CHANGELOG - PediCampos
 
-Atualizado em: 2026-07-10
+Atualizado em: 2026-07-11
 
 Este changelog registra as principais alteracoes feitas ate o estado atual do projeto. Datas sao aproximadas dentro do ciclo de desenvolvimento local.
 
@@ -730,8 +730,9 @@ Registrado antes da troca de chat:
 - Teste visual/manual foi realizado no navegador local em `http://127.0.0.1:5174`.
 - Nenhuma correcao foi implementada nesta etapa.
 - Nenhum codigo funcional, visual, regra comercial, preco, plano ou integracao foi alterado.
-- Supabase real continua pendente.
-- A proxima conversa deve comecar por correcoes visuais/mobile antes de iniciar Supabase real.
+- Supabase real continuava pendente naquele momento.
+- Registro historico: naquela etapa, a prioridade seguinte eram as correcoes visuais/mobile antes da volta para Supabase.
+- Estado atual posterior: essas pendencias visuais/mobile ja foram corrigidas no codigo; a prioridade voltou para Supabase.
 
 Pendencias visuais registradas:
 
@@ -833,6 +834,110 @@ Proxima pendencia visual/mobile:
 
 - Adicionar scroll automatico ao editar adicionais no admin mobile.
 
+## v0.28 - Scroll automatico ao editar adicionais
+
+Implementado:
+
+- Adicionado `useRef` ao formulario de adicionais em `src/pages/AdminAdditionals.jsx`.
+- Ao tocar em `Editar`, `editGroup` preenche o formulario e chama `scrollIntoView({ behavior: "smooth", block: "start" })`.
+- O comportamento de criacao e edicao de grupos/adicionais foi preservado.
+- Vinculos com produtos e opcoes do grupo foram preservados.
+- Desktop, regras de adicionais, calculo, precos, planos, checkout, pedidos e Supabase nao foram alterados.
+
+Build:
+
+- `npm run build` passou apos a correcao.
+
+Proxima pendencia visual/mobile:
+
+- Revisar cards/chips de adicionais no mobile.
+
+## v0.29 - Revisao dos cards e chips de adicionais mobile
+
+Implementado:
+
+- Ajustado o visual mobile dos cards e chips de adicionais em `src/styles/global.css`.
+- Cards de grupos ganharam melhor espacamento no mobile.
+- Chips/opcoes passaram a usar grade responsiva, com quebra de linha mais confortavel e tamanho mais consistente.
+- Comportamento de adicionais, criacao/edicao/exclusao, vinculos com produtos, calculo, precos, planos, checkout, pedidos e Supabase nao foram alterados.
+- Desktop foi preservado porque o ajuste ficou restrito ao breakpoint mobile.
+- O ciclo de pendencias visuais/mobile registrado no teste manual foi concluido no codigo.
+
+Build:
+
+- `npm run build` passou apos a correcao.
+
+Proxima etapa:
+
+- Subir localmente novamente e testar visualmente no navegador real.
+
+## v0.30 - SQL inicial real do Supabase
+
+Implementado:
+
+- Criado `supabase/schema.sql` para ser executado no SQL Editor do projeto Supabase `pedicampos`.
+- Criado `supabase/README.md` com instrucoes de execucao, conferencia das tabelas e variaveis futuras.
+- O schema cria 15 tabelas: `platform_settings`, `plans`, `stores`, `store_users`, `store_settings`, `categories`, `products`, `additional_groups`, `additional_options`, `additional_group_products`, `customers`, `orders`, `order_items`, `order_item_additionals` e `payment_methods`.
+- RLS e ativado em todas as 15 tabelas.
+- Policies temporarias permitem leitura publica apenas de catalogo ativo e criacao publica de pedidos.
+- Clientes e pedidos nao ficam publicamente legiveis por padrao.
+- React ainda nao foi conectado ao Supabase.
+- `localStorage`, mocks e `database.js` local continuam como estado real atual do app.
+
+Proxima etapa:
+
+- Conferir no Table Editor se as 15 tabelas foram criadas com RLS ativo.
+
+## v0.31 - Schema executado no Supabase
+
+Registrado:
+
+- Projeto Supabase criado com nome `pedicampos`.
+- Regiao escolhida: Oeste dos EUA (Oregon) / `us-west-2`.
+- URL do projeto aparece no painel como `https://tkoo...supabase.co`.
+- `supabase/schema.sql` foi executado no SQL Editor do Supabase.
+- O retorno foi `Sucesso. Nenhuma linha retornada.`.
+- Esse retorno e esperado porque o SQL cria tabelas, funcoes, triggers, RLS e policies, sem consultar dados.
+- React ainda nao foi conectado ao Supabase.
+- `src/services/database.js` continua usando `src/services/storage.js/localStorage` por baixo.
+- Nenhuma loja foi migrada para o banco real ainda.
+- `localStorage`, mocks e `storage.js` continuam preservados.
+
+Tabelas esperadas no Table Editor:
+
+- `platform_settings`
+- `plans`
+- `stores`
+- `store_users`
+- `store_settings`
+- `categories`
+- `products`
+- `additional_groups`
+- `additional_options`
+- `additional_group_products`
+- `customers`
+- `orders`
+- `order_items`
+- `order_item_additionals`
+- `payment_methods`
+
+Seguranca registrada:
+
+- Nao colocar senha do banco no codigo React.
+- A `anon public key` pode ir no frontend.
+- RLS deve proteger os dados.
+- Policies reais de master/admin serao refinadas depois com autenticacao real.
+
+Proxima etapa:
+
+- Conferir tabelas, RLS, policies, indices e triggers de `updated_at` no painel do Supabase.
+- Depois instalar `@supabase/supabase-js`, criar `.env.local`, criar `src/services/supabaseClient.js` e conectar sem migrar dados ainda.
+- Primeiras funcoes a migrar depois da conexao: `getStores()`, `getStoreBySlug()`, `createStore()` e `updateStore()`.
+
+Build:
+
+- `npm run build` passou apos atualizar as memorias com o estado real do Supabase.
+
 ## Builds e verificacoes
 
 - Build anterior conhecido: `npm run build` passou durante o desenvolvimento.
@@ -852,10 +957,14 @@ Proxima pendencia visual/mobile:
 - Build apos ajuste mobile dos controles de quantidade do carrinho passou.
 - Build apos ajuste do menu superior do admin mobile passou.
 - Build apos scroll automatico ao editar produtos no admin passou.
+- Build apos scroll automatico ao editar adicionais no admin passou.
+- Build apos revisao dos cards/chips de adicionais no admin mobile passou.
+- Build apos criacao do SQL inicial real do Supabase passou.
+- Build apos atualizacao das memorias com o estado real do Supabase passou.
 - Observacao: a primeira tentativa no sandbox falhou por acesso negado ao resolver `vite.config.js`; a tentativa com permissao elevada passou.
 
 ## Pendencias conhecidas registradas
 
 - Teste visual/manual em navegador real foi realizado em `http://127.0.0.1:5174`.
-- Necessario corrigir as pendencias visuais/mobile restantes e testar novamente o fluxo completo.
+- Pendencias visuais/mobile registradas foram corrigidas no codigo; necessario testar novamente no navegador real.
 - Precos comerciais finais confirmados: implantacao R$ 599,99; Start R$ 99,99/mes; Pro R$ 179,99/mes; Premium R$ 199,99/mes.

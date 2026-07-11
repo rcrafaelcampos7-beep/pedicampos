@@ -1,6 +1,6 @@
 # ARCHITECTURE - PediCampos
 
-Atualizado em: 2026-07-10
+Atualizado em: 2026-07-11
 
 ## Visao geral
 
@@ -18,6 +18,14 @@ Estado tecnico atual:
 - `src/hooks/usePediData.js` ja consome `database.js` para leitura e assinatura de atualizacoes.
 - Preparada conceitualmente para migrar para Supabase/backend real.
 - Nova direcao registrada em 2026-07-09: Supabase sera o banco alvo e localStorage sera mantido temporariamente como fallback.
+- Projeto Supabase `pedicampos` ja foi criado pelo usuario.
+- Regiao do projeto Supabase: Oeste dos EUA (Oregon) / `us-west-2`.
+- URL visivel no painel: `https://tkoo...supabase.co`.
+- SQL inicial real criado em `supabase/schema.sql`.
+- `supabase/schema.sql` ja foi executado no SQL Editor do Supabase.
+- Retorno recebido: `Sucesso. Nenhuma linha retornada.`, considerado correto para criacao de schema.
+- Proximo passo e conferir Table Editor, RLS, policies, indices e triggers de `updated_at`.
+- Supabase real ainda nao foi conectado ao React.
 - Rewrites SPA configurados em `vercel.json`.
 
 Principais tecnologias:
@@ -45,6 +53,11 @@ Principios:
 - Nenhuma tela foi migrada diretamente para `database.js` ainda.
 - O hook central `usePediData.js` ja foi migrado para a fachada.
 - O schema SQL inicial, riscos e checklist estao em `SUPABASE_MIGRATION_PLAN.md`.
+- O arquivo executado no SQL Editor e `supabase/schema.sql`.
+- As instrucoes operacionais estao em `supabase/README.md`.
+- A senha do banco nunca deve ser usada no React.
+- A `anon public key` pode ser usada no frontend junto com RLS.
+- As policies reais de master/admin serao refinadas depois, quando houver autenticacao real.
 
 API inicial criada:
 
@@ -770,7 +783,27 @@ Tabelas propostas:
 - `payment_methods`;
 - `store_settings`.
 
-O schema SQL inicial esta documentado em `SUPABASE_MIGRATION_PLAN.md`.
+O schema SQL inicial esta documentado em `SUPABASE_MIGRATION_PLAN.md` e materializado em `supabase/schema.sql`.
+
+Estado atual em 2026-07-11:
+
+- O schema ja foi executado no SQL Editor do projeto Supabase `pedicampos`.
+- O retorno `Sucesso. Nenhuma linha retornada.` foi considerado correto.
+- As 15 tabelas esperadas devem ser conferidas no Table Editor.
+- RLS, policies, indices e triggers de `updated_at` ainda precisam ser conferidos no painel.
+- O React ainda nao possui `supabaseClient.js`.
+- `@supabase/supabase-js` ainda nao foi instalado.
+- `.env.local` ainda nao foi criado para Supabase.
+- `database.js` continua usando `storage.js/localStorage` como fallback real.
+
+Proxima conexao planejada:
+
+- Instalar `@supabase/supabase-js`.
+- Criar `.env.local` com `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
+- Nao usar senha do banco no frontend.
+- Criar `src/services/supabaseClient.js`.
+- Conectar sem migrar dados ainda.
+- Depois migrar primeiro `getStores()`, `getStoreBySlug()`, `createStore()` e `updateStore()`.
 
 ### Autenticacao real
 
@@ -853,6 +886,9 @@ Estado em 2026-07-10:
 - Build apos ajuste mobile dos controles de quantidade do carrinho: `npm run build` passou.
 - Build apos ajuste do menu superior do admin mobile: `npm run build` passou.
 - Build apos scroll automatico ao editar produtos no admin: `npm run build` passou.
+- Build apos scroll automatico ao editar grupos/adicionais no admin: `npm run build` passou.
+- Build apos revisao dos cards/chips de adicionais no admin mobile: `npm run build` passou.
+- Build apos atualizacao das memorias com o estado real do Supabase: `npm run build` passou em 2026-07-11.
 
 Correcoes ja realizadas apos o teste visual/manual:
 
@@ -871,18 +907,20 @@ Correcoes ja realizadas apos o teste visual/manual:
   - scroll automatico ao tocar em `Editar` corrigido em `src/pages/AdminProducts.jsx`;
   - o formulario de produtos usa `useRef` e `scrollIntoView({ behavior: "smooth", block: "start" })`;
   - comportamento de criacao/edicao e desktop foram preservados.
+- Admin adicionais mobile:
+  - scroll automatico ao tocar em `Editar` corrigido em `src/pages/AdminAdditionals.jsx`;
+  - o formulario de adicionais usa `useRef` e `scrollIntoView({ behavior: "smooth", block: "start" })`;
+  - comportamento de criacao/edicao, vinculos e opcoes foram preservados.
+- Admin adicionais mobile:
+  - cards/chips de opcoes revisados em `src/styles/global.css`;
+  - cards ganharam melhor espacamento no mobile;
+  - chips/opcoes usam grade responsiva com quebra de linha mais legivel;
+  - desktop e comportamento dos adicionais foram preservados.
 
 Pendencias visuais/mobile restantes:
 
-- Admin adicionais mobile:
-  - ao tocar em `Editar`, deve rolar automaticamente ate o formulario;
-  - sugestao tecnica: `scrollIntoView({ behavior: "smooth", block: "start" })`;
-  - arquivo provavel: `src/pages/AdminAdditionals.jsx`.
-- Admin adicionais mobile:
-  - cards/chips de opcoes estao carregados visualmente;
-  - proxima correcao: melhorar espacamento, quebra de linha e chips;
-  - arquivos provaveis: `src/pages/AdminAdditionals.jsx` e `src/styles/global.css`.
-- Nenhuma dessas correcoes foi iniciada antes da troca de chat.
+- Nenhuma pendencia visual/mobile registrada no teste manual permanece aberta no codigo.
+- Proxima etapa: testar novamente no navegador real em `http://127.0.0.1:5174`.
 
 ## Riscos tecnicos atuais
 
@@ -905,8 +943,8 @@ Antes de implementar novas features, ler:
 
 Depois, continuar pela prioridade:
 
-1. Adicionar scroll automatico ao editar adicionais.
-2. Revisar cards/chips de adicionais no mobile.
-3. Rodar `npm run build`.
-4. Testar novamente localmente em `http://127.0.0.1:5174`.
-5. Depois desses ajustes, retomar a preparacao/conexao Supabase.
+1. Conferir no Supabase Table Editor se as 15 tabelas existem.
+2. Conferir RLS, policies, indices e triggers de `updated_at`.
+3. Criar a conexao Supabase no projeto sem migrar dados ainda.
+4. Manter `database.js/storage.js/localStorage` como fallback.
+5. Depois migrar primeiro `getStores()`, `getStoreBySlug()`, `createStore()` e `updateStore()`.

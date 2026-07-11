@@ -1,6 +1,6 @@
 # PROJECT_CONTEXT - PediCampos
 
-Atualizado em: 2026-07-10
+Atualizado em: 2026-07-11
 
 Este arquivo e a memoria principal do projeto PediCampos. Ele registra o estado atual do codigo, as decisoes ja tomadas, o que esta implementado, o que esta parcial e o que ainda e pendente.
 
@@ -48,6 +48,12 @@ O projeto esta saindo da fase puramente local/mockada e entrando na fase de prep
 Decisoes registradas:
 
 - Supabase sera o banco de dados alvo.
+- Projeto Supabase real ja foi criado com nome `pedicampos`.
+- Regiao escolhida no Supabase: Oeste dos EUA (Oregon) / `us-west-2`.
+- A URL do projeto aparece no painel como `https://tkoo...supabase.co`.
+- `supabase/schema.sql` foi executado no SQL Editor do Supabase.
+- O retorno `Sucesso. Nenhuma linha retornada.` foi recebido e e esperado para criacao de tabelas, funcoes, triggers e policies.
+- Proximo passo operacional no painel: conferir no Table Editor se as 15 tabelas foram criadas, com RLS, policies, indices e triggers de `updated_at`.
 - Tudo que for criado no master/admin deve futuramente refletir online no dominio e em outros dispositivos.
 - `localStorage` nao sera removido agora; ele sera mantido temporariamente como fallback durante a migracao.
 - `src/data/mockStores.js` e `src/data/mockOrders.js` nao serao removidos agora; continuam como seed/fallback enquanto a migracao nao estiver validada.
@@ -57,6 +63,8 @@ Decisoes registradas:
 - Nao deve haver SDK do Supabase espalhado diretamente pelas telas.
 - O plano tecnico completo foi criado em `SUPABASE_MIGRATION_PLAN.md`.
 - A area publica/comercial deve parar de usar linguagem de simulacao antes do uso real. Pix real, WhatsApp Cloud API e Supabase ainda precisam continuar claros na documentacao tecnica como pendentes/em migracao.
+- Supabase ainda nao foi conectado ao React; `storage.js/localStorage` continuam sendo o estado real atual do app.
+- A senha do banco nao deve ir para o React. A `anon public key` pode ser usada no frontend junto com RLS.
 
 ## Estado atual do projeto
 
@@ -89,7 +97,7 @@ Parcial ou simulado:
 - WhatsApp automatico e apenas simulado por mensagens geradas no painel.
 - Login e fake/localStorage, sem autenticacao real.
 - Upload de imagens nao existe; campos aceitam URL, iniciais ou assets locais.
-- Banco de dados real ainda nao existe; tudo fica em localStorage, mas a migracao para Supabase ja foi planejada em `SUPABASE_MIGRATION_PLAN.md`.
+- Banco Supabase real ja existe e recebeu o schema inicial, mas o React ainda nao foi conectado; o app continua lendo e salvando em localStorage por baixo de `database.js/storage.js`.
 
 ## Rotas existentes
 
@@ -609,6 +617,8 @@ Observacoes:
 ## Arquivos importantes
 
 - `SUPABASE_MIGRATION_PLAN.md`: plano tecnico da migracao para Supabase, schema SQL proposto, riscos, fallback e checklist.
+- `supabase/schema.sql`: SQL inicial real para criar as tabelas no Supabase, com indices, triggers, RLS e policies temporarias.
+- `supabase/README.md`: instrucoes para executar o SQL no painel do Supabase e conferir as tabelas.
 - `src/main.jsx`: entrada React.
 - `src/App.jsx`: roteamento principal e protecao fake de admin/master.
 - `src/routes/router.jsx`: roteador simples com `Link`, `navigate`, `usePath`.
@@ -654,6 +664,35 @@ Observacoes:
 
 Ajustes recentes implementados:
 
+- Estado atual do Supabase registrado:
+  - projeto Supabase `pedicampos` criado;
+  - regiao: Oeste dos EUA (Oregon) / `us-west-2`;
+  - URL visivel no painel como `https://tkoo...supabase.co`;
+  - `supabase/schema.sql` executado no SQL Editor;
+  - retorno recebido: `Sucesso. Nenhuma linha retornada.`;
+  - esse retorno e correto para um SQL de criacao de tabelas, funcoes, triggers, RLS e policies;
+  - proximo passo e conferir no Table Editor se as tabelas esperadas foram criadas.
+- Criado SQL inicial real para Supabase:
+  - arquivos criados: `supabase/schema.sql` e `supabase/README.md`;
+  - o schema cria 15 tabelas: `platform_settings`, `plans`, `stores`, `store_users`, `store_settings`, `categories`, `products`, `additional_groups`, `additional_options`, `additional_group_products`, `customers`, `orders`, `order_items`, `order_item_additionals` e `payment_methods`;
+  - RLS e ativado nas 15 tabelas;
+  - policies temporarias permitem leitura publica apenas de catalogo ativo e criacao publica de pedidos;
+  - dados de clientes e pedidos nao ficam publicamente legiveis por padrao;
+  - React ainda nao foi conectado ao Supabase e `localStorage` continua como fallback atual.
+- Revisados cards e chips de adicionais no admin mobile:
+  - arquivo alterado: `src/styles/global.css`;
+  - os cards de grupos ganharam melhor espacamento no mobile;
+  - os chips/opcoes passaram a usar grade responsiva, com quebra de linha mais legivel e tamanho mais consistente;
+  - comportamento de adicionais, criacao/edicao/exclusao, vinculos, calculo, precos, planos, checkout, pedidos e Supabase nao foram alterados;
+  - desktop foi preservado porque o ajuste ficou restrito ao breakpoint mobile;
+  - com esta correcao, o ciclo de ajustes visuais/mobile encontrado no teste manual foi concluido no codigo;
+  - `npm run build` passou apos a correcao.
+- Adicionado scroll automatico ao editar grupos/adicionais no admin:
+  - arquivo alterado: `src/pages/AdminAdditionals.jsx`;
+  - ao tocar em `Editar`, a tela rola suavemente ate o formulario do grupo com `scrollIntoView`;
+  - comportamento de criacao/edicao, vinculos de produtos e opcoes foram preservados;
+  - desktop, regras de adicionais, calculo, precos, planos, checkout, pedidos e Supabase nao foram alterados;
+  - `npm run build` passou apos a correcao.
 - Adicionado scroll automatico ao editar produtos no admin:
   - arquivo alterado: `src/pages/AdminProducts.jsx`;
   - ao tocar em `Editar`, a tela rola suavemente ate o formulario do produto com `scrollIntoView`;
@@ -678,8 +717,8 @@ Ajustes recentes implementados:
   - nenhuma regra comercial, preco, plano, logica de pagamento ou Supabase foi alterado;
   - `npm run build` passou apos a correcao.
 - Teste visual/manual local realizado em `http://127.0.0.1:5174` antes da troca de chat:
-  - nenhum ajuste de codigo deve ser iniciado antes da proxima conversa;
-  - as pendencias encontradas devem ser corrigidas antes de iniciar Supabase real;
+  - registro historico do teste manual anterior;
+  - as pendencias encontradas abaixo foram corrigidas nas etapas seguintes;
   - acompanhamento do pedido em desktop tem texto de adicionais repetido/mal formatado, por exemplo `Adicionais: Bacon extra + R$ 5,00, Adicionais: Cheddar + R$ 4,00`;
   - carrinho mobile tem controles de quantidade muito largos e pouco centralizados;
   - menu superior do admin no mobile fica apertado, com itens cortados/espremidos;
@@ -687,7 +726,7 @@ Ajustes recentes implementados:
   - em `AdminAdditionals`, ao tocar em Editar no mobile, a tela nao rola automaticamente ate o formulario;
   - em `AdminAdditionals` mobile, cards e chips/opcoes funcionam, mas ficam visualmente carregados;
   - arquivos provaveis: `src/pages/OrderTrackingPage.jsx`, `src/components/store/CartDrawer.jsx`, `src/components/admin/AdminLayout.jsx`, `src/pages/AdminProducts.jsx`, `src/pages/AdminAdditionals.jsx` e `src/styles/global.css`;
-  - ordem sugerida para a proxima conversa: corrigir texto repetido de adicionais no acompanhamento; melhorar carrinho mobile; melhorar menu mobile do admin; adicionar scroll automatico ao editar produtos; adicionar scroll automatico ao editar adicionais; revisar cards/chips de adicionais no mobile; rodar `npm run build`; testar novamente no navegador local.
+  - ordem que foi seguida nas correcoes: corrigir texto repetido de adicionais no acompanhamento; melhorar carrinho mobile; melhorar menu mobile do admin; adicionar scroll automatico ao editar produtos; adicionar scroll automatico ao editar adicionais; revisar cards/chips de adicionais no mobile; rodar `npm run build`; testar novamente no navegador local.
 - Projeto preparado para teste visual/manual local em 2026-07-10:
   - comando solicitado: `npm run dev`;
   - o servidor Vite ja estava ativo e respondeu 200;
@@ -832,9 +871,9 @@ Ajustes recentes implementados:
 
 Bugs/pendencias conhecidas:
 
-- Pendencias visuais/mobile restantes do teste manual local:
-  - editar grupo/adicional no admin mobile nao rola ate o formulario;
-  - cards/chips de adicionais no mobile precisam de melhor espacamento e organizacao.
+- Pendencias visuais/mobile registradas no teste manual local foram corrigidas no codigo.
+- Proxima validacao necessaria: subir o servidor local e testar visualmente de novo no navegador real.
+- Observacao do Rafael: o layout do admin mobile ainda nao ficou exatamente como desejado, mas sera redesenhado futuramente; por enquanto a prioridade volta para Supabase.
 - Produtos inativos aparecem como "Indisponivel" na loja publica, nao somem. Isso atende uma das possibilidades pedidas anteriormente, mas deve ser revisado se a decisao final for esconder.
 - Necessario testar visualmente desktop/mobile em navegador real.
 - Necessario testar fluxo completo apos migrar dados antigos.
@@ -860,12 +899,20 @@ Build:
 - Build apos ajuste mobile dos controles de quantidade do carrinho passou com `npm run build`.
 - Build apos ajuste do menu superior do admin mobile passou com `npm run build`.
 - Build apos scroll automatico ao editar produtos no admin passou com `npm run build`.
+- Build apos scroll automatico ao editar grupos/adicionais no admin passou com `npm run build`.
+- Build apos revisao dos cards/chips de adicionais no admin mobile passou com `npm run build`.
+- Build apos criacao de `supabase/schema.sql` e `supabase/README.md` passou com `npm run build`.
+- Build apos atualizacao das memorias com o estado real do Supabase passou em 2026-07-11 com `npm run build`.
 - Observacao: a primeira tentativa dentro do sandbox falhou por acesso negado ao resolver `vite.config.js`; a repeticao com permissao elevada passou.
 
 ## Proximas etapas recomendadas
 
-1. Corrigir ajustes visuais/mobile encontrados no teste manual antes de iniciar Supabase real.
-2. Adicionar scroll automatico ao editar adicionais no admin mobile.
-3. Revisar cards/chips de adicionais no mobile.
-4. Rodar `npm run build` e testar novamente no navegador local.
-5. Depois desses ajustes, retomar preparacao/conexao Supabase.
+1. Conferir no Table Editor se as 15 tabelas do schema foram criadas.
+2. Conferir RLS, policies, indices e triggers de `updated_at`.
+3. Instalar `@supabase/supabase-js`.
+4. Criar `.env.local` com `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
+5. Nao usar senha do banco no React.
+6. Criar `src/services/supabaseClient.js`.
+7. Manter `database.js` com `storage.js/localStorage` como fallback.
+8. Criar a conexao Supabase no projeto sem migrar dados ainda.
+9. Depois migrar primeiro `getStores()`, `getStoreBySlug()`, `createStore()` e `updateStore()`.
