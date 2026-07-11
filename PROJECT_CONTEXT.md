@@ -53,7 +53,7 @@ Decisoes registradas:
 - A URL do projeto aparece no painel como `https://tkoo...supabase.co`.
 - `supabase/schema.sql` foi executado no SQL Editor do Supabase.
 - O retorno `Sucesso. Nenhuma linha retornada.` foi recebido e e esperado para criacao de tabelas, funcoes, triggers e policies.
-- Proximo passo operacional no painel: conferir no Table Editor se as 15 tabelas foram criadas, com RLS, policies, indices e triggers de `updated_at`.
+- Tabelas conferidas no Table Editor; RLS, policies, indices e triggers de `updated_at` ainda devem ser validados item por item se nao tiverem sido conferidos.
 - Tudo que for criado no master/admin deve futuramente refletir online no dominio e em outros dispositivos.
 - `localStorage` nao sera removido agora; ele sera mantido temporariamente como fallback durante a migracao.
 - `src/data/mockStores.js` e `src/data/mockOrders.js` nao serao removidos agora; continuam como seed/fallback enquanto a migracao nao estiver validada.
@@ -63,7 +63,13 @@ Decisoes registradas:
 - Nao deve haver SDK do Supabase espalhado diretamente pelas telas.
 - O plano tecnico completo foi criado em `SUPABASE_MIGRATION_PLAN.md`.
 - A area publica/comercial deve parar de usar linguagem de simulacao antes do uso real. Pix real, WhatsApp Cloud API e Supabase ainda precisam continuar claros na documentacao tecnica como pendentes/em migracao.
-- Supabase ainda nao foi conectado ao React; `storage.js/localStorage` continuam sendo o estado real atual do app.
+- `@supabase/supabase-js` foi instalado.
+- `src/services/supabaseClient.js` foi criado como client defensivo.
+- `src/services/supabaseClient.js` le `import.meta.env.VITE_SUPABASE_URL` e `import.meta.env.VITE_SUPABASE_ANON_KEY`.
+- Se as variaveis Supabase nao existirem, o client exporta `null` e nao quebra o build.
+- `.env.example` foi criado com `VITE_SUPABASE_URL=` e `VITE_SUPABASE_ANON_KEY=`.
+- `.env.local` deve guardar as chaves reais e esta protegido no `.gitignore`.
+- Supabase ainda nao esta migrando dados; `storage.js/localStorage` continuam sendo o estado real atual do app.
 - A senha do banco nao deve ir para o React. A `anon public key` pode ser usada no frontend junto com RLS.
 
 ## Estado atual do projeto
@@ -87,6 +93,10 @@ Implementado:
 - Adicionais configuraveis por loja, vinculados a produtos.
 - Fachada inicial de dados criada em `src/services/database.js`, ainda usando `storage.js/localStorage`.
 - `src/hooks/usePediData.js` passou a consumir `src/services/database.js` para leitura e assinatura de atualizacoes.
+- SDK `@supabase/supabase-js` instalado.
+- `src/services/supabaseClient.js` criado, mas ainda sem uso em `database.js`.
+- `.env.example` criado para documentar as variaveis publicas do Vite.
+- `.env.local` protegido no `.gitignore` para guardar chaves reais fora do Git.
 - Persistencia via localStorage.
 - Dados mockados iniciais.
 - Rewrites de SPA para Vercel em `vercel.json`.
@@ -97,7 +107,7 @@ Parcial ou simulado:
 - WhatsApp automatico e apenas simulado por mensagens geradas no painel.
 - Login e fake/localStorage, sem autenticacao real.
 - Upload de imagens nao existe; campos aceitam URL, iniciais ou assets locais.
-- Banco Supabase real ja existe e recebeu o schema inicial, mas o React ainda nao foi conectado; o app continua lendo e salvando em localStorage por baixo de `database.js/storage.js`.
+- Banco Supabase real ja existe e recebeu o schema inicial. O client React/Supabase ja foi preparado, mas ainda nao migra dados; o app continua lendo e salvando em localStorage por baixo de `database.js/storage.js`.
 
 ## Rotas existentes
 
@@ -751,7 +761,7 @@ Ajustes recentes implementados:
   - `src/hooks/usePediData.js` ja consome `database.js`;
   - `src/services/storage.js` e `localStorage` continuam como fallback;
   - Supabase real ainda nao foi conectado;
-  - proxima etapa apos o teste manual: corrigir qualquer bug visual encontrado ou iniciar a conexao Supabase.
+  - proxima etapa apos o teste manual: configurar `.env.local` e testar conexao basica Supabase sem migrar dados.
 - Copy publica revisada em 2026-07-10 para remover linguagem de teste/simulacao:
   - `src/pages/LandingPage.jsx` deixou de exibir `mock`, `localStorage`, `Loja demo` e "Demonstração real no mock";
   - `src/pages/CheckoutPage.jsx` deixou de exibir `simulado`, `ficticio` e `DEMO` no Pix/Cartao;
@@ -909,10 +919,8 @@ Build:
 
 1. Conferir no Table Editor se as 15 tabelas do schema foram criadas.
 2. Conferir RLS, policies, indices e triggers de `updated_at`.
-3. Instalar `@supabase/supabase-js`.
-4. Criar `.env.local` com `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
-5. Nao usar senha do banco no React.
-6. Criar `src/services/supabaseClient.js`.
-7. Manter `database.js` com `storage.js/localStorage` como fallback.
-8. Criar a conexao Supabase no projeto sem migrar dados ainda.
-9. Depois migrar primeiro `getStores()`, `getStoreBySlug()`, `createStore()` e `updateStore()`.
+3. Criar `.env.local` com `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` reais.
+4. Nao usar senha do banco no React.
+5. Testar conexao basica Supabase com `src/services/supabaseClient.js`.
+6. Manter `database.js` com `storage.js/localStorage` como fallback.
+7. Depois migrar primeiro `getStores()`, `getStoreBySlug()`, `createStore()` e `updateStore()`.

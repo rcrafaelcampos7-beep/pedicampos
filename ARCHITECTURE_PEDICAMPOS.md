@@ -24,8 +24,13 @@ Estado tecnico atual:
 - SQL inicial real criado em `supabase/schema.sql`.
 - `supabase/schema.sql` ja foi executado no SQL Editor do Supabase.
 - Retorno recebido: `Sucesso. Nenhuma linha retornada.`, considerado correto para criacao de schema.
-- Proximo passo e conferir Table Editor, RLS, policies, indices e triggers de `updated_at`.
-- Supabase real ainda nao foi conectado ao React.
+- Tabelas ja foram conferidas no Table Editor.
+- `@supabase/supabase-js` foi instalado.
+- `src/services/supabaseClient.js` foi criado.
+- `.env.example` foi criado.
+- `.env.local` esta protegido no `.gitignore` e deve guardar as chaves reais.
+- O client Supabase ja existe no React, mas ainda nao migra dados.
+- `database.js` continua usando `storage.js/localStorage` como persistencia real.
 - Rewrites SPA configurados em `vercel.json`.
 
 Principais tecnologias:
@@ -35,6 +40,7 @@ Principais tecnologias:
 - Vite 7.
 - JavaScript modules.
 - CSS puro.
+- Supabase JS SDK instalado, ainda sem migracao de dados.
 - localStorage.
 
 ## Nova arquitetura alvo - Supabase
@@ -49,7 +55,7 @@ Principios:
 - A implementacao atual de `database.js` usa `src/services/storage.js` por baixo para preservar o comportamento atual.
 - Depois, `database.js` deve trocar a origem para Supabase com `VITE_DATA_SOURCE=supabase`.
 - `localStorage` e mocks continuam como fallback temporario, nao como arquitetura final.
-- Supabase real ainda nao foi conectado.
+- O client Supabase existe em `src/services/supabaseClient.js`, mas `database.js` ainda nao usa Supabase.
 - Nenhuma tela foi migrada diretamente para `database.js` ainda.
 - O hook central `usePediData.js` ja foi migrado para a fachada.
 - O schema SQL inicial, riscos e checklist estao em `SUPABASE_MIGRATION_PLAN.md`.
@@ -57,6 +63,8 @@ Principios:
 - As instrucoes operacionais estao em `supabase/README.md`.
 - A senha do banco nunca deve ser usada no React.
 - A `anon public key` pode ser usada no frontend junto com RLS.
+- `.env.example` documenta `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
+- `.env.local` deve ficar fora do Git e guardar as chaves reais.
 - As policies reais de master/admin serao refinadas depois, quando houver autenticacao real.
 
 API inicial criada:
@@ -101,6 +109,8 @@ VITE_DATA_SOURCE=local
 VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
 ```
+
+Observacao: `.env.example` registra apenas `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` nesta etapa. `VITE_DATA_SOURCE` continua previsto para ativar a troca de origem de dados em etapa posterior.
 
 Quando `VITE_DATA_SOURCE=local`, o app continua usando fallback local.
 Quando `VITE_DATA_SOURCE=supabase`, as funcoes da camada de dados devem buscar e salvar no Supabase.
@@ -624,7 +634,8 @@ Observacao de migracao:
 - `src/services/storage.js` continua critico e nao deve ser apagado agora.
 - `src/services/database.js` ja envolve essas funcoes com nomes preparados para banco real.
 - `src/services/database.js` ainda usa `storage.js/localStorage` como adapter temporario.
-- Supabase real ainda nao foi conectado.
+- `src/services/supabaseClient.js` ja existe, mas ainda nao foi ligado ao `database.js`.
+- Supabase ainda nao esta migrando dados.
 - `src/hooks/usePediData.js` foi migrado para `database.js` nesta etapa.
 - Nenhuma tela foi migrada diretamente para `database.js` nesta etapa.
 - O objetivo e reduzir chamadas diretas a `storage.js` nas telas antes de conectar Supabase.
@@ -789,20 +800,20 @@ Estado atual em 2026-07-11:
 
 - O schema ja foi executado no SQL Editor do projeto Supabase `pedicampos`.
 - O retorno `Sucesso. Nenhuma linha retornada.` foi considerado correto.
-- As 15 tabelas esperadas devem ser conferidas no Table Editor.
+- As 15 tabelas esperadas foram conferidas no Table Editor.
 - RLS, policies, indices e triggers de `updated_at` ainda precisam ser conferidos no painel.
-- O React ainda nao possui `supabaseClient.js`.
-- `@supabase/supabase-js` ainda nao foi instalado.
-- `.env.local` ainda nao foi criado para Supabase.
+- O React ja possui `src/services/supabaseClient.js`.
+- `@supabase/supabase-js` ja foi instalado.
+- `.env.example` foi criado.
+- `.env.local` ainda deve ser criado localmente com as chaves reais e nao deve ir para o Git.
 - `database.js` continua usando `storage.js/localStorage` como fallback real.
 
 Proxima conexao planejada:
 
-- Instalar `@supabase/supabase-js`.
 - Criar `.env.local` com `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
 - Nao usar senha do banco no frontend.
-- Criar `src/services/supabaseClient.js`.
-- Conectar sem migrar dados ainda.
+- Testar conexao basica Supabase com `src/services/supabaseClient.js`.
+- Conectar a camada de dados sem migrar dados ainda.
 - Depois migrar primeiro `getStores()`, `getStoreBySlug()`, `createStore()` e `updateStore()`.
 
 ### Autenticacao real
@@ -880,7 +891,7 @@ Estado em 2026-07-10:
 - Checklist manual: landing, loja publica, produto, adicionais gratis/pagos, carrinho, checkout, acompanhamento, admin pedidos, alteracao de status, master lojas/configuracoes, responsividade mobile e ausencia de termos publicos como `simulado`, `mock`, `localStorage`, `teste` ou `dados ficticios`.
 - `database.js` segue como fachada temporaria e `usePediData.js` ja usa essa fachada.
 - `storage.js/localStorage` continuam como fallback.
-- Supabase real ainda nao foi conectado.
+- `src/services/supabaseClient.js` ja existe, mas Supabase ainda nao migra dados.
 - Build de integridade apos finalizacao das memorias: `npm run build` passou em 2026-07-10 com permissao elevada apos a falha conhecida do sandbox ao resolver `vite.config.js`.
 - Build apos correcao dos adicionais no acompanhamento do pedido: `npm run build` passou.
 - Build apos ajuste mobile dos controles de quantidade do carrinho: `npm run build` passou.
@@ -943,8 +954,8 @@ Antes de implementar novas features, ler:
 
 Depois, continuar pela prioridade:
 
-1. Conferir no Supabase Table Editor se as 15 tabelas existem.
-2. Conferir RLS, policies, indices e triggers de `updated_at`.
-3. Criar a conexao Supabase no projeto sem migrar dados ainda.
+1. Criar `.env.local` com `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` reais.
+2. Testar conexao basica Supabase sem migrar dados.
+3. Conferir RLS, policies, indices e triggers de `updated_at`, se ainda nao tiver sido validado item por item.
 4. Manter `database.js/storage.js/localStorage` como fallback.
 5. Depois migrar primeiro `getStores()`, `getStoreBySlug()`, `createStore()` e `updateStore()`.

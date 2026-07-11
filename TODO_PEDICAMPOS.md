@@ -55,7 +55,14 @@ Legenda:
 - [x] Executar `supabase/schema.sql` no SQL Editor do Supabase.
 - [x] Confirmar retorno `Sucesso. Nenhuma linha retornada.` como esperado.
 - [x] Rodar `npm run build` apos atualizar as memorias com o estado real do Supabase.
-- [ ] Proxima tarefa real: conferir tabelas, RLS, policies, indices e triggers no painel do Supabase.
+- [x] Conferir tabelas no Table Editor do Supabase.
+- [x] Instalar `@supabase/supabase-js`.
+- [x] Criar `src/services/supabaseClient.js`.
+- [x] Criar `.env.example` com `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
+- [x] Garantir que `.env.local` esteja protegido no `.gitignore`.
+- [x] Nao colocar chaves reais nem senha do banco no codigo.
+- [ ] Proxima tarefa real: configurar `.env.local` com as chaves reais e testar conexao basica Supabase.
+- [ ] Conferir RLS, policies, indices e triggers no painel do Supabase, se ainda nao tiver sido validado item por item.
 
 ## Migracao Supabase
 
@@ -72,11 +79,11 @@ Legenda:
 - [x] Criar `supabase/README.md` com instrucoes para executar o SQL.
 - [x] Criar `src/services/database.js` com API preparada para Supabase e implementacao local por baixo.
 - [x] Confirmar que `src/services/database.js` ainda usa `storage.js/localStorage` como adapter temporario.
-- [x] Confirmar que Supabase real ainda nao foi conectado.
+- [x] Confirmar que Supabase ainda nao migra dados e `database.js` continua usando localStorage.
 - [x] Confirmar que nenhuma tela foi migrada para `database.js` nesta etapa.
 - [x] Migrar `src/hooks/usePediData.js` para importar `getDatabase` e `subscribeDatabase` de `database.js`.
 - [x] Testar pos-migracao do hook central sem conectar Supabase real.
-- [ ] Criar `src/services/supabaseClient.js` quando as variaveis de ambiente existirem.
+- [x] Criar `src/services/supabaseClient.js` defensivo, sem quebrar o app quando as variaveis nao existem.
 - [ ] Definir `VITE_DATA_SOURCE=local|supabase`.
 - [ ] Definir `VITE_SUPABASE_URL`.
 - [ ] Definir `VITE_SUPABASE_ANON_KEY`.
@@ -99,13 +106,15 @@ Legenda:
 - [ ] Conferir policies criadas em `Authentication > Policies`.
 - [ ] Conferir indices criados no Supabase.
 - [ ] Conferir triggers de `updated_at`.
-- [ ] Instalar `@supabase/supabase-js`.
+- [x] Instalar `@supabase/supabase-js`.
+- [x] Criar `.env.example`.
 - [ ] Popular `plans` e `platform_settings`.
 - [ ] Migrar lojas demo como seed inicial.
 - [ ] Criar `.env.local` com `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
 - [ ] Garantir que senha do banco nao seja colocada no React.
-- [ ] Criar `src/services/supabaseClient.js`.
-- [ ] Criar conexao Supabase sem migrar dados ainda.
+- [x] Criar `src/services/supabaseClient.js`.
+- [x] Preparar conexao Supabase sem migrar dados ainda.
+- [ ] Testar conexao basica Supabase com `.env.local` configurado.
 - [ ] Manter `database.js` com `storage.js/localStorage` como fallback.
 - [ ] Migrar primeiro `getStores()`, `getStoreBySlug()`, `createStore()` e `updateStore()`.
 - [ ] Implementar Supabase Auth para master/admin.

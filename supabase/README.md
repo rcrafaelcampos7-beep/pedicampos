@@ -12,8 +12,12 @@ Nesta etapa, o React ainda nao foi conectado ao Supabase. O app continua usando 
 - `supabase/schema.sql` ja foi executado no SQL Editor do Supabase.
 - Retorno recebido: `Sucesso. Nenhuma linha retornada.`.
 - Esse retorno e esperado para criacao de tabelas, funcoes, triggers, RLS e policies.
-- Proximo passo: conferir no Table Editor se as 15 tabelas foram criadas.
-- Supabase ainda nao foi conectado ao React.
+- As 15 tabelas foram conferidas no Table Editor.
+- `@supabase/supabase-js` foi instalado.
+- `src/services/supabaseClient.js` foi criado.
+- `.env.example` foi criado com as variaveis esperadas.
+- `.env.local` deve guardar as chaves reais e esta protegido no `.gitignore`.
+- O client Supabase ja existe no React, mas ainda nao migra dados.
 - Nenhuma loja foi migrada para o banco real ainda.
 - `storage.js`, mocks e `localStorage` continuam preservados.
 - `npm run build` passou apos atualizar as memorias com este estado.
@@ -82,38 +86,38 @@ where table_schema = 'public'
 order by table_name;
 ```
 
-## Variaveis de ambiente necessarias depois
+## Variaveis de ambiente
 
-Quando a conexao React/Supabase for implementada, o projeto deve usar:
+O arquivo `.env.example` documenta:
 
 ```txt
-VITE_DATA_SOURCE=supabase
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+```
+
+Crie um `.env.local` local, fora do Git, com os valores reais:
+
+```txt
 VITE_SUPABASE_URL=https://tkoo...supabase.co
 VITE_SUPABASE_ANON_KEY=
 ```
 
-Enquanto `VITE_DATA_SOURCE` estiver ausente ou `local`, o app deve continuar usando o adapter local atual.
+Enquanto a camada `database.js` nao for migrada, o app continua usando o adapter local atual.
 
 Nunca usar a senha do banco no React. A `anon public key` pode ir no frontend, desde que RLS e policies estejam protegendo os dados.
 
 ## Proxima etapa tecnica
 
-1. Conferir tabelas no Table Editor.
-2. Conferir RLS.
-3. Conferir policies.
-4. Conferir indices.
-5. Conferir triggers de `updated_at`.
-6. Instalar `@supabase/supabase-js`.
-7. Criar `src/services/supabaseClient.js`.
-8. Criar `.env.local` com `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
-9. Manter `database.js` com `storage.js/localStorage` como fallback.
-10. Criar conexao Supabase sem migrar dados ainda.
-11. Depois migrar primeiro `getStores()`, `getStoreBySlug()`, `createStore()` e `updateStore()`.
+1. Criar `.env.local` com `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` reais.
+2. Testar conexao basica Supabase com `src/services/supabaseClient.js`.
+3. Conferir RLS, policies, indices e triggers de `updated_at`, se ainda nao tiver sido validado item por item.
+4. Manter `database.js` com `storage.js/localStorage` como fallback.
+5. Depois migrar primeiro `getStores()`, `getStoreBySlug()`, `createStore()` e `updateStore()`.
 
 ## Observacoes importantes
 
 - Este SQL nao popula dados demo.
-- Este SQL nao conecta o React.
+- Este SQL nao migra dados para o React.
 - Este SQL nao remove mocks nem `localStorage`.
 - Admin/master real com Supabase Auth ainda fica para uma etapa posterior.
 - As policies permitem leitura publica apenas de catalogo ativo.

@@ -938,6 +938,32 @@ Build:
 
 - `npm run build` passou apos atualizar as memorias com o estado real do Supabase.
 
+## v0.32 - Client Supabase preparado no React
+
+Implementado nesta rotina:
+
+- Instalado `@supabase/supabase-js`.
+- Criado `src/services/supabaseClient.js`.
+- O client le `import.meta.env.VITE_SUPABASE_URL` e `import.meta.env.VITE_SUPABASE_ANON_KEY`.
+- Se as variaveis nao existirem, o client exporta `null` e nao quebra o app inteiro.
+- Criado `.env.example` com as variaveis esperadas.
+- `.env.local` foi adicionado explicitamente ao `.gitignore`.
+- Nenhuma chave real foi colocada no codigo.
+- Nenhuma senha do banco foi usada no React.
+- Supabase ainda nao esta migrando dados.
+- `src/services/database.js` continua usando `src/services/storage.js/localStorage` como fallback real.
+- Nenhuma tela, regra, plano, preco ou visual foi alterado.
+- Nenhum commit, add ou push foi feito nesta etapa.
+
+Proxima etapa:
+
+- Criar `.env.local` com `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` reais.
+- Testar conexao basica Supabase sem migrar lojas ainda.
+
+Build:
+
+- `npm run build` passou apos preparar o client Supabase.
+
 ## Builds e verificacoes
 
 - Build anterior conhecido: `npm run build` passou durante o desenvolvimento.
@@ -961,6 +987,7 @@ Build:
 - Build apos revisao dos cards/chips de adicionais no admin mobile passou.
 - Build apos criacao do SQL inicial real do Supabase passou.
 - Build apos atualizacao das memorias com o estado real do Supabase passou.
+- Build apos preparacao do client Supabase passou.
 - Observacao: a primeira tentativa no sandbox falhou por acesso negado ao resolver `vite.config.js`; a tentativa com permissao elevada passou.
 
 ## Pendencias conhecidas registradas
