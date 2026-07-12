@@ -416,3 +416,14 @@ Legenda:
 - [ ] Integrar `AdminCategories` somente depois da autenticacao real.
 - [ ] Executar CRUD temporario autenticado e conferir no Table Editor.
 - [ ] Manter produtos pendentes ate categorias estarem validadas.
+
+## Auth real dos usuarios de loja - 2026-07-12
+
+- [x] Criar `signInStoreUser`, `getStoreMemberships` e `getAuthorizedStoreForUser`.
+- [x] Migrar AdminLogin para Supabase Auth sem senha fixa ou escolha arbitraria de loja.
+- [x] Proteger rotas admin por sessao e vinculo ativo em `store_users`.
+- [x] Fazer logout real e remover troca manual de loja do layout.
+- [ ] Criar manualmente o primeiro usuario Auth de loja e seu vinculo.
+- [ ] Testar usuario valido, sem vinculo, inativo, isolamento, refresh e logout.
+- [ ] Criar selecao explicita quando houver necessidade real de multiplos vinculos.
+- [ ] Integrar AdminCategories ao adapter assincrono na proxima etapa.

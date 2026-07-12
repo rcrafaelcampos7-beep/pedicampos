@@ -1,8 +1,7 @@
 import { Sidebar } from "../layout/Sidebar.jsx";
 import { Button } from "../ui/Button.jsx";
-import { Select } from "../ui/Input.jsx";
 import { navigate } from "../../routes/router.jsx";
-import { usePediData } from "../../hooks/usePediData.js";
+import { signOut } from "../../services/auth.js";
 
 const adminLinks = [
   { to: "/admin/dashboard", label: "Dashboard", icon: "D" },
@@ -14,16 +13,8 @@ const adminLinks = [
 ];
 
 export function AdminLayout({ children, activePath, store }) {
-  const { stores } = usePediData();
-
-  function changeStore(storeId) {
-    window.localStorage.setItem("pedicampos.admin.storeId", storeId);
-    window.dispatchEvent(new CustomEvent("pedicampos:session-updated"));
-  }
-
-  function logout() {
-    window.localStorage.removeItem("pedicampos.admin.storeId");
-    window.localStorage.removeItem("pedicampos.admin.auth");
+  async function logout() {
+    await signOut();
     navigate("/admin");
   }
 
@@ -45,17 +36,6 @@ export function AdminLayout({ children, activePath, store }) {
             <span>Painel da loja</span>
             <h1>{store?.name || "Loja"}</h1>
           </div>
-          <Select
-            label="Loja"
-            value={store?.id || ""}
-            onChange={(event) => changeStore(event.target.value)}
-          >
-            {stores.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </Select>
         </header>
         {children}
       </main>

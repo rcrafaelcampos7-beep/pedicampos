@@ -902,3 +902,12 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - Bloqueio atual: admins de loja usam login fake e nao podem receber write remoto seguro.
 - Proxima etapa correta: Supabase Auth dos admins + registros `store_users`; depois integrar e testar `AdminCategories`.
 - Produtos permanecem pendentes.
+
+## Auth dos usuarios de loja
+
+- Concluido no codigo: login Supabase, leitura de memberships, resolucao da loja e protecao das rotas admin.
+- Roles aceitas conforme schema atual: `store_admin` e `store_staff`; master permanece separado.
+- Nenhuma migration 004 foi necessaria; as policies existentes ja limitam leitura do proprio vinculo e administracao ao master.
+- Nao existe fallback fake de admin nem selecao arbitraria de `store_id`.
+- Pendente: criar usuario/vinculo real e executar testes de sessao e isolamento.
+- Proxima etapa: integrar AdminCategories ao CRUD assincrono; produtos continuam depois.

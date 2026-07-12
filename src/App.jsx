@@ -22,6 +22,7 @@ import { MasterStores } from "./pages/MasterStores.jsx";
 import { OrderTrackingPage } from "./pages/OrderTrackingPage.jsx";
 import { StorePage } from "./pages/StorePage.jsx";
 import {
+  getAuthorizedStoreForUser,
   getCurrentUser,
   hasDevelopmentMasterSession,
   isMasterUser,
@@ -60,12 +61,37 @@ function NotFound() {
   );
 }
 
-function AdminRouter({ path, stores, platform }) {
-  const auth = window.localStorage.getItem("pedicampos.admin.auth") === "true";
-  const storeId = window.localStorage.getItem("pedicampos.admin.storeId");
-  const store = stores.find((item) => item.id === storeId) || stores[0];
+function AdminRouter({ path, platform }) {
+  const [authState, setAuthState] = useState({ loading: true, store: null });
 
-  if (!auth || !store) return <AdminLogin />;
+  useEffect(() => {
+    let active = true;
+
+    async function verifyStoreUser() {
+      const user = await getCurrentUser();
+      let authorization = null;
+
+      try {
+        authorization = await getAuthorizedStoreForUser(user);
+      } catch {
+        authorization = null;
+      }
+
+      if (active) setAuthState({ loading: false, store: authorization?.store || null });
+    }
+
+    verifyStoreUser();
+    const unsubscribe = subscribeAuthChanges(() => window.setTimeout(verifyStoreUser, 0));
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, []);
+
+  if (authState.loading) return null;
+  const store = authState.store;
+
+  if (!store) return <AdminLogin />;
   if (path === "/admin") {
     navigate("/admin/dashboard");
     return null;
@@ -133,13 +159,13 @@ function MasterRouter({ path }) {
 
 export default function App() {
   const path = usePath();
-  const { stores, platform } = usePediData();
+  const { platform } = usePediData();
   useSessionVersion();
   const segments = path.split("/").filter(Boolean);
 
   if (path === "/") return <LandingPage />;
 
-  if (segments[0] === "admin") return <AdminRouter path={path} stores={stores} platform={platform} />;
+  if (segments[0] === "admin") return <AdminRouter path={path} platform={platform} />;
   if (segments[0] === "master") return <MasterRouter path={path} />;
 
   if (segments.length === 1) return <StorePage slug={segments[0]} />;

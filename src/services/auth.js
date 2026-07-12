@@ -1,4 +1,5 @@
 import { supabase } from "./supabaseClient.js";
+import { getStoreById } from "./database.js";
 
 const DEV_AUTH_KEY = "pedicampos.master.dev-auth";
 const isDevFallbackEnabled =
@@ -46,6 +47,52 @@ export async function signInMaster(email, password) {
   window.sessionStorage.setItem(DEV_AUTH_KEY, "true");
   notifyAuthChange();
   return { user: { id: "development-master", email }, session: null, fallback: true };
+}
+
+export async function getStoreMemberships(userId) {
+  if (!userId || !supabase) return [];
+
+  const { data, error } = await supabase
+    .from("store_users")
+    .select("id, store_id, auth_user_id, email, role, active, created_at")
+    .eq("auth_user_id", userId)
+    .eq("active", true)
+    .in("role", ["store_admin", "store_staff"])
+    .not("store_id", "is", null)
+    .order("created_at", { ascending: true });
+
+  if (error) throw new Error("STORE_MEMBERSHIPS_UNAVAILABLE");
+  return data || [];
+}
+
+export async function getAuthorizedStoreForUser(user) {
+  if (!user) return null;
+  const memberships = await getStoreMemberships(user.id);
+  if (!memberships.length) return null;
+
+  const membership = memberships[0];
+  const store = await getStoreById(membership.store_id);
+  if (!store) return null;
+
+  return { store, membership, memberships };
+}
+
+export async function signInStoreUser(email, password) {
+  if (!supabase) throw new Error("STORE_AUTH_UNAVAILABLE");
+
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error || !data.user) throw new Error("STORE_AUTH_FAILED");
+
+  try {
+    const authorization = await getAuthorizedStoreForUser(data.user);
+    if (!authorization) throw new Error("STORE_ACCESS_DENIED");
+
+    notifyAuthChange();
+    return { user: data.user, session: data.session, ...authorization };
+  } catch (authorizationError) {
+    await supabase.auth.signOut();
+    throw authorizationError;
+  }
 }
 
 export async function signOut() {

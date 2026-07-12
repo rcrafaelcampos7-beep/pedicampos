@@ -1043,3 +1043,12 @@ Build:
 - Policies existentes foram preservadas; INSERT anonimo foi bloqueado com `42501`.
 - Tela admin permaneceu local por ainda nao existir Auth real dos admins de loja.
 - Produtos, adicionais e pedidos nao foram alterados.
+
+## 2026-07-12 - Supabase Auth para usuarios das lojas
+
+- Expandida a camada de auth com login e resolucao de vinculos de loja.
+- AdminLogin passou a aceitar apenas credenciais Supabase autorizadas, sem senha fixa e sem seletor de lojas.
+- Rotas admin deixaram de confiar nas chaves locais antigas e passaram a revalidar sessao + `store_users`.
+- AdminLayout passou a usar logout real e deixou de permitir troca manual para lojas nao vinculadas.
+- Nenhuma policy foi afrouxada e nenhuma migration adicional foi necessaria.
+- AdminCategories e produtos nao foram integrados nesta etapa.

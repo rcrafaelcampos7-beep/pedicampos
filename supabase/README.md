@@ -188,4 +188,31 @@ As funcoes de categorias em `database.js` agora consultam e gravam `public.categ
 
 Nenhuma migration adicional foi necessaria. As policies existentes permitem leitura publica somente de categorias ativas pertencentes a lojas ativas e permitem escrita somente ao master ou usuario autenticado ativo vinculado a mesma loja em `store_users`.
 
-O teste anonimo retornou leitura vazia e bloqueou INSERT com PostgreSQL `42501`; nenhuma categoria temporaria foi criada. `AdminCategories` ainda nao usa essas funcoes porque o admin da loja continua fake/local. Nao configure bypass: a proxima etapa correta e criar Auth real para admins, vincula-los a `store_users` e somente entao integrar a tela e executar CRUD por loja. Produtos continuam pendentes.
+O teste anonimo retornou leitura vazia e bloqueou INSERT com PostgreSQL `42501`; nenhuma categoria temporaria foi criada. `AdminCategories` ainda nao usa essas funcoes e sera integrado depois da validacao manual do Auth real dos admins. Produtos continuam pendentes.
+
+## Criar um usuario de loja
+
+1. Em `Authentication > Users`, use `Add user`.
+2. Informe o e-mail do usuario, uma senha forte e deixe o usuario confirmado.
+3. Copie o UUID do usuario Auth.
+4. Copie o UUID da loja em `Table Editor > stores`.
+5. No SQL Editor, execute substituindo os tres valores:
+
+```sql
+insert into public.store_users (store_id, auth_user_id, email, role, active)
+values (
+  'UUID_DA_LOJA'::uuid,
+  'UUID_DO_USUARIO_AUTH'::uuid,
+  'email@da-loja.com',
+  'store_admin',
+  true
+)
+on conflict (store_id, auth_user_id)
+do update set email = excluded.email, role = excluded.role, active = true;
+```
+
+As roles de loja aceitas pelo schema atual sao `store_admin` e `store_staff`. Nao use `master` para um admin de loja. O frontend nao cria usuarios nem recebe service role.
+
+O login `/admin` valida a sessao e o vinculo ativo. IDs salvos manualmente no navegador nao alteram a loja autorizada. Multiplos vinculos sao suportados pela camada, mas a interface usa o primeiro por ordem de criacao ate existir uma tela de selecao. Nao ha fallback fake para admin.
+
+Depois do vinculo, teste login, refresh, logout, usuario sem vinculo, usuario inativo e tentativa de acesso a outra loja. `AdminCategories` sera integrado ao adapter na proxima etapa; produtos continuam pendentes.

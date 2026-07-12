@@ -61,6 +61,17 @@ Atualizado em: 2026-07-12
 - Teste anon confirmou leitura vazia e bloqueio de INSERT com `42501`, sem linha criada.
 - Proxima etapa correta: Supabase Auth para usuarios das lojas e vinculacao em `store_users`; depois integrar `AdminCategories`. Produtos continuam pendentes.
 
+## Supabase Auth dos usuarios de loja - 2026-07-12
+
+- O login `/admin` agora usa `supabase.auth.signInWithPassword` e nao possui senha fixa nem seletor livre de loja.
+- A autorizacao exige vinculo ativo em `store_users`, `store_id` preenchido e role `store_admin` ou `store_staff`.
+- A rota admin resolve a loja pelo vinculo do `auth.uid()`; chaves antigas de localStorage nao concedem acesso nem permitem trocar para outra loja.
+- Refresh restaura a sessao pelo client Supabase e revalida o vinculo; logout usa `supabase.auth.signOut()`.
+- Master continua autorizado separadamente pela role `master`; uma role master nao e aceita como usuario de loja.
+- Nenhuma migration foi necessaria porque schema, `can_access_store` e policies atuais ja atendem ao isolamento.
+- Multiplos vinculos ja sao retornados pela camada; nesta versao o primeiro por data de criacao e usado, sem tela de selecao.
+- Nao foi mantido fallback fake para admin. `AdminCategories` continua local e sera integrado na proxima etapa; produtos permanecem pendentes.
+
 Este arquivo e a memoria principal do projeto PediCampos. Ele registra o estado atual do codigo, as decisoes ja tomadas, o que esta implementado, o que esta parcial e o que ainda e pendente.
 
 ## Identidade do projeto

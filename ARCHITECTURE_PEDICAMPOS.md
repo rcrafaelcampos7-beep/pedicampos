@@ -1003,4 +1003,12 @@ Categorias usam `categories.id` UUID, `store_id` obrigatorio, `name`, `active` e
 
 Leituras sempre aplicam `.eq("store_id", storeId)`. No banco, leitura publica exige categoria ativa e loja ativa; writes exigem `can_access_store(store_id)`, que aceita master ou usuario ativo ligado a mesma loja. O role anon nao possui escrita.
 
-O login fake do admin nao gera `auth.uid()`. Por isso `AdminCategories` continua no fluxo local e nao foi conectado ao adapter: uma sessao master eventualmente aberta no mesmo navegador nao deve ser tratada como identidade do lojista. A proxima camada necessaria e Auth real dos usuarios de loja.
+`AdminCategories` continua no fluxo local nesta etapa e sera conectado ao adapter depois da validacao manual da nova autenticacao dos usuarios de loja.
+
+## Autenticacao e autorizacao dos usuarios de loja
+
+Autenticacao e feita por e-mail/senha no Supabase Auth. Autorizacao e uma segunda etapa: `getStoreMemberships` consulta somente linhas proprias visiveis por RLS e aceita vinculos ativos com role `store_admin` ou `store_staff` e `store_id` nao nulo.
+
+`getAuthorizedStoreForUser` carrega a loja daquele `store_id`. A rota nao aceita IDs vindos de query string, formulario ou localStorage. O isolamento definitivo permanece no banco por `can_access_store(target_store_id)`, que compara `auth.uid()` com o vinculo ativo.
+
+Um usuario pode ter varios vinculos no modelo atual. A API retorna todos; a interface usa por enquanto o primeiro pela data de criacao. Master e loja usam a mesma infraestrutura Auth, mas roles e protecoes de rota distintas; iniciar outra conta no mesmo navegador substitui a sessao Supabase atual.
