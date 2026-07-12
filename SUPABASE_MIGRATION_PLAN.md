@@ -884,3 +884,11 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - Conflitos por `key` sao ignorados para nunca restaurar ou sobrescrever precos alterados futuramente.
 - Proximo passo operacional: executar a migration, conferir os tres registros e testar CRUD de loja real.
 - Depois de estabilizar lojas, a proxima entidade continua sendo categorias.
+
+## Loja publica Supabase por slug
+
+- Concluido no codigo: `StorePage` consulta `getStoreBySlug` e nao depende da lista local do hook.
+- Lojas ativas podem abrir mesmo sem produtos/categorias migrados.
+- Ausencia remota bem-sucedida nao aciona mock; falhas continuam cobertas pelo fallback do adapter.
+- RLS de leitura apenas para lojas ativas foi preservado; inativas ficam indistinguiveis de inexistentes para anon.
+- Proxima etapa planejada: migracao de categorias.

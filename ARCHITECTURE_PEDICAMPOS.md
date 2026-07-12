@@ -988,3 +988,11 @@ O fallback de login usa `sessionStorage`, exige build DEV e flag explicita. Ele 
 `stores.plan_key` referencia a chave unica `plans.key`. Como o schema inicial nao inclui dados, `003_seed_plans.sql` cria somente as linhas basicas necessarias para satisfazer essa integridade referencial.
 
 A migration usa `on conflict (key) do nothing`: primeira execucao insere os planos ausentes; execucoes posteriores preservam integralmente registros existentes, inclusive precos que venham a ser alterados pelo painel master. Features e regras comerciais do frontend nao sao regravadas por este seed.
+
+## Resolucao publica de loja por slug
+
+`StorePage` possui estado assincrono isolado e chama `getStoreBySlug`. O adapter consulta `public.stores` primeiro e somente usa storage local quando Supabase esta ausente ou retorna erro. Uma resposta remota `null` e definitiva para aquela consulta e nao e substituida por mock.
+
+As colecoes `categories`, `products` e `additionalGroups` retornam vazias no adapter relacional enquanto nao forem migradas. Isso representa um cardapio vazio, nao uma loja inexistente.
+
+A policy publica de `stores` usa `active = true`. Assim, anon nao consegue diferenciar slug inexistente de loja inativa sem uma RPC/resposta publica especifica. O frontend preserva o estado visual de indisponibilidade para linhas inativas que sejam legitimamente retornadas, sem ampliar a policy nesta etapa.

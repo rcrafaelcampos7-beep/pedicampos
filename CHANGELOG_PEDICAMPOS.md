@@ -1027,3 +1027,10 @@ Build:
 - Incluidos Start (99.99), Pro (179.99) e Premium (199.99), ativos e na ordem comercial atual.
 - A migration usa conflito pela chave com `do nothing`, sem alterar precos previamente existentes.
 - Nenhuma tela, regra comercial ou entidade de catalogo/pedidos foi alterada.
+
+## 2026-07-12 - Loja publica por slug Supabase
+
+- `StorePage` deixou de localizar a loja apenas no snapshot local e passou a consultar `getStoreBySlug`.
+- Adicionados estados de carregamento e falha, validacao de slug e protecao contra resposta assincrona obsoleta.
+- Loja Supabase sem produtos abre normalmente e informa que nenhum produto esta disponivel.
+- Mantidos o fallback local, o formato atual da loja e as policies RLS existentes.

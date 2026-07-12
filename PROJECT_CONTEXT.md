@@ -41,6 +41,15 @@ Atualizado em: 2026-07-12
 - Alteracoes comerciais futuras continuam destinadas ao painel master.
 - Proximo passo: executar a migration no Supabase e depois testar criacao, edicao e desativacao de uma loja real.
 
+## Loja publica por slug no Supabase - 2026-07-12
+
+- `StorePage` agora busca a loja com `await getStoreBySlug(slug)` em estado assincrono proprio.
+- A rota trata loading, erro inesperado, slug invalido, loja inexistente, loja inativa quando visivel e loja ativa sem produtos.
+- Resultado remoto bem-sucedido sem linha nao mistura mocks; fallback local continua somente quando o adapter detecta indisponibilidade/erro Supabase.
+- Lojas novas podem abrir com cardapio vazio enquanto categorias e produtos nao forem migrados, exibindo mensagem publica apropriada.
+- Pela RLS atual, anon le somente lojas ativas. Uma loja remota inativa fica oculta e aparece como nao encontrada ao publico; a tela de indisponibilidade continua aplicavel quando a loja inativa e retornada por contexto autorizado ou fallback.
+- Proxima etapa: categorias.
+
 Este arquivo e a memoria principal do projeto PediCampos. Ele registra o estado atual do codigo, as decisoes ja tomadas, o que esta implementado, o que esta parcial e o que ainda e pendente.
 
 ## Identidade do projeto

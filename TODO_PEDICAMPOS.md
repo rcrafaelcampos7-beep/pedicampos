@@ -396,3 +396,12 @@ Legenda:
 - [ ] Executar a migration 003 no SQL Editor.
 - [ ] Conferir Start, Pro e Premium no Table Editor.
 - [ ] Repetir CRUD real de loja com master autenticado.
+
+## Loja publica Supabase - 2026-07-12
+
+- [x] Buscar `/:slug` assincronamente com `getStoreBySlug`.
+- [x] Tratar carregamento, erro, slug invalido, ausencia e cardapio vazio.
+- [x] Preservar fallback local sem misturar mocks em consulta remota vazia.
+- [ ] Validar no dominio uma loja Supabase ativa por slug.
+- [ ] Decidir futuramente se lojas inativas devem ter uma resposta publica dedicada sem ampliar dados expostos pelo RLS.
+- [ ] Migrar categorias como proxima entidade.

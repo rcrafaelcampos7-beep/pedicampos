@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CategoryTabs } from "../components/store/CategoryTabs.jsx";
 import { CartDrawer } from "../components/store/CartDrawer.jsx";
 import { ProductCard } from "../components/store/ProductCard.jsx";
@@ -10,15 +10,48 @@ import { EmptyState } from "../components/ui/EmptyState.jsx";
 import { useCart } from "../hooks/useCart.js";
 import { usePediData } from "../hooks/usePediData.js";
 import { Link } from "../routes/router.jsx";
+import { getStoreBySlug } from "../services/database.js";
 import { planHasFeature } from "../utils/plans.js";
 
 export function StorePage({ slug }) {
-  const { stores, platform } = usePediData();
-  const store = stores.find((item) => item.slug === slug);
+  const { platform } = usePediData();
+  const [store, setStore] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const validSlug = /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug || "");
   const cart = useCart(store?.id);
   const [activeCategory, setActiveCategory] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [cartOpen, setCartOpen] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    setStore(null);
+    setLoadError(false);
+
+    if (!validSlug) {
+      setLoading(false);
+      return () => {
+        active = false;
+      };
+    }
+
+    setLoading(true);
+    getStoreBySlug(slug)
+      .then((result) => {
+        if (active) setStore(result);
+      })
+      .catch(() => {
+        if (active) setLoadError(true);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [slug, validSlug]);
 
   const categoriesById = useMemo(() => {
     return Object.fromEntries((store?.categories || []).map((category) => [category.id, category]));
@@ -26,8 +59,33 @@ export function StorePage({ slug }) {
 
   const products = useMemo(() => {
     if (!store) return [];
-    return store.products.filter((product) => !activeCategory || product.categoryId === activeCategory);
+    return (store.products || []).filter((product) => !activeCategory || product.categoryId === activeCategory);
   }, [activeCategory, store]);
+
+  if (loading) {
+    return (
+      <main className="not-found">
+        <Card>
+          <h1>Carregando loja...</h1>
+          <p>Aguarde enquanto buscamos as informações.</p>
+        </Card>
+      </main>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <main className="not-found">
+        <Card>
+          <h1>Não foi possível carregar a loja</h1>
+          <p>Tente novamente em alguns instantes.</p>
+          <Button variant="primary" onClick={() => window.location.reload()}>
+            Tentar novamente
+          </Button>
+        </Card>
+      </main>
+    );
+  }
 
   if (!store) {
     return (
@@ -95,8 +153,8 @@ export function StorePage({ slug }) {
           </section>
         ) : (
           <EmptyState
-            title="Nenhum produto nesta categoria"
-            description="Escolha outra categoria ou cadastre produtos pelo painel."
+            title={activeCategory ? "Nenhum produto nesta categoria" : "Nenhum produto disponível no momento."}
+            description={activeCategory ? "Escolha outra categoria." : "A loja ainda está preparando o cardápio."}
           />
         )}
       </main>

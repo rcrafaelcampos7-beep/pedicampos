@@ -173,3 +173,11 @@ Execute `supabase/migrations/003_seed_plans.sql` no SQL Editor. O arquivo insere
 A migration usa `on conflict (key) do nothing`. Ela pode ser executada novamente sem duplicar linhas e sem sobrescrever precos ou outros dados ja existentes. Alteracoes comerciais futuras devem ser feitas pelo painel master.
 
 Depois da execucao, confirme os tres registros no Table Editor e repita o teste de criacao, edicao e desativacao de uma loja temporaria.
+
+## Loja publica por slug
+
+A rota `/:slug` agora consulta `getStoreBySlug` no adapter Supabase-first. Uma loja ativa cadastrada em `public.stores` pode abrir tanto localmente quanto no dominio. Enquanto categorias e produtos nao forem migrados, a pagina abre com cardapio vazio e mostra `Nenhum produto disponível no momento.`
+
+Uma consulta bem-sucedida sem linha mostra loja nao encontrada e nao injeta mocks. Se Supabase estiver indisponivel ou retornar erro, o fallback local existente permanece.
+
+A policy publica atual permite ler apenas `active = true`. Por seguranca, uma loja remota inativa nao e exposta ao role anon e aparece como nao encontrada. A mensagem especifica de indisponibilidade e usada quando uma linha inativa e retornada em contexto autorizado ou pelo fallback local. Categorias sao a proxima entidade planejada.
