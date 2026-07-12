@@ -911,3 +911,11 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - Nao existe fallback fake de admin nem selecao arbitraria de `store_id`.
 - Pendente: criar usuario/vinculo real e executar testes de sessao e isolamento.
 - Proxima etapa: integrar AdminCategories ao CRUD assincrono; produtos continuam depois.
+
+## AdminCategories conectado
+
+- Concluido no codigo: leitura, criacao, edicao, status, exclusao e reordenacao Supabase-first.
+- `store_id` e derivado apenas da sessao/vinculo autorizado e nao pode ser escolhido na tela.
+- Nenhuma migration ou mudanca de policy foi necessaria.
+- Pendente: teste CRUD temporario no navegador/Table Editor e teste cruzado Loja A x Loja B.
+- Proxima entidade: produtos. Adicionais e pedidos permanecem fora do escopo.

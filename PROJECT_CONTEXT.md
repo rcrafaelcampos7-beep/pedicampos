@@ -56,7 +56,7 @@ Atualizado em: 2026-07-12
 - Conversores explicitos preservam `storeId`, `name`, `active` e `order`, mapeando `store_id` e `sort_order`.
 - Toda leitura e filtrada por `store_id`; writes dependem da policy `can_access_store` e nao permitem role anon.
 - Nenhuma migration foi necessaria: schema, FK, indice e policies existentes ja atendem ao isolamento.
-- `AdminCategories` nao foi integrado porque o login admin ainda e fake/local e nao fornece identidade Supabase segura.
+- `AdminCategories` foi inicialmente mantido local ate a conclusao do Auth dos usuarios de loja; agora ja usa o adapter assincrono.
 - Fallback local permanece apenas quando o client esta ausente ou Supabase retorna erro; sucesso vazio retorna `[]` sem categorias locais.
 - Teste anon confirmou leitura vazia e bloqueio de INSERT com `42501`, sem linha criada.
 - Proxima etapa correta: Supabase Auth para usuarios das lojas e vinculacao em `store_users`; depois integrar `AdminCategories`. Produtos continuam pendentes.
@@ -70,7 +70,17 @@ Atualizado em: 2026-07-12
 - Master continua autorizado separadamente pela role `master`; uma role master nao e aceita como usuario de loja.
 - Nenhuma migration foi necessaria porque schema, `can_access_store` e policies atuais ja atendem ao isolamento.
 - Multiplos vinculos ja sao retornados pela camada; nesta versao o primeiro por data de criacao e usado, sem tela de selecao.
-- Nao foi mantido fallback fake para admin. `AdminCategories` continua local e sera integrado na proxima etapa; produtos permanecem pendentes.
+- Nao foi mantido fallback fake para admin. `AdminCategories` ja foi integrado; produtos permanecem pendentes.
+
+## AdminCategories no Supabase - 2026-07-12
+
+- `AdminCategories` agora carrega, cria, edita, exclui e reordena categorias pelas funcoes assincronas de `database.js`.
+- O `store.id` vem exclusivamente da loja resolvida pela sessao Auth e pelo vinculo ativo em `store_users` no `AdminRouter`.
+- A tela nao aceita `store_id` de formulario, URL ou localStorage e nao faz gravacao paralela em `storage.js`.
+- Foram adicionados loading, lista vazia, erros amigaveis e bloqueio durante operacoes.
+- A lista e recarregada depois de cada mutation. O fallback local do adapter permanece.
+- O isolamento definitivo continua em `can_access_store(store_id)`; o teste CRUD visual/Table Editor deve ser feito com o usuario real vinculado.
+- Proxima etapa: produtos. Adicionais e pedidos continuam pendentes.
 
 Este arquivo e a memoria principal do projeto PediCampos. Ele registra o estado atual do codigo, as decisoes ja tomadas, o que esta implementado, o que esta parcial e o que ainda e pendente.
 

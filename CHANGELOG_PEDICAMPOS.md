@@ -1052,3 +1052,11 @@ Build:
 - AdminLayout passou a usar logout real e deixou de permitir troca manual para lojas nao vinculadas.
 - Nenhuma policy foi afrouxada e nenhuma migration adicional foi necessaria.
 - AdminCategories e produtos nao foram integrados nesta etapa.
+
+## 2026-07-12 - AdminCategories integrado ao Supabase
+
+- A tela deixou de alterar categorias aninhadas via `storage.updateStore`.
+- Listagem, criacao, edicao, exclusao e ordenacao agora aguardam o adapter Supabase-first.
+- O unico identificador de loja usado vem da rota autenticada.
+- Adicionados estados de carregamento, erro, vazio e operacao em andamento.
+- Fallback local e RLS foram preservados; produtos nao foram migrados.

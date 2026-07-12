@@ -426,4 +426,14 @@ Legenda:
 - [ ] Criar manualmente o primeiro usuario Auth de loja e seu vinculo.
 - [ ] Testar usuario valido, sem vinculo, inativo, isolamento, refresh e logout.
 - [ ] Criar selecao explicita quando houver necessidade real de multiplos vinculos.
-- [ ] Integrar AdminCategories ao adapter assincrono na proxima etapa.
+- [x] Integrar AdminCategories ao adapter assincrono.
+
+## AdminCategories assincrono - 2026-07-12
+
+- [x] Carregar categorias pela loja autorizada.
+- [x] Integrar criacao, edicao, exclusao e reordenacao ao adapter Supabase-first.
+- [x] Adicionar loading, vazio, erro e bloqueio de operacoes duplicadas.
+- [x] Remover escrita direta em `storage.js` da tela.
+- [ ] Executar CRUD real com categoria temporaria e conferir no Table Editor.
+- [ ] Confirmar com dois usuarios/lojas que RLS bloqueia acesso cruzado.
+- [ ] Migrar produtos como proxima entidade.
