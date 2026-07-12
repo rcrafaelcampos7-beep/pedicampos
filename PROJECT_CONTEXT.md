@@ -22,6 +22,16 @@ Atualizado em: 2026-07-12
 - Fallback fake existe somente com `import.meta.env.DEV` e `VITE_ENABLE_FAKE_MASTER_AUTH=true`; nunca funciona no build de producao.
 - Admins de lojas continuam com login local e ficam pendentes.
 
+## Telas master de lojas no Supabase - 2026-07-12
+
+- O login master real esta funcionando e as telas `MasterCreateStore` e `MasterStores` passaram a chamar o adapter assincrono Supabase-first.
+- Criacao aguarda `createStore`, bloqueia envio duplicado e navega somente apos a operacao terminar.
+- Listagem usa `getStores`; edicao usa `updateStore`; desativacao usa `deactivateStore`; ativacao usa `updateStore` com `active: true`.
+- A lista e recarregada depois de editar ou alterar status e possui estados de loading, erro e vazio.
+- O fallback local de `database.js` continua preservado e nao ha segunda gravacao local quando o Supabase responde com sucesso.
+- Lojas persistidas no Supabase passam a ser compartilhadas entre local e dominio. `subscribeDatabase` continua observando apenas localStorage; atualizacoes remotas aparecem ao recarregar a listagem, nao por Realtime.
+- Categorias sao a proxima entidade planejada. Produtos, adicionais e pedidos continuam locais.
+
 Este arquivo e a memoria principal do projeto PediCampos. Ele registra o estado atual do codigo, as decisoes ja tomadas, o que esta implementado, o que esta parcial e o que ainda e pendente.
 
 ## Identidade do projeto

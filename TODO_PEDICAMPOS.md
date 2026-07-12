@@ -378,3 +378,12 @@ Legenda:
 - [ ] Testar login, logout e bloqueio de usuario autenticado sem role master.
 - [ ] Integrar telas master de lojas ao adapter assincrono; elas ainda gravam localmente.
 - [ ] Migrar admins de loja em etapa posterior.
+
+## Telas master de lojas - 2026-07-12
+
+- [x] Integrar `MasterCreateStore` com `getStores` e `createStore` assincronos.
+- [x] Integrar `MasterStores` com listagem, edicao, ativacao e desativacao assincronas.
+- [x] Adicionar loading, bloqueio de clique duplicado, erro amigavel e lista vazia.
+- [x] Recarregar lojas apos cada operacao.
+- [ ] Executar CRUD temporario no navegador com a sessao master e conferir a linha no Table Editor.
+- [ ] Migrar categorias como proxima entidade.

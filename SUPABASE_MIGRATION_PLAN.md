@@ -867,3 +867,12 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - A criacao anteriormente bloqueada com `42501` permanece evidência de que anon nao possui write.
 - Pendente antes do teste: criar usuario Auth, executar migration e integrar `MasterCreateStore`/`MasterStores` ao adapter assincrono.
 - Auth dos admins de loja permanece para etapa futura.
+
+## Integracao das telas de lojas - 2026-07-12
+
+- Concluida no codigo: criar, listar, editar, ativar e desativar lojas pelo adapter assincrono.
+- O login master fornece o JWT usado automaticamente pelo client Supabase nas policies RLS.
+- Sucesso remoto nao gera copia local paralela; falha remota continua acionando o fallback definido em `database.js`.
+- O teste CRUD remoto ainda deve ser executado com uma sessao master no navegador e confirmado no Table Editor.
+- Realtime e sincronizacao global do `usePediData` nao fazem parte desta etapa.
+- Proxima entidade: categorias. Produtos, adicionais e pedidos permanecem pendentes.

@@ -3,15 +3,16 @@ import { MasterLayout } from "../components/master/MasterLayout.jsx";
 import { Button } from "../components/ui/Button.jsx";
 import { Card } from "../components/ui/Card.jsx";
 import { Checkbox, Input, Select, Textarea } from "../components/ui/Input.jsx";
-import { createEmptyStore } from "../data/mockStores.js";
 import { usePediData } from "../hooks/usePediData.js";
-import { mutateDatabase } from "../services/storage.js";
 import { navigate } from "../routes/router.jsx";
+import { createStore as createDatabaseStore, getStores } from "../services/database.js";
 import { getPlanName, getPlanPriceLabel, PLAN_KEYS } from "../utils/plans.js";
 import { slugify, uniqueSlug } from "../utils/slug.js";
 
 export function MasterCreateStore({ activePath }) {
-  const { stores, platform } = usePediData();
+  const { platform } = usePediData();
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
   const [form, setForm] = useState({
     name: "",
     slug: "",
@@ -33,10 +34,16 @@ export function MasterCreateStore({ activePath }) {
     }));
   }
 
-  function createStore(event) {
+  async function createStore(event) {
     event.preventDefault();
-    const slug = uniqueSlug(form.slug || form.name, stores);
-    const newStore = createEmptyStore({
+    if (submitting) return;
+    setSubmitting(true);
+    setError("");
+
+    try {
+      const stores = await getStores();
+      const slug = uniqueSlug(form.slug || form.name, stores);
+      await createDatabaseStore({
       name: form.name,
       slug,
       segment: form.segment || "Delivery local",
@@ -51,11 +58,12 @@ export function MasterCreateStore({ activePath }) {
       products: [],
     });
 
-    mutateDatabase((database) => {
-      database.stores = [newStore, ...database.stores];
-      return database;
-    });
-    navigate("/master/lojas");
+      navigate("/master/lojas");
+    } catch {
+      setError("Não foi possível criar a loja. Tente novamente.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -64,6 +72,7 @@ export function MasterCreateStore({ activePath }) {
         <span className="eyebrow">Nova loja</span>
         <h2>Criar loja multi-loja</h2>
         <p>Ao criar, a loja já funciona publicamente pelo slug e pode ser editada no admin.</p>
+        {error ? <div className="form-error">{error}</div> : null}
         <form onSubmit={createStore}>
           <div className="form-grid">
             <Input label="Nome da loja" value={form.name} onChange={(event) => updateForm("name", event.target.value)} required />
@@ -83,8 +92,8 @@ export function MasterCreateStore({ activePath }) {
           </div>
           <Textarea label="Endereço" value={form.address} onChange={(event) => updateForm("address", event.target.value)} />
           <Checkbox label="Criar ativa" checked={form.active} onChange={(checked) => updateForm("active", checked)} />
-          <Button type="submit" variant="primary" size="lg">
-            Criar loja
+          <Button type="submit" variant="primary" size="lg" disabled={submitting}>
+            {submitting ? "Criando..." : "Criar loja"}
           </Button>
         </form>
       </Card>

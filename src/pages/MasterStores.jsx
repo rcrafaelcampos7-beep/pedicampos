@@ -7,13 +7,18 @@ import { Modal } from "../components/ui/Modal.jsx";
 import { Badge } from "../components/ui/Badge.jsx";
 import { usePediData } from "../hooks/usePediData.js";
 import { Link } from "../routes/router.jsx";
-import { updateStore } from "../services/storage.js";
+import { deactivateStore, getStores, updateStore } from "../services/database.js";
 import { formatCurrency } from "../utils/formatCurrency.js";
 import { getPlanName, getPlanPriceLabel, PLAN_KEYS } from "../utils/plans.js";
 import { uniqueSlug } from "../utils/slug.js";
 
 export function MasterStores({ activePath }) {
-  const { stores, orders, platform } = usePediData();
+  const { orders, platform } = usePediData();
+  const [stores, setStores] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [pendingStoreId, setPendingStoreId] = useState("");
   const [editingId, setEditingId] = useState("");
   const selectedStore = stores.find((store) => store.id === editingId);
   const [form, setForm] = useState(null);
@@ -22,18 +27,55 @@ export function MasterStores({ activePath }) {
     setForm(selectedStore ? { ...selectedStore } : null);
   }, [selectedStore]);
 
-  function toggleActive(storeId) {
-    updateStore(storeId, (draft) => ({ ...draft, active: !draft.active }));
+  async function loadStores() {
+    setLoading(true);
+    setError("");
+    try {
+      setStores(await getStores());
+    } catch {
+      setError("Não foi possível carregar as lojas. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
   }
 
-  function saveStore(event) {
+  useEffect(() => {
+    loadStores();
+  }, []);
+
+  async function toggleActive(store) {
+    if (pendingStoreId) return;
+    setPendingStoreId(store.id);
+    setError("");
+    try {
+      if (store.active) await deactivateStore(store.id);
+      else await updateStore(store.id, { active: true });
+      await loadStores();
+    } catch {
+      setError("Não foi possível alterar o status da loja. Tente novamente.");
+    } finally {
+      setPendingStoreId("");
+    }
+  }
+
+  async function saveStore(event) {
     event.preventDefault();
-    updateStore(form.id, {
-      ...form,
-      slug: uniqueSlug(form.slug, stores, form.id),
-      deliveryFee: Number(form.deliveryFee) || 0,
-    });
-    setEditingId("");
+    if (saving) return;
+    setSaving(true);
+    setError("");
+    try {
+      await updateStore(form.id, {
+        ...form,
+        slug: uniqueSlug(form.slug, stores, form.id),
+        deliveryFee: Number(form.deliveryFee) || 0,
+      });
+      setEditingId("");
+      await loadStores();
+    } catch {
+      setError("Não foi possível salvar a loja. Tente novamente.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   function updateForm(field, value) {
@@ -53,8 +95,12 @@ export function MasterStores({ activePath }) {
           </Link>
         </div>
 
+        {error ? <div className="form-error">{error}</div> : null}
+
         <div className="store-admin-grid">
-          {stores.map((store) => {
+          {loading ? <Card><p>Carregando lojas...</p></Card> : null}
+          {!loading && !stores.length ? <Card><p>Nenhuma loja cadastrada.</p></Card> : null}
+          {!loading && stores.map((store) => {
             const storeOrders = orders.filter((order) => order.storeId === store.id);
             const revenue = storeOrders.reduce((sum, order) => sum + order.total, 0);
             return (
@@ -78,8 +124,13 @@ export function MasterStores({ activePath }) {
                   <Link className="btn btn-secondary btn-sm" to={`/${store.slug}`}>
                     Acessar
                   </Link>
-                  <Button variant={store.active ? "warning" : "success"} size="sm" onClick={() => toggleActive(store.id)}>
-                    {store.active ? "Desativar" : "Ativar"}
+                  <Button
+                    variant={store.active ? "warning" : "success"}
+                    size="sm"
+                    disabled={pendingStoreId === store.id}
+                    onClick={() => toggleActive(store)}
+                  >
+                    {pendingStoreId === store.id ? "Salvando..." : store.active ? "Desativar" : "Ativar"}
                   </Button>
                 </div>
               </Card>
@@ -121,8 +172,8 @@ export function MasterStores({ activePath }) {
               <Checkbox label="Ativa" checked={form.active} onChange={(checked) => updateForm("active", checked)} />
               <Checkbox label="Aberta" checked={form.open} onChange={(checked) => updateForm("open", checked)} />
             </div>
-            <Button type="submit" variant="primary">
-              Salvar loja
+            <Button type="submit" variant="primary" disabled={saving}>
+              {saving ? "Salvando..." : "Salvar loja"}
             </Button>
           </form>
         ) : null}

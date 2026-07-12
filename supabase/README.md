@@ -150,4 +150,12 @@ Depois da migration, lojas ativas continuam publicamente legiveis. INSERT, UPDAT
 
 O fallback fake e opcional somente no servidor Vite de desenvolvimento. Para usa-lo, configure localmente `VITE_ENABLE_FAKE_MASTER_AUTH=true`, `VITE_DEV_MASTER_EMAIL` e `VITE_DEV_MASTER_PASSWORD`. Nao configure essas variaveis na Vercel. Esse fallback nao gera JWT e nao permite writes no Supabase.
 
-Mesmo apos autorizar o master, `MasterCreateStore` e `MasterStores` ainda precisam ser conectados ao adapter assincrono para que botoes das telas gravem no Supabase. Admins das lojas continuam pendentes.
+O master ja foi autorizado e as telas de lojas foram conectadas ao adapter assincrono. Admins das lojas continuam pendentes.
+
+## Telas master de lojas conectadas
+
+`MasterCreateStore` e `MasterStores` agora usam as funcoes assincronas Supabase-first de `database.js`. Criacao, listagem, edicao, ativacao e desativacao usam a sessao Auth atual e respeitam RLS. Quando Supabase responde com sucesso, a tela nao grava uma segunda copia local. Se o client estiver ausente ou o adapter receber erro, o fallback local existente continua disponivel.
+
+Lojas gravadas remotamente sao compartilhadas entre desenvolvimento local e dominio porque ambos consultam `public.stores`. A listagem consulta novamente depois de cada operacao. Nao ha Supabase Realtime: `subscribeDatabase` observa somente localStorage.
+
+Para validar, crie uma loja descartavel com slug `teste-supabase-[timestamp]`, confira no Table Editor, edite o nome, desative e confirme `active = false`. Depois remova o registro manualmente apenas se nao quiser mante-lo. A proxima entidade planejada e categorias; produtos, adicionais e pedidos ainda nao foram migrados.

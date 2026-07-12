@@ -47,20 +47,20 @@ using (public.is_master());
 
 -- Replace the UUID and email before running. store_id stays NULL for a platform master.
 update public.store_users
-set email = 'master@example.com', role = 'master', active = true
-where auth_user_id = '00000000-0000-0000-0000-000000000000'::uuid;
+set email = 'rcrafaelcampos7@gmail.com', role = 'master', active = true
+where auth_user_id = 'b66e4c84-f8af-4a44-b81a-51cee71728d5'::uuid;
 
 insert into public.store_users (store_id, auth_user_id, email, role, active)
 select
   null,
-  '00000000-0000-0000-0000-000000000000'::uuid,
-  'master@example.com',
+  'b66e4c84-f8af-4a44-b81a-51cee71728d5'::uuid,
+  'rcrafaelcampos7@gmail.com',
   'master',
   true
 where not exists (
   select 1
   from public.store_users
-  where auth_user_id = '00000000-0000-0000-0000-000000000000'::uuid
+  where auth_user_id = 'b66e4c84-f8af-4a44-b81a-51cee71728d5'::uuid
 );
 
 commit;

@@ -1012,3 +1012,11 @@ Build:
 - Adicionada migration idempotente `002_master_auth.sql`; writes em `stores` ficam exclusivos do master autenticado.
 - Fallback fake opcional limitado ao modo DEV e configurado somente por variaveis explicitas.
 - Admins das lojas e telas de dados continuam fora desta migracao.
+
+## 2026-07-12 - Gerenciamento master de lojas assincrono
+
+- `MasterCreateStore` deixou de gravar diretamente com `mutateDatabase` e passou a usar o adapter Supabase-first.
+- `MasterStores` deixou de usar `storage.updateStore` e passou a carregar e alterar lojas por `database.js`.
+- Adicionados estados de carregamento, erro, lista vazia e bloqueio durante operacoes.
+- A lista remota e atualizada depois de edicao, ativacao ou desativacao.
+- Nenhuma entidade alem de lojas foi migrada; fallback local foi mantido.

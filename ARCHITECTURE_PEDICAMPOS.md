@@ -974,3 +974,11 @@ Supabase Auth mantem a sessao no client. A autorizacao nao depende apenas da aut
 Auditoria: `platform_settings` tem SELECT publico e administracao master; `plans` tem SELECT publico apenas de ativos e administracao master; `stores` tem leitura publica de ativos e, apos a migration 002, INSERT/UPDATE/DELETE somente master; `store_users` permite ao autenticado ler a propria linha e ao master gerenciar autorizacoes. O role `anon` nao recebe write administrativo.
 
 O fallback de login usa `sessionStorage`, exige build DEV e flag explicita. Ele nao produz JWT Supabase e, portanto, nao contorna RLS nem habilita writes remotos.
+
+## Estado assincrono das telas master de lojas
+
+`MasterStores` mantem uma lista propria carregada por `getStores()`, separada do snapshot local de `usePediData`. Isso limita a mudanca as telas de lojas: pedidos e configuracao comercial continuam vindo do hook local. Depois de cada mutation, a tela executa nova leitura para refletir o estado confirmado pelo adapter.
+
+`MasterCreateStore` consulta as lojas antes de gerar o slug e aguarda `createStore()`. O adapter decide entre Supabase e fallback; a tela nao grava uma copia adicional no localStorage.
+
+`subscribeDatabase` continua sendo uma assinatura de eventos do localStorage e nao recebe eventos remotos Supabase. Nao foi adicionado Realtime nesta etapa; abrir/recarregar a listagem dispara uma consulta atualizada.
