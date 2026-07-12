@@ -1078,3 +1078,12 @@ Build:
 - Vinculos sao deduplicados e opcoes gratis/pagas preservam seus valores.
 - Scroll automatico, layout e fallback local foram mantidos.
 - Pedidos nao foram migrados.
+
+## 2026-07-12 - Configuracoes e metodos de pagamento
+
+- Adicionados adapters Supabase-first para `store_settings` e `payment_methods`.
+- AdminSettings passou a salvar perfil publico, operacao, Pix e metodos remotos.
+- StorePage e CheckoutPage passaram a hidratar configuracoes por `store_id`.
+- Migration 006 adicionou RPC de perfil limitada, sem acesso a plano ou ativacao comercial.
+- Checkout passou a respeitar entrega, retirada, taxa, minimo e metodos configurados.
+- Nenhum gateway, pagamento real ou pedido remoto foi implementado.

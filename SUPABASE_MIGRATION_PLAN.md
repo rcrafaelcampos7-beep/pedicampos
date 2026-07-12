@@ -937,3 +937,12 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - Pendente: executar migration e testar CRUD/cross-store nas tres tabelas.
 - Pedidos continuam pendentes.
 - Proxima etapa recomendada: `store_settings` e `payment_methods`, pois checkout/pedidos dependem dessas configuracoes online.
+
+## Store settings e payment methods conectados
+
+- Concluido no codigo: adapters, AdminSettings e leitura publica/checkout.
+- Migration 006 permite update seguro de perfil sem liberar plano ou `active` ao lojista.
+- Policies existentes de settings/metodos foram suficientes e writes anon continuam bloqueados.
+- Ausencia de registro remoto usa defaults controlados; resposta vazia nao injeta mock.
+- Checkout continua sem gateway e pedidos continuam locais.
+- Pendente: executar migration e validar fluxo completo. Proxima entidade: pedidos.

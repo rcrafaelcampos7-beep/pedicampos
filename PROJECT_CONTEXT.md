@@ -104,6 +104,17 @@ Atualizado em: 2026-07-12
 - Fallback local permanece; resposta remota vazia nao mistura mocks.
 - Pedidos continuam locais. Proxima etapa correta: configuracoes da loja e formas de pagamento, dependencias do checkout antes de pedidos.
 
+## Configuracoes da loja e pagamentos - 2026-07-12
+
+- `store_settings` e `payment_methods` agora possuem adapters Supabase-first e estao integrados ao `AdminSettings`.
+- `stores` mantem identidade, slug, visual, WhatsApp e aberto/fechado; `store_settings` guarda operacao/entrega/Pix/instrucoes; `payment_methods` guarda Pix, dinheiro e cartao ativos.
+- Criada migration 006 com RPC restrita para o lojista atualizar apenas o perfil publico. Plano e `active` continuam exclusivos do master.
+- AdminSettings possui loading, erro, sucesso e bloqueio de envio duplicado.
+- StorePage e CheckoutPage carregam settings/metodos remotos e usam defaults controlados quando nao ha linha.
+- Checkout respeita entrega/retirada, taxa, pedido minimo, chave Pix, instrucoes e metodos ativos, mas pagamentos e pedidos continuam simulados/locais.
+- INSERT anon em ambas as tabelas foi bloqueado com `42501`; fallback local permanece.
+- Proxima etapa: pedidos, depois de validar manualmente estas configuracoes.
+
 Este arquivo e a memoria principal do projeto PediCampos. Ele registra o estado atual do codigo, as decisoes ja tomadas, o que esta implementado, o que esta parcial e o que ainda e pendente.
 
 ## Identidade do projeto

@@ -10,7 +10,7 @@ import { EmptyState } from "../components/ui/EmptyState.jsx";
 import { useCart } from "../hooks/useCart.js";
 import { usePediData } from "../hooks/usePediData.js";
 import { Link } from "../routes/router.jsx";
-import { getStoreBySlug } from "../services/database.js";
+import { getPaymentMethodsByStore, getStoreBySlug, getStoreSettings } from "../services/database.js";
 import { planHasFeature } from "../utils/plans.js";
 
 export function StorePage({ slug }) {
@@ -38,6 +38,27 @@ export function StorePage({ slug }) {
 
     setLoading(true);
     getStoreBySlug(slug)
+      .then(async (result) => {
+        if (!result) return null;
+        const [settings, paymentMethods] = await Promise.all([
+          getStoreSettings(result.id),
+          getPaymentMethodsByStore(result.id),
+        ]);
+        return {
+          ...result,
+          address: "",
+          openingHours: "",
+          deliveryTime: "",
+          deliveryFee: 0,
+          minimumOrderValue: 0,
+          deliveryEnabled: true,
+          pickupEnabled: true,
+          pixKey: "",
+          paymentInstructions: "",
+          ...(settings || {}),
+          paymentMethods,
+        };
+      })
       .then((result) => {
         if (active) setStore(result);
       })

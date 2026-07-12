@@ -1034,3 +1034,13 @@ AdminProducts recebe a loja autorizada da rota, busca categorias/produtos em par
 A migration 005 adiciona triggers que exigem a mesma loja entre opcao/grupo e entre grupo/produto. A constraint unica existente e `Set` no adapter impedem links duplicados.
 
 Criacao/edicao usam `save_additional_group`, uma RPC `security invoker`: ela continua sujeita ao JWT, grants e RLS do chamador, mas agrupa alteracao do grupo, substituicao de opcoes e links em uma unica transacao. Falhas revertem tudo antes do fallback. IDs das opcoes podem ser recriados durante edicao; pedidos ainda nao usam esses IDs porque nao foram migrados.
+
+## Separacao das configuracoes da loja
+
+- `stores`: nome, slug, segmento, plano, active, open, cor, WhatsApp, logo e banner.
+- `store_settings`: endereco, horario, tempo, taxa, chave Pix, pedido minimo, modo entrega/retirada e `extra.paymentInstructions`.
+- `payment_methods`: uma linha por `pix`, `cash` e `card`, com status; `online_enabled` preserva o flag visual de Pix online, sem gateway real.
+
+AdminSettings recebe `store.id` da sessao. A RPC `update_store_public_profile` e `security definer`, mas valida `can_access_store` e expõe somente colunas publicas permitidas; `plan_key` e `active` nao sao parametros. Settings e metodos usam upsert sob RLS normal.
+
+Loja publica e checkout fazem hidratacao assíncrona depois de resolver o slug. Ausencia bem-sucedida de settings usa defaults controlados na pagina, sem puxar mocks; erro Supabase continua sujeito ao fallback do adapter.

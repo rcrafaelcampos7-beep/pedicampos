@@ -461,3 +461,14 @@ Legenda:
 - [ ] Testar produto de outra loja e isolamento Loja A x Loja B.
 - [ ] Migrar configuracoes da loja/formas de pagamento antes dos pedidos.
 - [ ] Manter pedidos pendentes.
+
+## Configuracoes e formas de pagamento - 2026-07-12
+
+- [x] Criar adapters e conversores de `store_settings` e `payment_methods`.
+- [x] Integrar AdminSettings com perfil, operacao e metodos remotos.
+- [x] Integrar leitura minima na loja publica e checkout.
+- [x] Criar migration 006 para update seguro do perfil sem expor plano/active.
+- [x] Confirmar bloqueio anonimo de escrita (`42501`).
+- [ ] Executar migration 006 no SQL Editor.
+- [ ] Testar campos, metodos, isolamento e reflexo publico/checkout.
+- [ ] Migrar pedidos como proxima entidade.

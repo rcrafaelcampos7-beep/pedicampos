@@ -7,6 +7,7 @@ import { Input, Select, Textarea } from "../components/ui/Input.jsx";
 import { useCart } from "../hooks/useCart.js";
 import { usePediData } from "../hooks/usePediData.js";
 import { Link, navigate } from "../routes/router.jsx";
+import { getPaymentMethodsByStore, getStoreBySlug, getStoreSettings } from "../services/database.js";
 import { createOrder } from "../services/storage.js";
 import { formatCurrency } from "../utils/formatCurrency.js";
 import { ORDER_STATUS, PAYMENT_STATUS } from "../utils/orderStatus.js";
@@ -50,8 +51,10 @@ function getStorePixKey(store) {
 }
 
 export function CheckoutPage({ slug }) {
-  const { stores, platform } = usePediData();
-  const store = stores.find((item) => item.slug === slug);
+  const { platform } = usePediData();
+  const [store, setStore] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const cart = useCart(store?.id);
   const [cartOpen, setCartOpen] = useState(false);
   const [error, setError] = useState("");
@@ -94,6 +97,53 @@ export function CheckoutPage({ slug }) {
     }`;
 
   useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setLoadError(false);
+    setStore(null);
+
+    getStoreBySlug(slug)
+      .then(async (result) => {
+        if (!result) return null;
+        const [settings, paymentMethods] = await Promise.all([
+          getStoreSettings(result.id),
+          getPaymentMethodsByStore(result.id),
+        ]);
+        return {
+          ...result,
+          address: "",
+          openingHours: "",
+          deliveryTime: "",
+          deliveryFee: 0,
+          minimumOrderValue: 0,
+          deliveryEnabled: true,
+          pickupEnabled: true,
+          pixKey: "",
+          paymentInstructions: "",
+          ...(settings || {}),
+          paymentMethods,
+        };
+      })
+      .then((result) => {
+        if (!active) return;
+        setStore(result);
+        if (result && !result.deliveryEnabled && result.pickupEnabled) {
+          setForm((current) => ({ ...current, fulfillment: "pickup" }));
+        }
+      })
+      .catch(() => {
+        if (active) setLoadError(true);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [slug]);
+
+  useEffect(() => {
     if (paymentOptions.length && !paymentOptions.some((option) => option.key === form.paymentMethod)) {
       updateForm("paymentMethod", paymentOptions[0].key);
     }
@@ -108,6 +158,11 @@ export function CheckoutPage({ slug }) {
     if (!form.phone.trim()) return "Informe seu telefone.";
     if (form.fulfillment === "delivery" && (!form.street.trim() || !form.district.trim() || !form.number.trim())) {
       return "Informe endereço, bairro e número para entrega.";
+    }
+    if (form.fulfillment === "delivery" && !store.deliveryEnabled) return "Entrega indisponível para esta loja.";
+    if (form.fulfillment === "pickup" && !store.pickupEnabled) return "Retirada indisponível para esta loja.";
+    if (cart.totals.subtotal < (store.minimumOrderValue || 0)) {
+      return `O pedido mínimo é ${formatCurrency(store.minimumOrderValue)}.`;
     }
     return "";
   }
@@ -226,6 +281,21 @@ export function CheckoutPage({ slug }) {
     navigate(`/${store.slug}/pedido/${order.id}`);
   }
 
+  if (loading) {
+    return <main className="not-found"><Card><h1>Carregando checkout...</h1></Card></main>;
+  }
+
+  if (loadError) {
+    return (
+      <main className="not-found">
+        <Card>
+          <h1>Não foi possível carregar o checkout</h1>
+          <p>Tente novamente em instantes.</p>
+        </Card>
+      </main>
+    );
+  }
+
   if (!store) {
     return (
       <main className="not-found">
@@ -312,6 +382,7 @@ export function CheckoutPage({ slug }) {
               <button
                 type="button"
                 className={form.fulfillment === "delivery" ? "active" : ""}
+                disabled={!store.deliveryEnabled}
                 onClick={() => updateForm("fulfillment", "delivery")}
               >
                 Entrega
@@ -319,6 +390,7 @@ export function CheckoutPage({ slug }) {
               <button
                 type="button"
                 className={form.fulfillment === "pickup" ? "active" : ""}
+                disabled={!store.pickupEnabled}
                 onClick={() => updateForm("fulfillment", "pickup")}
               >
                 Retirada
@@ -362,6 +434,7 @@ export function CheckoutPage({ slug }) {
                 </option>
               ))}
             </Select>
+            {store.paymentInstructions ? <p className="muted">{store.paymentInstructions}</p> : null}
             {form.paymentMethod === "cash" ? (
               <Input
                 label="Troco para quanto?"

@@ -242,3 +242,17 @@ A RPC e `security invoker`, concedida somente a `authenticated`, e continua obed
 `AdminAdditionals` agora carrega grupos e produtos remotos. Preco `0` aparece como Gratis; valores positivos sao mantidos em `numeric(10,2)`. Para validar, crie um grupo com opcao gratis e paga, vincule a produto, edite/status/exclua e confira `additional_groups`, `additional_options` e `additional_group_products`.
 
 Teste tambem produto de outra loja e confirme erro `23514` ou bloqueio RLS. Pedidos continuam pendentes. A proxima etapa recomendada e migrar `store_settings` e `payment_methods` antes de checkout/pedidos.
+
+## Configuracoes da loja e formas de pagamento
+
+Execute `supabase/migrations/006_store_settings.sql` antes de salvar pelo admin. A RPC permite ao usuario vinculado alterar nome, slug, segmento, open, visual e WhatsApp, mas nao permite modificar `plan_key` nem `active`.
+
+Dados ficam separados assim:
+
+- `stores`: identidade/visual, WhatsApp e aberto/fechado;
+- `store_settings`: endereco, horario, tempo, taxa, minimo, chave Pix, entrega/retirada e instrucoes;
+- `payment_methods`: Pix, dinheiro e cartao ativos, apenas como configuracao.
+
+AdminSettings usa upserts por `store_id`. StorePage e CheckoutPage leem esses dados remotamente; sem linha, aplicam defaults controlados. O checkout respeita taxa, minimo, entrega/retirada e metodos ativos, mas nao cria cobranca real nem pedido Supabase.
+
+Teste alteracoes no admin e confira `stores`, `store_settings` e `payment_methods`. Depois abra loja/checkout e valide os reflexos. Escrita anonima permaneceu bloqueada com `42501`. A proxima etapa e pedidos.

@@ -27,6 +27,10 @@ const ADDITIONAL_GROUP_COLUMNS =
   "id, store_id, name, description, required, min_choices, max_choices, selection_type, active, sort_order, created_at, updated_at";
 const ADDITIONAL_OPTION_COLUMNS =
   "id, store_id, additional_group_id, name, price, active, sort_order, created_at, updated_at";
+const STORE_SETTINGS_COLUMNS =
+  "id, store_id, address, opening_hours, delivery_time, delivery_fee, pix_key, minimum_order_value, service_mode, extra, created_at, updated_at";
+const PAYMENT_METHOD_COLUMNS =
+  "id, store_id, type, label, active, provider, provider_config, manual, online_enabled, created_at, updated_at";
 
 function getLocalStores() {
   return getStorageDatabase().stores;
@@ -194,6 +198,83 @@ export function additionalGroupToSupabase(group = {}, storeId) {
   };
 }
 
+export function storeSettingsFromSupabase(row) {
+  if (!row) return null;
+  const serviceMode = row.service_mode || "delivery_pickup";
+  return {
+    id: row.id,
+    storeId: row.store_id,
+    address: row.address || "",
+    openingHours: row.opening_hours || "",
+    deliveryTime: row.delivery_time || "",
+    deliveryFee: Number(row.delivery_fee) || 0,
+    pixKey: row.pix_key || "",
+    minimumOrderValue: Number(row.minimum_order_value) || 0,
+    deliveryEnabled: serviceMode === "delivery" || serviceMode === "delivery_pickup",
+    pickupEnabled: serviceMode === "pickup" || serviceMode === "delivery_pickup",
+    paymentInstructions: row.extra?.paymentInstructions || "",
+    extra: row.extra || {},
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export function storeSettingsToSupabase(data = {}, storeId) {
+  const deliveryEnabled = data.deliveryEnabled !== false;
+  const pickupEnabled = data.pickupEnabled !== false;
+  const serviceMode = deliveryEnabled && pickupEnabled
+    ? "delivery_pickup"
+    : deliveryEnabled
+      ? "delivery"
+      : pickupEnabled
+        ? "pickup"
+        : "disabled";
+
+  return {
+    store_id: storeId,
+    address: data.address || "",
+    opening_hours: data.openingHours || "",
+    delivery_time: data.deliveryTime || "",
+    delivery_fee: Number(data.deliveryFee) || 0,
+    pix_key: data.pixKey || "",
+    minimum_order_value: Number(data.minimumOrderValue) || 0,
+    service_mode: serviceMode,
+    extra: {
+      ...(data.extra || {}),
+      paymentInstructions: data.paymentInstructions || "",
+    },
+  };
+}
+
+export function paymentMethodFromSupabase(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    storeId: row.store_id,
+    type: row.type,
+    label: row.label,
+    active: row.active !== false,
+    manual: row.manual !== false,
+    onlineEnabled: Boolean(row.online_enabled),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export function paymentMethodToSupabase(method = {}, storeId) {
+  const labels = { pix: "Pix", cash: "Dinheiro", card: "Cartão" };
+  return {
+    store_id: storeId,
+    type: method.type,
+    label: method.label || labels[method.type] || method.type,
+    active: method.active !== false,
+    provider: null,
+    provider_config: {},
+    manual: true,
+    online_enabled: method.type === "pix" ? Boolean(method.onlineEnabled) : false,
+  };
+}
+
 function warnAndUseLocal(operation, error) {
   console.warn(`[PediCampos] Supabase falhou em ${operation}; usando fallback local.`, error);
 }
@@ -312,6 +393,132 @@ export async function updateStore(id, data) {
 
 export async function deactivateStore(id) {
   return updateStore(id, { active: false });
+}
+
+export async function updateStorePublicProfile(storeId, data) {
+  if (supabase) {
+    const { data: updated, error } = await supabase.rpc("update_store_public_profile", {
+      p_store_id: storeId,
+      p_name: data.name || "",
+      p_slug: data.slug || "",
+      p_segment: data.segment || "",
+      p_open: data.open !== false,
+      p_primary_color: data.primaryColor || "#16a34a",
+      p_whatsapp: data.whatsapp || "",
+      p_logo: data.logo || "",
+      p_banner_url: data.banner || "",
+    });
+
+    if (!error) return storeFromSupabase(updated);
+    warnAndUseLocal("updateStorePublicProfile", error);
+  }
+
+  updateStorageStore(storeId, data);
+  return getLocalStoreById(storeId);
+}
+
+export async function getStoreSettings(storeId) {
+  if (!supabase) {
+    const store = getLocalStoreById(storeId);
+    if (!store) return null;
+    return {
+      storeId,
+      address: store.address || "",
+      openingHours: store.openingHours || "",
+      deliveryTime: store.deliveryTime || "",
+      deliveryFee: Number(store.deliveryFee) || 0,
+      pixKey: store.pixKey || "",
+      minimumOrderValue: Number(store.minimumOrderValue) || 0,
+      deliveryEnabled: store.deliveryEnabled !== false,
+      pickupEnabled: store.pickupEnabled !== false,
+      paymentInstructions: store.paymentInstructions || "",
+    };
+  }
+
+  const { data, error } = await supabase
+    .from("store_settings")
+    .select(STORE_SETTINGS_COLUMNS)
+    .eq("store_id", storeId)
+    .maybeSingle();
+
+  if (error) {
+    warnAndUseLocal("getStoreSettings", error);
+    const store = getLocalStoreById(storeId);
+    return store ? storeSettingsFromSupabase({
+      store_id: storeId,
+      address: store.address,
+      opening_hours: store.openingHours,
+      delivery_time: store.deliveryTime,
+      delivery_fee: store.deliveryFee,
+      pix_key: store.pixKey,
+      minimum_order_value: store.minimumOrderValue,
+      service_mode: store.deliveryEnabled === false ? "pickup" : store.pickupEnabled === false ? "delivery" : "delivery_pickup",
+      extra: { paymentInstructions: store.paymentInstructions || "" },
+    }) : null;
+  }
+
+  return storeSettingsFromSupabase(data);
+}
+
+export async function updateStoreSettings(storeId, data) {
+  if (supabase) {
+    const current = await getStoreSettings(storeId);
+    const payload = storeSettingsToSupabase({ ...current, ...data }, storeId);
+    const { data: updated, error } = await supabase
+      .from("store_settings")
+      .upsert(payload, { onConflict: "store_id" })
+      .select(STORE_SETTINGS_COLUMNS)
+      .single();
+
+    if (!error) return storeSettingsFromSupabase(updated);
+    warnAndUseLocal("updateStoreSettings", error);
+  }
+
+  updateStorageStore(storeId, data);
+  const store = getLocalStoreById(storeId);
+  return store ? { ...data, storeId } : null;
+}
+
+export async function getPaymentMethodsByStore(storeId) {
+  if (!supabase) return getLocalStoreById(storeId)?.paymentMethods || {};
+
+  const { data, error } = await supabase
+    .from("payment_methods")
+    .select(PAYMENT_METHOD_COLUMNS)
+    .eq("store_id", storeId);
+
+  if (error) {
+    warnAndUseLocal("getPaymentMethodsByStore", error);
+    return getLocalStoreById(storeId)?.paymentMethods || {};
+  }
+
+  const methods = { pix: false, pixOnline: false, cash: false, card: false };
+  for (const row of data || []) {
+    const method = paymentMethodFromSupabase(row);
+    methods[method.type] = method.active;
+    if (method.type === "pix") methods.pixOnline = method.onlineEnabled;
+  }
+  return methods;
+}
+
+export async function updatePaymentMethods(storeId, methods = {}) {
+  if (supabase) {
+    const rows = [
+      { type: "pix", active: Boolean(methods.pix), onlineEnabled: Boolean(methods.pixOnline) },
+      { type: "cash", active: Boolean(methods.cash) },
+      { type: "card", active: Boolean(methods.card) },
+    ].map((method) => paymentMethodToSupabase(method, storeId));
+
+    const { error } = await supabase
+      .from("payment_methods")
+      .upsert(rows, { onConflict: "store_id,type" });
+
+    if (!error) return getPaymentMethodsByStore(storeId);
+    warnAndUseLocal("updatePaymentMethods", error);
+  }
+
+  updateStorageStore(storeId, { paymentMethods: methods });
+  return getLocalStoreById(storeId)?.paymentMethods || methods;
 }
 
 export function deleteStore(id) {
