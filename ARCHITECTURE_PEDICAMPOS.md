@@ -996,3 +996,11 @@ A migration usa `on conflict (key) do nothing`: primeira execucao insere os plan
 As colecoes `categories`, `products` e `additionalGroups` retornam vazias no adapter relacional enquanto nao forem migradas. Isso representa um cardapio vazio, nao uma loja inexistente.
 
 A policy publica de `stores` usa `active = true`. Assim, anon nao consegue diferenciar slug inexistente de loja inativa sem uma RPC/resposta publica especifica. O frontend preserva o estado visual de indisponibilidade para linhas inativas que sejam legitimamente retornadas, sem ampliar a policy nesta etapa.
+
+## Persistencia relacional de categorias
+
+Categorias usam `categories.id` UUID, `store_id` obrigatorio, `name`, `active` e `sort_order`. O adapter devolve o contrato atual `{ id, storeId, name, active, order }` e inclui timestamps sem aninhar a categoria na linha de loja.
+
+Leituras sempre aplicam `.eq("store_id", storeId)`. No banco, leitura publica exige categoria ativa e loja ativa; writes exigem `can_access_store(store_id)`, que aceita master ou usuario ativo ligado a mesma loja. O role anon nao possui escrita.
+
+O login fake do admin nao gera `auth.uid()`. Por isso `AdminCategories` continua no fluxo local e nao foi conectado ao adapter: uma sessao master eventualmente aberta no mesmo navegador nao deve ser tratada como identidade do lojista. A proxima camada necessaria e Auth real dos usuarios de loja.

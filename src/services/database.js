@@ -20,6 +20,7 @@ function makeId(prefix) {
 
 const STORE_COLUMNS =
   "id, plan_key, name, slug, segment, active, open, primary_color, whatsapp, logo, banner_url, created_at, updated_at";
+const CATEGORY_COLUMNS = "id, store_id, name, active, sort_order, created_at, updated_at";
 
 function getLocalStores() {
   return getStorageDatabase().stores;
@@ -64,6 +65,31 @@ export function storeToSupabase(store = {}) {
     whatsapp: store.whatsapp,
     logo: store.logo,
     banner_url: store.banner,
+  };
+
+  return Object.fromEntries(Object.entries(mapped).filter(([, value]) => value !== undefined));
+}
+
+export function categoryFromSupabase(row) {
+  if (!row) return null;
+
+  return {
+    id: row.id,
+    storeId: row.store_id,
+    name: row.name || "",
+    active: row.active !== false,
+    order: Number(row.sort_order) || 0,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export function categoryToSupabase(category = {}, storeId) {
+  const mapped = {
+    store_id: storeId ?? category.storeId,
+    name: category.name,
+    active: category.active,
+    sort_order: category.order,
   };
 
   return Object.fromEntries(Object.entries(mapped).filter(([, value]) => value !== undefined));
@@ -247,12 +273,25 @@ export function deleteProduct(productId) {
   return productId;
 }
 
-export function getCategoriesByStore(storeId) {
-  return getLocalStoreById(storeId)?.categories || [];
+export async function getCategoriesByStore(storeId) {
+  if (!supabase) return getLocalStoreById(storeId)?.categories || [];
+
+  const { data, error } = await supabase
+    .from("categories")
+    .select(CATEGORY_COLUMNS)
+    .eq("store_id", storeId)
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    warnAndUseLocal("getCategoriesByStore", error);
+    return getLocalStoreById(storeId)?.categories || [];
+  }
+
+  return (data || []).map(categoryFromSupabase);
 }
 
-export function createCategory(storeId, data = {}) {
-  const categories = getCategoriesByStore(storeId);
+export async function createCategory(storeId, data = {}) {
+  const categories = await getCategoriesByStore(storeId);
   const category = {
     id: data.id || makeId("cat"),
     name: data.name || "",
@@ -260,6 +299,17 @@ export function createCategory(storeId, data = {}) {
     order: Number(data.order) || categories.length + 1,
     ...data,
   };
+
+  if (supabase) {
+    const { data: created, error } = await supabase
+      .from("categories")
+      .insert(categoryToSupabase(category, storeId))
+      .select(CATEGORY_COLUMNS)
+      .single();
+
+    if (!error) return categoryFromSupabase(created);
+    warnAndUseLocal("createCategory", error);
+  }
 
   updateStorageStore(storeId, (store) => ({
     ...store,
@@ -269,7 +319,19 @@ export function createCategory(storeId, data = {}) {
   return category;
 }
 
-export function updateCategory(categoryId, data) {
+export async function updateCategory(categoryId, data) {
+  if (supabase) {
+    const { data: updated, error } = await supabase
+      .from("categories")
+      .update(categoryToSupabase(data))
+      .eq("id", categoryId)
+      .select(CATEGORY_COLUMNS)
+      .maybeSingle();
+
+    if (!error) return categoryFromSupabase(updated);
+    warnAndUseLocal("updateCategory", error);
+  }
+
   const store = getStoreContaining("categories", categoryId);
   if (!store) return null;
 
@@ -280,10 +342,22 @@ export function updateCategory(categoryId, data) {
     ),
   }));
 
-  return getCategoriesByStore(store.id).find((category) => category.id === categoryId) || null;
+  return getLocalStoreById(store.id)?.categories.find((category) => category.id === categoryId) || null;
 }
 
-export function deleteCategory(categoryId) {
+export async function deleteCategory(categoryId) {
+  if (supabase) {
+    const { data: deleted, error } = await supabase
+      .from("categories")
+      .delete()
+      .eq("id", categoryId)
+      .select("id")
+      .maybeSingle();
+
+    if (!error) return deleted?.id || null;
+    warnAndUseLocal("deleteCategory", error);
+  }
+
   const store = getStoreContaining("categories", categoryId);
   if (!store) return null;
 

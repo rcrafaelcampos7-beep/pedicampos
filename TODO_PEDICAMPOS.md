@@ -405,3 +405,14 @@ Legenda:
 - [ ] Validar no dominio uma loja Supabase ativa por slug.
 - [ ] Decidir futuramente se lojas inativas devem ter uma resposta publica dedicada sem ampliar dados expostos pelo RLS.
 - [ ] Migrar categorias como proxima entidade.
+
+## Categorias Supabase - 2026-07-12
+
+- [x] Criar conversores entre categoria relacional e formato atual.
+- [x] Migrar as quatro funcoes de categorias para Supabase-first com fallback.
+- [x] Preservar filtro e isolamento por `store_id`.
+- [x] Confirmar que anon nao consegue inserir categorias (`42501`).
+- [ ] Criar Supabase Auth para admins das lojas e vincular em `store_users`.
+- [ ] Integrar `AdminCategories` somente depois da autenticacao real.
+- [ ] Executar CRUD temporario autenticado e conferir no Table Editor.
+- [ ] Manter produtos pendentes ate categorias estarem validadas.

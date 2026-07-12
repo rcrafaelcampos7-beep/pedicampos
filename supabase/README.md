@@ -181,3 +181,11 @@ A rota `/:slug` agora consulta `getStoreBySlug` no adapter Supabase-first. Uma l
 Uma consulta bem-sucedida sem linha mostra loja nao encontrada e nao injeta mocks. Se Supabase estiver indisponivel ou retornar erro, o fallback local existente permanece.
 
 A policy publica atual permite ler apenas `active = true`. Por seguranca, uma loja remota inativa nao e exposta ao role anon e aparece como nao encontrada. A mensagem especifica de indisponibilidade e usada quando uma linha inativa e retornada em contexto autorizado ou pelo fallback local. Categorias sao a proxima entidade planejada.
+
+## Categorias Supabase
+
+As funcoes de categorias em `database.js` agora consultam e gravam `public.categories` primeiro. O formato relacional usa `store_id` e `sort_order`; o frontend continua recebendo `storeId` e `order`. Uma lista remota vazia nao recebe categorias mock/local automaticamente.
+
+Nenhuma migration adicional foi necessaria. As policies existentes permitem leitura publica somente de categorias ativas pertencentes a lojas ativas e permitem escrita somente ao master ou usuario autenticado ativo vinculado a mesma loja em `store_users`.
+
+O teste anonimo retornou leitura vazia e bloqueou INSERT com PostgreSQL `42501`; nenhuma categoria temporaria foi criada. `AdminCategories` ainda nao usa essas funcoes porque o admin da loja continua fake/local. Nao configure bypass: a proxima etapa correta e criar Auth real para admins, vincula-los a `store_users` e somente entao integrar a tela e executar CRUD por loja. Produtos continuam pendentes.

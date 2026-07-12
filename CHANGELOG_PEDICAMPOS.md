@@ -1034,3 +1034,12 @@ Build:
 - Adicionados estados de carregamento e falha, validacao de slug e protecao contra resposta assincrona obsoleta.
 - Loja Supabase sem produtos abre normalmente e informa que nenhum produto esta disponivel.
 - Mantidos o fallback local, o formato atual da loja e as policies RLS existentes.
+
+## 2026-07-12 - Adapter Supabase-first de categorias
+
+- Migradas leitura, criacao, atualizacao e exclusao de categorias em `database.js`.
+- Adicionados mapeamentos `store_id`/`storeId` e `sort_order`/`order`.
+- Resposta remota vazia permanece vazia e sucesso remoto nao gera gravacao local paralela.
+- Policies existentes foram preservadas; INSERT anonimo foi bloqueado com `42501`.
+- Tela admin permaneceu local por ainda nao existir Auth real dos admins de loja.
+- Produtos, adicionais e pedidos nao foram alterados.

@@ -50,6 +50,17 @@ Atualizado em: 2026-07-12
 - Pela RLS atual, anon le somente lojas ativas. Uma loja remota inativa fica oculta e aparece como nao encontrada ao publico; a tela de indisponibilidade continua aplicavel quando a loja inativa e retornada por contexto autorizado ou fallback.
 - Proxima etapa: categorias.
 
+## Adapter Supabase de categorias - 2026-07-12
+
+- `getCategoriesByStore`, `createCategory`, `updateCategory` e `deleteCategory` agora sao Supabase-first em `database.js`.
+- Conversores explicitos preservam `storeId`, `name`, `active` e `order`, mapeando `store_id` e `sort_order`.
+- Toda leitura e filtrada por `store_id`; writes dependem da policy `can_access_store` e nao permitem role anon.
+- Nenhuma migration foi necessaria: schema, FK, indice e policies existentes ja atendem ao isolamento.
+- `AdminCategories` nao foi integrado porque o login admin ainda e fake/local e nao fornece identidade Supabase segura.
+- Fallback local permanece apenas quando o client esta ausente ou Supabase retorna erro; sucesso vazio retorna `[]` sem categorias locais.
+- Teste anon confirmou leitura vazia e bloqueio de INSERT com `42501`, sem linha criada.
+- Proxima etapa correta: Supabase Auth para usuarios das lojas e vinculacao em `store_users`; depois integrar `AdminCategories`. Produtos continuam pendentes.
+
 Este arquivo e a memoria principal do projeto PediCampos. Ele registra o estado atual do codigo, as decisoes ja tomadas, o que esta implementado, o que esta parcial e o que ainda e pendente.
 
 ## Identidade do projeto

@@ -892,3 +892,13 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - Ausencia remota bem-sucedida nao aciona mock; falhas continuam cobertas pelo fallback do adapter.
 - RLS de leitura apenas para lojas ativas foi preservado; inativas ficam indistinguiveis de inexistentes para anon.
 - Proxima etapa planejada: migracao de categorias.
+
+## Categorias - adapter preparado
+
+- Concluido: funcoes CRUD Supabase-first, conversores e filtro por `store_id`.
+- Schema/policies existentes foram suficientes; nenhuma migration SQL adicional foi criada.
+- Teste de seguranca: SELECT anon passou vazio; INSERT anon falhou com `42501`; nenhuma linha temporaria foi criada.
+- CRUD autenticado ainda nao foi executado nesta sessao.
+- Bloqueio atual: admins de loja usam login fake e nao podem receber write remoto seguro.
+- Proxima etapa correta: Supabase Auth dos admins + registros `store_users`; depois integrar e testar `AdminCategories`.
+- Produtos permanecem pendentes.
