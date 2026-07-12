@@ -4,6 +4,7 @@ import { supabase } from "./supabaseClient.js";
 import {
   createOrder as createStorageOrder,
   getDatabase as getStorageDatabase,
+  migrateLegacyStoresForSupabase,
   mutateDatabase,
   subscribeDatabase as subscribeStorageDatabase,
   updateOrder as updateStorageOrder,
@@ -275,8 +276,118 @@ export function paymentMethodToSupabase(method = {}, storeId) {
   };
 }
 
+export function orderAdditionalFromSupabase(row) {
+  return {
+    groupId: row.additional_group_id,
+    groupName: row.group_name || "Adicionais",
+    optionId: row.additional_option_id,
+    optionName: row.option_name,
+    name: row.option_name,
+    price: Number(row.price) || 0,
+  };
+}
+
+export function orderItemFromSupabase(row) {
+  return {
+    id: row.id,
+    productId: row.product_id,
+    name: row.product_name,
+    unitPrice: Number(row.unit_price) || 0,
+    quantity: Number(row.quantity) || 1,
+    note: row.note || "",
+    image: row.image_url || "",
+    total: Number(row.total) || 0,
+    selectedAdditionals: (row.order_item_additionals || []).map(orderAdditionalFromSupabase),
+  };
+}
+
+export function orderFromSupabase(row) {
+  if (!row) return null;
+  const customer = row.customers || row.customer || {};
+  const store = row.stores || {};
+  return {
+    id: row.id,
+    publicToken: row.public_token || row.publicToken,
+    number: row.number,
+    storeId: row.store_id || row.storeId,
+    storeSlug: store.slug || row.storeSlug || row.metadata?.storeSlug || "",
+    storeName: store.name || row.storeName || row.metadata?.storeName || "",
+    createdAt: row.created_at || row.createdAt,
+    updatedAt: row.updated_at || row.updatedAt,
+    customer: {
+      name: customer.name || "",
+      phone: customer.phone || "",
+      email: customer.email || "",
+    },
+    fulfillment: row.fulfillment,
+    address: row.address,
+    notes: row.notes || "",
+    paymentMethod: row.payment_method || row.paymentMethod,
+    paymentStatus: row.payment_status || row.paymentStatus,
+    orderStatus: row.order_status || row.orderStatus,
+    subtotal: Number(row.subtotal) || 0,
+    deliveryFee: Number(row.delivery_fee ?? row.deliveryFee) || 0,
+    discount: Number(row.discount) || 0,
+    total: Number(row.total) || 0,
+    pixCode: row.pix_code || row.pixCode || "",
+    pixKey: row.pix_key || row.pixKey || "",
+    items: (row.order_items || row.items || []).map((item) =>
+      item.product_name ? orderItemFromSupabase(item) : item
+    ),
+  };
+}
+
+export function customerToSupabase(customer = {}) {
+  return { name: customer.name || "", phone: customer.phone || "", email: customer.email || "" };
+}
+
+export function orderToSupabase(order = {}) {
+  const paymentKeys = { Pix: "pix", Dinheiro: "cash", Cartão: "card", Cartao: "card" };
+  return {
+    customer: customerToSupabase(order.customer),
+    fulfillment: order.fulfillment === "pickup" ? "pickup" : "delivery",
+    address: order.address || null,
+    notes: order.notes || "",
+    paymentMethod: order.paymentMethodKey || paymentKeys[order.paymentMethod] || order.paymentMethod,
+    items: (order.items || []).map((item) => ({
+      productId: item.productId,
+      quantity: Number(item.quantity) || 1,
+      note: item.note || item.observation || "",
+      selectedAdditionals: (item.selectedAdditionals || item.addons || []).map((additional) => ({
+        groupId: additional.groupId,
+        optionId: additional.optionId || additional.id,
+      })),
+    })),
+  };
+}
+
 function warnAndUseLocal(operation, error) {
   console.warn(`[PediCampos] Supabase falhou em ${operation}; usando fallback local.`, error);
+}
+
+function isConnectionError(error) {
+  if (!error) return false;
+  const message = `${error.message || ""} ${error.details || ""}`.toLowerCase();
+  return !error.code && (
+    error instanceof TypeError ||
+    message.includes("failed to fetch") ||
+    message.includes("fetch failed") ||
+    message.includes("networkerror") ||
+    message.includes("network error") ||
+    message.includes("load failed")
+  );
+}
+
+function throwDatabaseError(operation, error) {
+  const failure = new Error(`Não foi possível concluir ${operation}.`);
+  failure.code = error?.code;
+  failure.cause = error;
+  throw failure;
+}
+
+function useLocalForConnectionFailure(operation, error) {
+  if (!isConnectionError(error)) throwDatabaseError(operation, error);
+  warnAndUseLocal(operation, error);
 }
 
 function getStoreContaining(collectionName, itemId) {
@@ -292,7 +403,8 @@ function getAdditionalGroupStore(groupId) {
 }
 
 export function getDatabase() {
-  return getStorageDatabase();
+  const database = getStorageDatabase();
+  return supabase ? { ...database, stores: [] } : database;
 }
 
 export function subscribeDatabase(callback) {
@@ -304,35 +416,51 @@ export async function getStores() {
 
   const { data, error } = await supabase.from("stores").select(STORE_COLUMNS).order("created_at", { ascending: false });
   if (error) {
-    warnAndUseLocal("getStores", error);
+    useLocalForConnectionFailure("getStores", error);
     return getLocalStores();
   }
 
-  return (data || []).map(storeFromSupabase);
+  const stores = (data || []).map(storeFromSupabase);
+  migrateLegacyStoresForSupabase(stores, { complete: true });
+  return stores;
 }
 
-export async function getStoreBySlug(slug) {
-  if (!supabase) return getLocalStores().find((store) => store.slug === slug) || null;
-
-  const { data, error } = await supabase.from("stores").select(STORE_COLUMNS).eq("slug", slug).maybeSingle();
-  if (error) {
-    warnAndUseLocal("getStoreBySlug", error);
+export async function getStoreBySlug(slug, options = {}) {
+  const allowLocalFallback = options.allowLocalFallback !== false;
+  if (!supabase) {
+    if (!allowLocalFallback) throw new Error("Supabase não está configurado para resolver a loja do checkout.");
     return getLocalStores().find((store) => store.slug === slug) || null;
   }
 
-  return storeFromSupabase(data);
+  const { data, error } = await supabase.from("stores").select(STORE_COLUMNS).eq("slug", slug).maybeSingle();
+  if (error) {
+    if (!allowLocalFallback) throwDatabaseError("resolver a loja pelo slug", error);
+    useLocalForConnectionFailure("getStoreBySlug", error);
+    return getLocalStores().find((store) => store.slug === slug) || null;
+  }
+
+  const store = storeFromSupabase(data);
+  if (store) migrateLegacyStoresForSupabase([store]);
+  return store;
 }
 
-export async function getStoreById(id) {
-  if (!supabase) return getLocalStoreById(id);
-
-  const { data, error } = await supabase.from("stores").select(STORE_COLUMNS).eq("id", id).maybeSingle();
-  if (error) {
-    warnAndUseLocal("getStoreById", error);
+export async function getStoreById(id, options = {}) {
+  const allowLocalFallback = options.allowLocalFallback !== false;
+  if (!supabase) {
+    if (!allowLocalFallback) throw new Error("Supabase não está configurado para resolver a loja autorizada.");
     return getLocalStoreById(id);
   }
 
-  return storeFromSupabase(data);
+  const { data, error } = await supabase.from("stores").select(STORE_COLUMNS).eq("id", id).maybeSingle();
+  if (error) {
+    if (!allowLocalFallback) throwDatabaseError("resolver a loja autorizada", error);
+    useLocalForConnectionFailure("getStoreById", error);
+    return getLocalStoreById(id);
+  }
+
+  const store = storeFromSupabase(data);
+  if (store) migrateLegacyStoresForSupabase([store]);
+  return store;
 }
 
 export async function createStore(data = {}) {
@@ -891,15 +1019,140 @@ export async function deleteAdditionalGroup(groupId) {
   return groupId;
 }
 
-export function getOrdersByStore(storeId) {
-  return getStorageDatabase().orders.filter((order) => order.storeId === storeId);
+export async function getOrdersByStore(storeId) {
+  if (!supabase) return getStorageDatabase().orders.filter((order) => order.storeId === storeId);
+
+  const { data: orderRows, error: ordersError } = await supabase
+    .from("orders")
+    .select("*")
+    .eq("store_id", storeId)
+    .order("created_at", { ascending: false });
+
+  if (ordersError) {
+    useLocalForConnectionFailure("getOrdersByStore", ordersError);
+    return getStorageDatabase().orders.filter((order) => order.storeId === storeId);
+  }
+  if (!orderRows?.length) return [];
+
+  const orderIds = orderRows.map((order) => order.id);
+  const customerIds = [...new Set(orderRows.map((order) => order.customer_id).filter(Boolean))];
+  const [customersResult, itemsResult, storeResult] = await Promise.all([
+    customerIds.length
+      ? supabase.from("customers").select("id, name, phone, email").in("id", customerIds)
+      : Promise.resolve({ data: [], error: null }),
+    supabase.from("order_items").select("*").eq("store_id", storeId).in("order_id", orderIds),
+    supabase.from("stores").select("slug, name").eq("id", storeId).maybeSingle(),
+  ]);
+
+  const relatedError = customersResult.error || itemsResult.error || storeResult.error;
+  if (relatedError) {
+    useLocalForConnectionFailure("carregar os detalhes dos pedidos", relatedError);
+    return getStorageDatabase().orders.filter((order) => order.storeId === storeId);
+  }
+
+  const itemRows = itemsResult.data || [];
+  const itemIds = itemRows.map((item) => item.id);
+  const additionalsResult = itemIds.length
+    ? await supabase
+      .from("order_item_additionals")
+      .select("*")
+      .eq("store_id", storeId)
+      .in("order_item_id", itemIds)
+    : { data: [], error: null };
+
+  if (additionalsResult.error) {
+    useLocalForConnectionFailure("carregar os adicionais dos pedidos", additionalsResult.error);
+    return getStorageDatabase().orders.filter((order) => order.storeId === storeId);
+  }
+
+  const customersById = new Map((customersResult.data || []).map((customer) => [customer.id, customer]));
+  const additionalsByItem = new Map();
+  for (const additional of additionalsResult.data || []) {
+    const current = additionalsByItem.get(additional.order_item_id) || [];
+    current.push(additional);
+    additionalsByItem.set(additional.order_item_id, current);
+  }
+  const itemsByOrder = new Map();
+  for (const item of itemRows) {
+    const current = itemsByOrder.get(item.order_id) || [];
+    current.push({ ...item, order_item_additionals: additionalsByItem.get(item.id) || [] });
+    itemsByOrder.set(item.order_id, current);
+  }
+
+  return orderRows.map((order) => orderFromSupabase({
+    ...order,
+    customers: customersById.get(order.customer_id),
+    stores: storeResult.data,
+    order_items: itemsByOrder.get(order.id) || [],
+  }));
 }
 
-export function getOrderById(orderId) {
-  return getStorageDatabase().orders.find((order) => order.id === orderId) || null;
+export async function getOrderById(orderId, storeSlug = "") {
+  if (supabase && storeSlug) {
+    const { data, error } = await supabase.rpc("get_public_order", {
+      p_token: orderId,
+      p_store_slug: storeSlug,
+    });
+    if (!error) return orderFromSupabase(data);
+    useLocalForConnectionFailure("buscar o pedido público", error);
+  } else if (supabase) {
+    const { data, error } = await supabase.from("orders").select("*").eq("id", orderId).maybeSingle();
+    if (!error) {
+      if (!data) return null;
+      const orders = await getOrdersByStore(data.store_id);
+      return orders.find((order) => order.id === orderId) || null;
+    }
+    useLocalForConnectionFailure("buscar o pedido", error);
+  }
+
+  return getStorageDatabase().orders.find((order) =>
+    (order.id === orderId || order.publicToken === orderId) && (!storeSlug || order.storeSlug === storeSlug)
+  ) || null;
 }
 
-export function createOrder(storeId, data = {}) {
+export async function createOrder(storeId, data = {}) {
+  if (supabase) {
+    const payload = orderToSupabase(data);
+    const { data: created, error } = await supabase.rpc("create_public_order", {
+      p_store_id: storeId,
+      p_customer: payload.customer,
+      p_fulfillment: payload.fulfillment,
+      p_address: payload.address,
+      p_notes: payload.notes,
+      p_payment_method: payload.paymentMethod,
+      p_items: payload.items,
+    });
+
+    if (!error) {
+      return {
+        ...data,
+        id: created.id,
+        publicToken: created.publicToken,
+        number: created.number,
+        storeId,
+      };
+    }
+    if (import.meta.env.DEV) {
+      console.error("[PediCampos] create_public_order falhou.", {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        request: {
+          storeId,
+          fulfillment: payload.fulfillment,
+          paymentMethod: payload.paymentMethod,
+          items: payload.items.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            optionIds: item.selectedAdditionals.map((additional) => additional.optionId),
+          })),
+        },
+      });
+    }
+    useLocalForConnectionFailure("criar o pedido", error);
+  }
+
   const store = getLocalStoreById(storeId);
   const order = {
     ...data,
@@ -912,12 +1165,30 @@ export function createOrder(storeId, data = {}) {
   return order;
 }
 
-export function updateOrder(orderId, data) {
+export async function updateOrder(orderId, data) {
+  if (supabase) {
+    const mapped = {
+      order_status: data.orderStatus,
+      payment_status: data.paymentStatus,
+      notes: data.notes,
+    };
+    const payload = Object.fromEntries(Object.entries(mapped).filter(([, value]) => value !== undefined));
+    const { data: updated, error } = await supabase
+      .from("orders")
+      .update(payload)
+      .eq("id", orderId)
+      .select("*")
+      .maybeSingle();
+
+    if (!error) return orderFromSupabase(updated);
+    useLocalForConnectionFailure("atualizar o pedido", error);
+  }
+
   updateStorageOrder(orderId, data);
-  return getOrderById(orderId);
+  return getStorageDatabase().orders.find((order) => order.id === orderId) || null;
 }
 
-export function updateOrderStatus(orderId, status) {
+export async function updateOrderStatus(orderId, status) {
   return updateOrder(orderId, {
     orderStatus: status,
     updatedAt: new Date().toISOString(),

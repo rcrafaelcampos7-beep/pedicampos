@@ -10,7 +10,14 @@ import { EmptyState } from "../components/ui/EmptyState.jsx";
 import { useCart } from "../hooks/useCart.js";
 import { usePediData } from "../hooks/usePediData.js";
 import { Link } from "../routes/router.jsx";
-import { getPaymentMethodsByStore, getStoreBySlug, getStoreSettings } from "../services/database.js";
+import {
+  getAdditionalGroupsByStore,
+  getCategoriesByStore,
+  getPaymentMethodsByStore,
+  getProductsByStore,
+  getStoreBySlug,
+  getStoreSettings,
+} from "../services/database.js";
 import { planHasFeature } from "../utils/plans.js";
 
 export function StorePage({ slug }) {
@@ -37,13 +44,26 @@ export function StorePage({ slug }) {
     }
 
     setLoading(true);
-    getStoreBySlug(slug)
+    getStoreBySlug(slug, { allowLocalFallback: false })
       .then(async (result) => {
         if (!result) return null;
-        const [settings, paymentMethods] = await Promise.all([
+        const [settings, paymentMethods, remoteCategories, remoteProducts, remoteAdditionalGroups] = await Promise.all([
           getStoreSettings(result.id),
           getPaymentMethodsByStore(result.id),
+          getCategoriesByStore(result.id),
+          getProductsByStore(result.id),
+          getAdditionalGroupsByStore(result.id),
         ]);
+        const categories = remoteCategories.filter((category) => category.active);
+        const products = remoteProducts.filter((product) => product.active);
+        const activeProductIds = new Set(products.map((product) => product.id));
+        const additionalGroups = remoteAdditionalGroups
+          .filter((group) => group.active)
+          .map((group) => ({
+            ...group,
+            options: (group.options || []).filter((option) => option.active),
+            productIds: (group.productIds || []).filter((productId) => activeProductIds.has(productId)),
+          }));
         return {
           ...result,
           address: "",
@@ -57,6 +77,9 @@ export function StorePage({ slug }) {
           paymentInstructions: "",
           ...(settings || {}),
           paymentMethods,
+          categories,
+          products,
+          additionalGroups,
         };
       })
       .then((result) => {
@@ -82,6 +105,17 @@ export function StorePage({ slug }) {
     if (!store) return [];
     return (store.products || []).filter((product) => !activeCategory || product.categoryId === activeCategory);
   }, [activeCategory, store]);
+
+  function addProductToCart(item) {
+    if (import.meta.env.DEV) {
+      console.info("[PediCampos] StorePage adicionando produto.", {
+        slug,
+        storeId: store.id,
+        productId: item.productId,
+      });
+    }
+    cart.addItem(item);
+  }
 
   if (loading) {
     return (
@@ -186,7 +220,7 @@ export function StorePage({ slug }) {
         platform={platform}
         open={Boolean(selectedProduct)}
         onClose={() => setSelectedProduct(null)}
-        onAdd={cart.addItem}
+        onAdd={addProductToCart}
       />
 
       <CartDrawer

@@ -1087,3 +1087,67 @@ Build:
 - Migration 006 adicionou RPC de perfil limitada, sem acesso a plano ou ativacao comercial.
 - Checkout passou a respeitar entrega, retirada, taxa, minimo e metodos configurados.
 - Nenhum gateway, pagamento real ou pedido remoto foi implementado.
+
+## 2026-07-12 - Pedidos Supabase-first
+
+- Adicionada migration 007 para criacao atomica e acompanhamento por token UUID.
+- Adapter passou a converter pedidos, clientes, itens e adicionais relacionais.
+- Checkout aguarda criacao remota, bloqueia envio duplicado e navega pelo token publico.
+- OrderTracking passou a usar RPC segura sem leitura publica geral.
+- AdminOrders passou a listar e atualizar pedidos remotos da loja autorizada.
+- Totais enviados pelo navegador sao ignorados pela RPC; pagamentos/WhatsApp reais nao foram integrados.
+
+## 2026-07-12 - Fix catalogo publico Supabase
+
+- StorePage passou a carregar categorias, produtos e adicionais remotos junto das configuracoes.
+- Aplicados filtros defensivos de status ativo e links para produtos ativos.
+- Produto sem categoria continua suportado.
+- Policies existentes foram suficientes; nenhuma migration ou permissao de escrita foi alterada.
+
+## 2026-07-12 - Correcao de pedidos ausentes no admin
+
+- Corrigido o fallback amplo que mascarava erros Supabase e fazia AdminOrders ler uma lista local vazia.
+- `getOrdersByStore` agora carrega pedidos, clientes, itens e adicionais em etapas filtradas pela loja.
+- Criacao, leitura e atualizacao de pedidos so usam fallback em indisponibilidade real de rede/client.
+- AdminOrders passou a exibir falha de consulta sem confundi-la com ausencia de pedidos.
+- Nenhuma policy ou migration foi alterada; escrita e leitura administrativa continuam sob RLS.
+
+## 2026-07-12 - Permissao da RPC de criacao de pedidos
+
+- Diagnosticado erro real `42501 permission denied for table customers` no primeiro `INSERT ... RETURNING` da RPC.
+- Criada migration 008 para executar apenas `create_public_order` como definer, sem conceder leitura publica de customers/orders.
+- Mantidos `search_path` fixo, EXECUTE somente para anon/authenticated e validacoes server-side existentes.
+- Checkout e adapter agora registram code/message/details/hint somente em desenvolvimento.
+- Nenhum fallback local foi adicionado para erros de RPC, RLS, schema, FK ou validacao.
+
+## 2026-07-12 - Auditoria da RPC apos migration 008
+
+- A chamada remota direta passou e criou o pedido temporario `80EE5827` com um item e duas opcoes.
+- Tracking confirmou persistencia, loja correta, status recebido e total calculado no banco.
+- Adicionado diagnostico read-only de pg_proc para identificar overloads, owner, `prosecdef`, config e definicao real.
+- Logs de desenvolvimento passaram a incluir IDs/quantidades do payload sem dados pessoais.
+- Nenhuma migration 009 foi criada porque a funcao alvo respondeu corretamente.
+
+## 2026-07-12 - Correcao da origem da loja no checkout
+
+- Impedido que uma loja antiga do fallback local forneca `p_store_id` para uma RPC remota.
+- Checkout passou a resolver o slug estritamente no Supabase ao carregar e antes de criar o pedido.
+- Carrinho passou a persistir seu `storeId`; divergencias limpam os itens com mensagem amigavel.
+- Mantido diagnostico DEV seguro com slug, IDs resolvido/carrinho/enviado.
+- Nenhuma migration, RPC, policy ou fallback de erro RPC foi alterado.
+
+## 2026-07-12 - Carrinho novo vinculado a loja remota
+
+- StorePage deixou de aceitar fallback local ao resolver a loja do carrinho.
+- useCart passou a persistir `storeId` no envelope e nos itens novos.
+- Corrigida a janela de inicializacao que poderia escrever estado vazio antes de ler a chave da loja.
+- Adicionados logs DEV seguros para adicao, persistencia e leitura no checkout.
+
+## 2026-07-12 - Autoridade unica do Supabase para lojas
+
+- Removida a competicao entre snapshot local e lojas remotas nas areas migradas.
+- usePediData passou a hidratar lojas assincronamente pelo facade remoto.
+- Fallback de lojas foi limitado a client ausente ou falha real de rede; null remoto nao injeta mock.
+- Admin Auth passou a resolver a loja vinculada sem fallback local.
+- Adicionada migracao local versionada que remove apenas colisoes de slug e seus carrinhos legados.
+- Nenhuma RPC, migration SQL, policy ou dado Supabase foi alterado.

@@ -946,3 +946,60 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - Ausencia de registro remoto usa defaults controlados; resposta vazia nao injeta mock.
 - Checkout continua sem gateway e pedidos continuam locais.
 - Pendente: executar migration e validar fluxo completo. Proxima entidade: pedidos.
+
+## Pedidos conectados
+
+- Concluido no codigo: RPC atomica, token publico, adapter e tres telas principais.
+- Migration 007 adiciona `public_token`, desconto, indice e RPCs create/tracking.
+- Totais e snapshots sao calculados no banco; SELECT publico geral continua inexistente.
+- Admin/master permanecem protegidos pelas policies atuais.
+- Pendente: executar migration e testar matriz completa no Table Editor.
+- Proxima etapa: endurecimento/observabilidade e, separadamente, gateway de pagamento e WhatsApp reais.
+
+## Correcao previa a validacao de pedidos
+
+- Corrigida StorePage, que buscava a loja mas nao hidratava o catalogo relacional.
+- Leitura publica confirmou categorias/produtos/grupos/opcoes/links sem bloqueio RLS.
+- Nenhuma migration foi criada; policies atuais ja atendem ao catalogo ativo.
+- Validar catalogo no dominio antes de retomar a matriz de testes de pedidos.
+
+## Correcao da listagem administrativa de pedidos
+
+- O bug era agravado pelo fallback indistinto: qualquer erro remoto era convertido em leitura do localStorage, normalmente vazio no navegador do admin.
+- Consultas administrativas agora sao segmentadas e filtradas por `store_id`; erros RLS/schema/RPC deixam de ser mascarados.
+- A migration 007 ja possui policies com `can_access_store(store_id)`, portanto nao foi criada migration adicional nem aberta leitura anonima.
+- Validacao pendente no projeto remoto: confirmar as quatro linhas relacionadas, o `store_id`, atualizar status e testar uma segunda loja.
+
+## Migration 008 - permissao da RPC publica
+
+- A migration 007 executada correspondia ao comportamento local relevante: assinatura correta e `SECURITY INVOKER`.
+- Teste anonimo real aceitou todo o payload e falhou no primeiro `INSERT ... RETURNING` com `42501` em customers.
+- A migration 008 muda somente a funcao validada para `SECURITY DEFINER`; nao concede SELECT anonimo, nao remove RLS e reafirma `search_path` e grants.
+- Depois de executar 008, repetir a matriz de criacao e conferir rollback/linhas nas quatro tabelas.
+
+## Auditoria depois da 008
+
+- A RPC remota aceitou a identidade `(uuid,jsonb,text,jsonb,text,text,jsonb)` e criou o pedido `80EE5827`.
+- Nao criar migration 009 ate o SQL `supabase/diagnostics/create_public_order_audit.sql` demonstrar overload incorreto ou definicao divergente.
+- Pendente: executar o diagnostico no SQL Editor, comparar o erro/payload exato do navegador e remover o pedido temporario depois da auditoria.
+
+## Correcao frontend do tenant do pedido
+
+- O erro `Store unavailable` vinha de um UUID de loja local antiga usado apos fallback de slug.
+- A criacao agora exige duas resolucoes remotas coerentes e nunca usa ID do carrinho/localStorage como autoridade.
+- Nao houve mudanca SQL; nenhuma migration 009 e necessaria para esta causa.
+- Pendente: deploy e matriz manual carrinho antigo/novo, banco, admin e tracking.
+
+### Carrinho novo
+
+- StorePage e Checkout usam a loja remota como origem do ID.
+- Persistencia inclui ownership explicita e bloqueia divergencias; nenhuma mudanca SQL foi necessaria.
+- Build passou; teste visual de reload/localStorage permanece manual.
+
+## Separacao definitiva de lojas locais/remotas
+
+- Supabase e fonte unica para lojas quando configurado; snapshots locais nao entram nas areas migradas.
+- Fallback ocorre somente por conectividade real, nunca por resposta vazia, RLS ou schema.
+- Limpeza local V1 e seletiva e idempotente: colisao comprovada por slug remove loja/carrinho legado; dados local-only permanecem.
+- Testes isolados confirmaram colisao, preservacao local-only e null remoto sem mock.
+- Nenhuma migration SQL foi necessaria. Pendente apenas validacao E2E do pedido/admin.

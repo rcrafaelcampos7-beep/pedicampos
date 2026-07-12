@@ -5,6 +5,7 @@ import { DEFAULT_FEATURES_BY_PLAN, normalizePlan } from "../utils/plans.js";
 
 const STORAGE_KEY = "pedicampos.database.v1";
 const UPDATE_EVENT = "pedicampos:data-updated";
+const SUPABASE_STORES_MIGRATION_KEY = "pedicampos.localMigration.supabaseStoresV1";
 
 export const defaultPlatformSettings = {
   name: "PediCampos",
@@ -440,6 +441,56 @@ export function resetDatabase() {
   const fresh = createInitialDatabase();
   saveDatabase(fresh);
   return fresh;
+}
+
+export function migrateLegacyStoresForSupabase(remoteStores = [], { complete = false } = {}) {
+  if (!canUseStorage()) return { removedStores: [], removedCarts: [] };
+
+  let migrationState = { processedSlugs: [], complete: false };
+  try {
+    migrationState = {
+      ...migrationState,
+      ...(JSON.parse(window.localStorage.getItem(SUPABASE_STORES_MIGRATION_KEY)) || {}),
+    };
+  } catch {
+    // A malformed migration marker is safe to rebuild from the current remote rows.
+  }
+
+  if (migrationState.complete) return { removedStores: [], removedCarts: [] };
+
+  const remoteBySlug = new Map(
+    remoteStores.filter((store) => store?.slug && store?.id).map((store) => [store.slug, store])
+  );
+  const database = getDatabase();
+  const collisions = database.stores.filter((localStore) => {
+    const remoteStore = remoteBySlug.get(localStore.slug);
+    return remoteStore && remoteStore.id !== localStore.id;
+  });
+
+  if (collisions.length) {
+    const collisionIds = new Set(collisions.map((store) => store.id));
+    saveDatabase({
+      ...database,
+      stores: database.stores.filter((store) => !collisionIds.has(store.id)),
+    });
+    for (const store of collisions) {
+      window.localStorage.removeItem(`pedicampos.cart.${store.id}`);
+    }
+  }
+
+  const processedSlugs = Array.from(new Set([
+    ...(migrationState.processedSlugs || []),
+    ...remoteBySlug.keys(),
+  ]));
+  window.localStorage.setItem(SUPABASE_STORES_MIGRATION_KEY, JSON.stringify({
+    processedSlugs,
+    complete: Boolean(complete),
+  }));
+
+  return {
+    removedStores: collisions.map((store) => ({ id: store.id, slug: store.slug })),
+    removedCarts: collisions.map((store) => `pedicampos.cart.${store.id}`),
+  };
 }
 
 export function updateStore(storeId, updater) {

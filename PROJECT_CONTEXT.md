@@ -70,7 +70,7 @@ Atualizado em: 2026-07-12
 - Master continua autorizado separadamente pela role `master`; uma role master nao e aceita como usuario de loja.
 - Nenhuma migration foi necessaria porque schema, `can_access_store` e policies atuais ja atendem ao isolamento.
 - Multiplos vinculos ja sao retornados pela camada; nesta versao o primeiro por data de criacao e usado, sem tela de selecao.
-- Nao foi mantido fallback fake para admin. Categorias, produtos e adicionais ja foram integrados; pedidos permanecem pendentes.
+- Nao foi mantido fallback fake para admin. Categorias, produtos, adicionais e pedidos ja usam adapters Supabase-first.
 
 ## AdminCategories no Supabase - 2026-07-12
 
@@ -111,9 +111,29 @@ Atualizado em: 2026-07-12
 - Criada migration 006 com RPC restrita para o lojista atualizar apenas o perfil publico. Plano e `active` continuam exclusivos do master.
 - AdminSettings possui loading, erro, sucesso e bloqueio de envio duplicado.
 - StorePage e CheckoutPage carregam settings/metodos remotos e usam defaults controlados quando nao ha linha.
-- Checkout respeita entrega/retirada, taxa, pedido minimo, chave Pix, instrucoes e metodos ativos, mas pagamentos e pedidos continuam simulados/locais.
+- Checkout respeita entrega/retirada, taxa, pedido minimo, chave Pix, instrucoes e metodos ativos; pedidos agora sao remotos, mas pagamentos continuam sem gateway real.
 - INSERT anon em ambas as tabelas foi bloqueado com `42501`; fallback local permanece.
 - Proxima etapa: pedidos, depois de validar manualmente estas configuracoes.
+
+## Pedidos no Supabase - 2026-07-12
+
+- Checkout, acompanhamento publico e AdminOrders agora usam o adapter Supabase-first.
+- Criada migration 007 com `public_token` UUID, desconto, indice e RPC atomica de criacao.
+- A RPC recebe IDs/quantidades, valida loja, atendimento, pagamento, produtos e adicionais, e recalcula subtotal/taxa/total no banco.
+- Nomes/precos de produtos e adicionais sao salvos como snapshots nas tabelas de itens.
+- Acompanhamento usa token UUID + slug por RPC dedicada; nao existe SELECT publico geral de pedidos.
+- Admin lista e altera status somente sob `can_access_store(store_id)`; master continua com acesso total.
+- Start continua enviando ao WhatsApp; Pro/Premium criam pedido conforme fluxo atual, sem gateway real.
+- Pix/cartao e WhatsApp reais continuam pendentes. Fallback local permanece.
+
+## Correcao do catalogo publico remoto - 2026-07-12
+
+- Bug manual: a loja abria pelo slug, mas mostrava cardapio vazio apesar de haver produtos no Supabase.
+- Causa: `storeFromSupabase` entrega colecoes vazias e StorePage hidratava somente settings/metodos.
+- StorePage agora carrega em paralelo categorias, produtos e grupos/opcoes/vinculos por `store_id`.
+- Somente registros ativos sao exibidos; links sao filtrados para produtos ativos. Produto ativo sem categoria continua visivel.
+- Leitura anon real de `lojateste` confirmou catalogo completo sem erro de RLS.
+- Nenhuma migration foi necessaria. Pedidos continuam aguardando validacao manual apos esta correcao.
 
 Este arquivo e a memoria principal do projeto PediCampos. Ele registra o estado atual do codigo, as decisoes ja tomadas, o que esta implementado, o que esta parcial e o que ainda e pendente.
 
@@ -1029,6 +1049,54 @@ Build:
 - Observacao: a primeira tentativa dentro do sandbox falhou por acesso negado ao resolver `vite.config.js`; a repeticao com permissao elevada passou.
 
 ## Proximas etapas recomendadas
+
+### Correcao da listagem de pedidos - 2026-07-12
+
+- `getOrdersByStore` deixou de depender de um unico select relacional aninhado: pedidos, clientes, itens e adicionais sao carregados por consultas isoladas, sempre filtradas pelo `store_id` autorizado.
+- Erros de RLS, RPC, schema, FK e validacao nao acionam mais fallback local nos fluxos de pedidos. Somente ausencia do client ou falha real de rede usa `storage.js`.
+- AdminOrders mostra erro de carregamento sem apresentar simultaneamente o estado vazio.
+- As policies da migration 007 continuam inalteradas: leitura administrativa exige `can_access_store(store_id)`; nao foi aberto SELECT anonimo geral.
+- A existencia e o `store_id` do pedido historico precisam ser conferidos no Table Editor, pois uma sessao anonima nao pode auditar pedidos por design.
+
+### Correcao da RPC publica de pedidos - 2026-07-12
+
+- Reproducao real da `create_public_order` retornou `42501 permission denied for table customers`, com hint solicitando SELECT para anon.
+- A causa era `SECURITY INVOKER`: o `INSERT ... RETURNING id` precisava de privilegio de leitura, que corretamente nao existe para clientes anonimos.
+- Migration 008 altera somente a RPC validada para `SECURITY DEFINER`, fixa `search_path`, reafirma grants restritos de EXECUTE e nao concede SELECT anonimo nas tabelas.
+- Erros completos da RPC sao registrados somente em desenvolvimento; a mensagem publica continua amigavel e erros de RPC nao usam fallback local.
+- O teste real chegou ate a gravacao com loja, produto, opcoes gratis/paga, vinculos, entrega, Pix, taxa e minimo validos; nenhuma linha temporaria foi criada porque a transacao falhou atomicamente.
+
+### Auditoria pos-migration 008 - 2026-07-12
+
+- A chamada anonima direta com a assinatura frontend criou com sucesso o pedido temporario `80EE5827`, provando que a 008 esta efetiva no endpoint testado.
+- O acompanhamento retornou uma linha, um item, duas opcoes e total 35 para a loja `129ee8d4-e7ae-4aad-9d64-2e7489efe8b1`.
+- A falha ainda vista no navegador nao e reproduzida pelo mesmo projeto/payload de referencia; deve ser diagnosticada pelo novo erro completo e resumo seguro do payload no console de desenvolvimento.
+- Criado SQL read-only em `supabase/diagnostics/create_public_order_audit.sql` para contar overloads e conferir assinatura, `prosecdef`, owner, `search_path`, definicao e grants.
+- Nao foi criada migration 009 sem evidencia de divergencia da funcao.
+
+### Correcao do store_id no checkout - 2026-07-12
+
+- O UUID antigo nao existia no codigo; vinha de uma loja persistida em `storage.js/localStorage` devolvida pelo fallback de `getStoreBySlug` para o mesmo slug.
+- Checkout usa resolucao estrita Supabase pelo slug ao carregar e repete a resolucao imediatamente antes de `createOrder`.
+- O `p_store_id` passa a ser exclusivamente o `id` dessa segunda resolucao; divergencia com a tela ou carrinho limpa os itens e bloqueia a RPC.
+- Carrinhos agora persistem envelope com `storeId`; arrays legados continuam legiveis e sao normalizados. Produto/opcao continuam revalidados no banco pela RPC.
+- Nenhuma RPC, migration, policy ou regra visual foi alterada.
+
+### Persistencia de carrinho remoto - 2026-07-12
+
+- StorePage tambem resolve o slug sem fallback local antes de inicializar `useCart(store.id)`.
+- Primeiro item novo grava envelope `{ storeId, items }` sob a chave da loja remota; cada item tambem recebe o mesmo `storeId`.
+- `clearCart` redefine o estado vazio com o ID remoto atual. Carrinho divergente e removido e normalizado antes de novo uso.
+- Diagnosticos DEV mostram ID ao adicionar, persistir e ler no checkout. Validacao visual ficou pendente porque o navegador integrado nao estava disponivel.
+
+### Fonte unica Supabase para lojas - 2026-07-12
+
+- Foi confirmada duplicidade historica possivel entre `pedicampos.database.v1`/mocks e lojas remotas com o mesmo slug e UUIDs diferentes.
+- Quando o client esta configurado, `database.getDatabase()` e `usePediData` nao publicam mais lojas locais; o hook hidrata `stores` por `getStores` remoto.
+- `getStores`, `getStoreBySlug` e `getStoreById` so usam fallback local em falha classificada como conectividade. Resposta remota vazia/null permanece vazia/null; RLS/schema nao sao mascarados.
+- Admin Auth resolve o `store_users.store_id` com `allowLocalFallback:false`.
+- A migracao local versionada `pedicampos.localMigration.supabaseStoresV1` remove apenas lojas locais cujo slug remoto existe com outro ID e somente os carrinhos desses IDs legados.
+- Lojas/carrinhos exclusivamente locais sao preservados para fallback quando nao colidem.
 
 1. Conferir no Table Editor se as 15 tabelas do schema foram criadas.
 2. Conferir RLS, policies, indices e triggers de `updated_at`.

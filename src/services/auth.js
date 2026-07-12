@@ -71,7 +71,7 @@ export async function getAuthorizedStoreForUser(user) {
   if (!memberships.length) return null;
 
   const membership = memberships[0];
-  const store = await getStoreById(membership.store_id);
+  const store = await getStoreById(membership.store_id, { allowLocalFallback: false });
   if (!store) return null;
 
   return { store, membership, memberships };

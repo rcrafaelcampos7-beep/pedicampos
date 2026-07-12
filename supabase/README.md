@@ -215,7 +215,7 @@ As roles de loja aceitas pelo schema atual sao `store_admin` e `store_staff`. Na
 
 O login `/admin` valida a sessao e o vinculo ativo. IDs salvos manualmente no navegador nao alteram a loja autorizada. Multiplos vinculos sao suportados pela camada, mas a interface usa o primeiro por ordem de criacao ate existir uma tela de selecao. Nao ha fallback fake para admin.
 
-Depois do vinculo, teste login, refresh, logout, usuario sem vinculo, usuario inativo e tentativa de acesso a outra loja. Categorias, produtos e adicionais ja usam o adapter; pedidos continuam pendentes.
+Depois do vinculo, teste login, refresh, logout, usuario sem vinculo, usuario inativo e tentativa de acesso a outra loja. Categorias, produtos, adicionais e pedidos ja usam adapters Supabase-first.
 
 ## AdminCategories conectado ao adapter
 
@@ -231,7 +231,7 @@ Valide com uma categoria temporaria: crie, edite nome/status, reordene, exclua e
 
 Antes de testar, execute `supabase/migrations/004_product_category_store.sql` no SQL Editor. O trigger idempotente valida que `category_id`, quando informado, pertence ao mesmo `store_id` do produto. Categoria de outra loja e rejeitada com erro PostgreSQL `23514`; RLS continua bloqueando writes de usuarios nao vinculados.
 
-Depois teste criacao, edicao de nome/preco/categoria, status e exclusao no Table Editor. Teste tambem Loja A x Loja B e categoria cruzada. Os vinculos de adicionais sao mantidos na tabela relacional propria; pedidos continuam pendentes.
+Depois teste criacao, edicao de nome/preco/categoria, status e exclusao no Table Editor. Teste tambem Loja A x Loja B e categoria cruzada. Os vinculos de adicionais sao mantidos na tabela relacional propria e os pedidos usam snapshots.
 
 ## Adicionais Supabase e migration 005
 
@@ -256,3 +256,54 @@ Dados ficam separados assim:
 AdminSettings usa upserts por `store_id`. StorePage e CheckoutPage leem esses dados remotamente; sem linha, aplicam defaults controlados. O checkout respeita taxa, minimo, entrega/retirada e metodos ativos, mas nao cria cobranca real nem pedido Supabase.
 
 Teste alteracoes no admin e confira `stores`, `store_settings` e `payment_methods`. Depois abra loja/checkout e valide os reflexos. Escrita anonima permaneceu bloqueada com `42501`. A proxima etapa e pedidos.
+
+## Pedidos Supabase e migration 007
+
+Execute `supabase/migrations/007_orders.sql` antes de testar. Ela adiciona token UUID publico, desconto, indice e duas RPCs:
+
+- `create_public_order`: valida e cria cliente/pedido/itens/adicionais atomicamente;
+- `get_public_order`: retorna somente o pedido identificado por token UUID + slug.
+
+O checkout nao envia precos confiaveis para persistencia. A RPC consulta produtos, opcoes, vinculos, taxa e minimo no banco; calcula subtotal/total e salva snapshots. Nao existe policy de SELECT geral para anon.
+
+Teste retirada, entrega, Pix, cartao, dinheiro e adicionais gratis/pagos. Confira `customers`, `orders`, `order_items` e `order_item_additionals`; abra o acompanhamento e atualize status no admin. Tente produto/opcao de outra loja e adulteracao de totais. Pagamento real e WhatsApp Cloud API continuam pendentes.
+
+## Catalogo da loja publica
+
+StorePage agora carrega, em paralelo, categorias, produtos e adicionais depois de resolver a loja por slug. O conversor de `stores` continua retornando arrays vazios por padrao, mas a pagina os substitui pelas consultas relacionais.
+
+Somente registros ativos e links para produtos ativos sao exibidos. Produtos sem categoria continuam visiveis no grid geral. A leitura anon real confirmou acesso ao catalogo sem erro de RLS, portanto nenhuma migration adicional foi necessaria.
+
+Valide o catalogo no dominio antes de continuar os testes da migration 007 de pedidos.
+
+## Diagnostico de pedidos ausentes no admin
+
+O adapter nao converte mais erros de RLS, RPC, schema, FK ou validacao em pedidos locais. Somente falha real de conexao ou client nao configurado usa o fallback. A listagem administrativa hidrata clientes, itens e adicionais em consultas separadas, todas limitadas ao `store_id` autorizado.
+
+No Table Editor, confira `customers`, `orders`, `order_items` e `order_item_additionals`. Em `orders`, valide `store_id`, `public_token`, `order_status`, `payment_status` e `created_at`, comparando o `store_id` com o vinculo ativo em `store_users`. Nenhuma nova migration foi necessaria; SELECT geral para anon continua bloqueado.
+
+## Migration 008 - create_public_order
+
+Execute `supabase/migrations/008_public_order_rpc_permissions.sql` depois da 007. Ela corrige `42501 permission denied for table customers` causado pelo `INSERT ... RETURNING` sob `SECURITY INVOKER`.
+
+A RPC passa a ser definer com `search_path` fixo e EXECUTE apenas para anon/authenticated. Nao conceda o SELECT sugerido pelo hint do Postgres: customers e orders devem continuar sem leitura anonima direta. Depois execute um pedido e confira atomicamente as quatro tabelas; se falhar, o console de desenvolvimento mostra `code`, `message`, `details` e `hint`.
+
+### Auditoria da funcao remota
+
+Execute `supabase/diagnostics/create_public_order_audit.sql` no SQL Editor para listar todas as assinaturas, `prosecdef`, owner, `proconfig`, definicao e grants. A API anonima nao possui acesso a pg_proc.
+
+A chamada direta apos a 008 criou `80EE5827` com sucesso. Se o checkout ainda falhar, compare no console DEV o code/message/details/hint e o resumo de store, modalidade, metodo, produto, quantidade e option IDs. Remova o pedido temporario depois da conferencia.
+
+### Store ID enviado pelo checkout
+
+O checkout nao aceita mais uma loja retornada pelo fallback local para criar pedido remoto. Ele resolve o slug estritamente no Supabase e repete a consulta antes de chamar a RPC. O ID do carrinho serve apenas para detectar divergencia e nunca vira `p_store_id`.
+
+Se houver carrinho de outra loja, ele e limpo e o cliente deve adicionar os produtos novamente. A RPC continua sendo a validacao final de produto, opcao, vinculo e precos. Nenhuma migration adicional foi criada.
+
+StorePage tambem exige resolucao remota antes de criar o carrinho. Carrinhos novos sao salvos como `{ storeId, items }`, com o UUID remoto no envelope e nos itens. Logs DEV permitem comparar StorePage, localStorage e Checkout sem expor dados pessoais.
+
+### Lojas legadas no navegador
+
+Quando Supabase esta configurado, lojas remotas sao a unica fonte das areas migradas. O banco local ainda existe para fallback/domínios pendentes, mas suas lojas nao sao publicadas pelo facade nem mescladas com resultados remotos.
+
+Na primeira lista/resolucao remota, `pedicampos.localMigration.supabaseStoresV1` registra a limpeza. Apenas uma loja local com slug remoto igual e ID diferente e removida, junto de `pedicampos.cart.<id-local>`. Lojas e carrinhos sem colisao permanecem. Resposta remota vazia nunca recebe mocks.

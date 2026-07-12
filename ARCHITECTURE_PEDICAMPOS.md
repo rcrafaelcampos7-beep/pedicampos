@@ -1044,3 +1044,43 @@ Criacao/edicao usam `save_additional_group`, uma RPC `security invoker`: ela con
 AdminSettings recebe `store.id` da sessao. A RPC `update_store_public_profile` e `security definer`, mas valida `can_access_store` e expõe somente colunas publicas permitidas; `plan_key` e `active` nao sao parametros. Settings e metodos usam upsert sob RLS normal.
 
 Loja publica e checkout fazem hidratacao assíncrona depois de resolver o slug. Ausencia bem-sucedida de settings usa defaults controlados na pagina, sem puxar mocks; erro Supabase continua sujeito ao fallback do adapter.
+
+## Criacao e leitura de pedidos
+
+`create_public_order` e uma RPC `security invoker` executada em uma unica transacao. Ela valida loja ativa, service mode, metodo ativo, produto ativo da loja e opcoes ativas vinculadas ao produto. Quantidade e limitada; opcoes duplicadas sao rejeitadas.
+
+O navegador envia somente cliente, atendimento, endereco, notas, metodo, IDs e quantidades. Precos, taxa, minimo, subtotal, desconto zero e total sao calculados no banco. Depois sao gravados customer, order, snapshots de itens e snapshots de adicionais.
+
+Cada pedido recebe `public_token` UUID independente do UUID interno. `get_public_order(token, slug)` e security definer e retorna somente o pedido correspondente ao bearer token, sem policy SELECT anon sobre `orders`. Admin usa SELECT normal sob RLS e joins das quatro tabelas.
+
+## Hidratacao do catalogo publico
+
+O registro raiz de `stores` nao inclui colecoes relacionais; os arrays vazios do conversor sao apenas placeholders de formato. StorePage resolve o slug e executa em paralelo settings, pagamentos, categorias, produtos e adicionais.
+
+As policies publicas ja filtram entidades ativas de lojas ativas. A pagina aplica uma segunda filtragem defensiva e remove dos grupos links para produtos nao retornados. Produtos ativos com `category_id` nulo ou categoria nao exibida continuam no grid geral.
+
+## Leitura administrativa de pedidos
+
+AdminOrders usa exclusivamente o `store.id` resolvido pela sessao e chama `getOrdersByStore`. O adapter consulta primeiro `orders` por `store_id` e depois hidrata customers, order_items e order_item_additionals com os IDs retornados. Isso evita que uma falha em relacionamento aninhado seja confundida com lista vazia.
+
+Nos pedidos, fallback local e restrito a client ausente ou falha de transporte. Respostas Postgres/PostgREST com codigo (RLS, FK, schema, RPC ou regra de negocio) sao propagadas para a UI. O RLS continua sendo a fronteira de autorizacao e nao ha SELECT administrativo para anon.
+
+## Execucao da criacao publica
+
+`create_public_order` e a unica fronteira publica de escrita atomica. Ela roda como `SECURITY DEFINER` a partir da migration 008 porque `INSERT ... RETURNING` nao pode exigir SELECT anonimo sobre dados pessoais. Seu `search_path` e fixo, o EXECUTE e explicitamente limitado a anon/authenticated e as tabelas permanecem protegidas por RLS e sem SELECT publico.
+
+O navegador envia IDs e quantidades; a RPC valida loja ativa, modalidade, metodo, produto, opcoes ativas e vinculos e calcula os valores no banco. O modal aplica minimo/maximo de grupos; a equivalencia completa dessa regra no servidor permanece um endurecimento pendente e nao foi a causa do erro 42501.
+
+A auditoria de catalogo PostgreSQL deve usar `supabase/diagnostics/create_public_order_audit.sql`; o endpoint REST anonimo nao expoe pg_proc. A reproducao direta depois da 008 confirmou que a identidade de sete parametros usada pelo frontend esta operacional. Divergencias restantes entre UI e chamada direta devem ser comparadas pelo resumo seguro do payload e pelos campos completos do erro em modo DEV.
+
+### Autoridade do tenant no checkout
+
+O carrinho nao define o tenant do pedido. Checkout resolve `getStoreBySlug` em modo remoto estrito e repete essa resolucao antes da RPC. Apenas o ID retornado nessa etapa vira `p_store_id`. O carrinho guarda `storeId` apenas para detectar contaminacao; divergencia invalida seus itens. IDs de produto/opcao sao novamente validados pela RPC.
+
+StorePage usa a mesma resolucao remota estrita antes de chamar `useCart`. O formato persistido e `{ storeId, items }`; a escrita so ocorre quando o estado carregado pertence ao ID atual, evitando apagar ou reatribuir carrinhos durante a troca inicial de loja.
+
+## Autoridade de lojas e legado local
+
+Com Supabase configurado, o facade nao expoe `storage.database.stores` como snapshot inicial. `usePediData` carrega lojas remotas e preserva do storage apenas dominios ainda locais, como configuracao de plataforma conforme a etapa atual. StorePage/Checkout usam slug remoto estrito; Admin usa membership remoto e ID estrito; Master CRUD usa adapters remotos.
+
+Fallback local de lojas exige ausencia de client ou erro de transporte sem codigo PostgREST. Resultado remoto vazio e erros RLS/schema nao fazem merge. A migracao `pedicampos.localMigration.supabaseStoresV1` compara slugs retornados pelo Supabase, remove apenas registros locais com ID divergente e apaga somente a chave de carrinho daquele ID legado.

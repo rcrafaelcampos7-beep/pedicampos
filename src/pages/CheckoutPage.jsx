@@ -7,8 +7,7 @@ import { Input, Select, Textarea } from "../components/ui/Input.jsx";
 import { useCart } from "../hooks/useCart.js";
 import { usePediData } from "../hooks/usePediData.js";
 import { Link, navigate } from "../routes/router.jsx";
-import { getPaymentMethodsByStore, getStoreBySlug, getStoreSettings } from "../services/database.js";
-import { createOrder } from "../services/storage.js";
+import { createOrder, getPaymentMethodsByStore, getStoreBySlug, getStoreSettings } from "../services/database.js";
 import { formatCurrency } from "../utils/formatCurrency.js";
 import { ORDER_STATUS, PAYMENT_STATUS } from "../utils/orderStatus.js";
 import { planHasFeature } from "../utils/plans.js";
@@ -55,6 +54,7 @@ export function CheckoutPage({ slug }) {
   const [store, setStore] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const cart = useCart(store?.id);
   const [cartOpen, setCartOpen] = useState(false);
   const [error, setError] = useState("");
@@ -102,7 +102,7 @@ export function CheckoutPage({ slug }) {
     setLoadError(false);
     setStore(null);
 
-    getStoreBySlug(slug)
+    getStoreBySlug(slug, { allowLocalFallback: false })
       .then(async (result) => {
         if (!result) return null;
         const [settings, paymentMethods] = await Promise.all([
@@ -148,6 +148,24 @@ export function CheckoutPage({ slug }) {
       updateForm("paymentMethod", paymentOptions[0].key);
     }
   }, [paymentOptions, form.paymentMethod]);
+
+  useEffect(() => {
+    if (cart.mismatched) {
+      cart.clearCart();
+      setError("O carrinho pertencia a outra loja e foi limpo. Adicione os produtos novamente.");
+    }
+  }, [cart.mismatched]);
+
+  useEffect(() => {
+    if (store && import.meta.env.DEV) {
+      console.info("[PediCampos] Checkout leu o carrinho.", {
+        slug,
+        resolvedStoreId: store.id,
+        cartStoreId: cart.storeId,
+        itemCount: cart.items.length,
+      });
+    }
+  }, [cart.items.length, cart.storeId, slug, store]);
 
   function updateForm(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -206,8 +224,9 @@ export function CheckoutPage({ slug }) {
       .join("\n");
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
+    if (submitting) return;
     if (!store || !store.active || !store.open) return;
     const validation = validate();
     if (validation) {
@@ -255,6 +274,7 @@ export function CheckoutPage({ slug }) {
           : null,
       notes: form.notes,
       paymentMethod: paymentMethodLabel,
+      paymentMethodKey: form.paymentMethod,
       paymentStatus: isAutomaticPayment
         ? automaticPaymentApproved
           ? PAYMENT_STATUS.APPROVED
@@ -276,9 +296,40 @@ export function CheckoutPage({ slug }) {
     // Integração futura: aqui o backend criaria a cobrança Pix no Mercado Pago ou Asaas.
     // Integração futura: o QR Code retornado pela API substituiria o bloco visual fake abaixo.
     // Integração futura: o webhook de confirmação atualizaria paymentStatus e orderStatus automaticamente.
-    createOrder(order);
-    cart.clearCart();
-    navigate(`/${store.slug}/pedido/${order.id}`);
+    setSubmitting(true);
+    setError("");
+    try {
+      const resolvedStore = await getStoreBySlug(slug, { allowLocalFallback: false });
+      if (!resolvedStore || resolvedStore.id !== store.id || (cart.storeId && cart.storeId !== resolvedStore.id)) {
+        cart.clearCart();
+        setError("A loja do carrinho mudou. Adicione os produtos novamente antes de finalizar.");
+        return;
+      }
+      if (import.meta.env.DEV) {
+        console.info("[PediCampos] Loja validada antes de create_public_order.", {
+          slug,
+          resolvedStoreId: resolvedStore.id,
+          cartStoreId: cart.storeId,
+          pStoreId: resolvedStore.id,
+        });
+      }
+      const createdOrder = await createOrder(resolvedStore.id, { ...order, storeId: resolvedStore.id });
+      cart.clearCart();
+      navigate(`/${store.slug}/pedido/${createdOrder.publicToken || createdOrder.id}`);
+    } catch (requestError) {
+      if (import.meta.env.DEV) {
+        const source = requestError?.cause || requestError;
+        console.error("[PediCampos] Falha ao finalizar o checkout.", {
+          code: source?.code,
+          message: source?.message,
+          details: source?.details,
+          hint: source?.hint,
+        });
+      }
+      setError("Não foi possível criar o pedido. Confira os itens e tente novamente.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   if (loading) {
@@ -496,8 +547,8 @@ export function CheckoutPage({ slug }) {
             ) : null}
           </Card>
 
-          <Button variant="store" size="lg" type="submit" disabled={!cart.items.length || !store.active || !store.open}>
-            {canUseSiteCheckout ? "Finalizar pedido" : "Enviar pedido no WhatsApp"}
+          <Button variant="store" size="lg" type="submit" disabled={submitting || !cart.items.length || !store.active || !store.open}>
+            {submitting ? "Enviando pedido..." : canUseSiteCheckout ? "Finalizar pedido" : "Enviar pedido no WhatsApp"}
           </Button>
         </form>
 

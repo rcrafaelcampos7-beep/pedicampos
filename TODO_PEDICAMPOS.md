@@ -460,7 +460,7 @@ Legenda:
 - [ ] Testar CRUD completo e conferir as tres tabelas.
 - [ ] Testar produto de outra loja e isolamento Loja A x Loja B.
 - [ ] Migrar configuracoes da loja/formas de pagamento antes dos pedidos.
-- [ ] Manter pedidos pendentes.
+- [x] Manter pedidos pendentes ate concluir as dependencias de configuracao.
 
 ## Configuracoes e formas de pagamento - 2026-07-12
 
@@ -471,4 +471,80 @@ Legenda:
 - [x] Confirmar bloqueio anonimo de escrita (`42501`).
 - [ ] Executar migration 006 no SQL Editor.
 - [ ] Testar campos, metodos, isolamento e reflexo publico/checkout.
-- [ ] Migrar pedidos como proxima entidade.
+- [x] Migrar pedidos depois das configuracoes da loja.
+
+## Pedidos Supabase - 2026-07-12
+
+- [x] Criar migration 007 com token publico e RPCs seguras.
+- [x] Migrar adapter de pedidos, clientes, itens e adicionais escolhidos.
+- [x] Integrar Checkout, OrderTracking e AdminOrders.
+- [x] Recalcular valores no banco e salvar snapshots.
+- [ ] Executar migration 007 no SQL Editor.
+- [ ] Testar entrega, retirada, tres pagamentos, adicionais gratis/pagos e duplicidade.
+- [ ] Conferir quatro tabelas e isolamento Loja A x Loja B.
+- [ ] Integrar gateway/WhatsApp reais somente em etapa futura separada.
+
+## Correcao catalogo publico - 2026-07-12
+
+- [x] Identificar arrays vazios vindos de `storeFromSupabase` como causa.
+- [x] Hidratar categorias, produtos e adicionais em paralelo na StorePage.
+- [x] Filtrar ativos e vinculos validos sem misturar mocks.
+- [x] Confirmar leitura publica real sem erro de RLS.
+- [ ] Validar visualmente produtos e adicionais no dominio.
+- [ ] Retomar testes de pedidos somente depois dessa validacao.
+
+## Correcao da listagem de pedidos - 2026-07-12
+
+- [x] Remover fallback silencioso para erros de RLS/RPC/schema/validacao em pedidos.
+- [x] Carregar pedidos e relacionamentos por consultas filtradas por `store_id`.
+- [x] Fazer AdminOrders diferenciar erro de lista realmente vazia.
+- [x] Manter SELECT anonimo geral bloqueado e dispensar nova migration.
+- [ ] Conferir o pedido historico e seu `store_id` no Table Editor.
+- [ ] Criar novo pedido e validar listagem, status, tracking e isolamento entre lojas.
+
+## Correcao da RPC publica - 2026-07-12
+
+- [x] Reproduzir e registrar o erro real `42501` em `customers`.
+- [x] Confirmar assinatura e payload do checkout ate a fase de INSERT.
+- [x] Criar migration 008 sem liberar SELECT anonimo ou alterar RLS.
+- [x] Exibir diagnostico completo somente em desenvolvimento.
+- [ ] Executar migration 008 no SQL Editor.
+- [ ] Repetir pedido com entrega, opcao gratis e opcao paga; conferir as quatro tabelas.
+- [ ] Endurecer em etapa propria a validacao server-side de minimo/maximo por grupo; a UI ja aplica essas regras.
+
+## Auditoria remota create_public_order - 2026-07-12
+
+- [x] Repetir a chamada anonima apos a migration 008.
+- [x] Confirmar criacao e tracking remoto com produto e duas opcoes.
+- [x] Criar consulta pg_proc/pg_namespace para auditoria no SQL Editor.
+- [x] Adicionar resumo nao sensivel do payload ao erro de desenvolvimento.
+- [ ] Executar o SQL de diagnostico e registrar quantidade de overloads/owner/config remotos.
+- [ ] Remover o pedido temporario `80EE5827` apos a verificacao no Table Editor.
+- [ ] Capturar o novo erro e payload do checkout no console se a UI ainda falhar.
+
+## Store ID correto no checkout - 2026-07-12
+
+- [x] Rastrear UUID antigo ao fallback local de loja por slug.
+- [x] Resolver loja sem fallback local no checkout.
+- [x] Resolver novamente antes da RPC e enviar somente o ID remoto atual.
+- [x] Persistir propriedade do carrinho e bloquear divergencias.
+- [ ] Testar carrinho legado/invalido e carrinho novo no navegador.
+- [ ] Confirmar pedido no banco/admin, atualizar status e validar tracking.
+
+## Persistencia do carrinho novo - 2026-07-12
+
+- [x] Tornar StorePage estrita para a loja remota.
+- [x] Persistir envelope e item com o ID recebido de StorePage.
+- [x] Impedir sobrescrita vazia durante a troca inicial de storeId no hook.
+- [x] Limpar automaticamente estado divergente e manter o ID remoto atual.
+- [ ] Confirmar logs/localStorage no navegador e finalizar pedido pelo fluxo visual.
+
+## Fonte unica de lojas - 2026-07-12
+
+- [x] Auditar snapshot local, facade, auth, paginas e imports.
+- [x] Impedir lojas locais no snapshot quando Supabase esta configurado.
+- [x] Restringir fallback a falha real de conectividade.
+- [x] Criar limpeza local versionada e seletiva por colisao de slug remoto.
+- [x] Invalidar somente carrinhos ligados aos IDs locais removidos.
+- [x] Testar colisao, local-only, null remoto e resolucao estrita de lojateste.
+- [ ] Validar pedido/admin/status/tracking pelo navegador com bundle atual.

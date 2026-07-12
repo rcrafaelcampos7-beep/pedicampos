@@ -1,17 +1,46 @@
+import { useEffect, useState } from "react";
 import { Card } from "../components/ui/Card.jsx";
 import { StatusBadge } from "../components/ui/StatusBadge.jsx";
 import { OrderTimeline } from "../components/store/OrderTimeline.jsx";
-import { usePediData } from "../hooks/usePediData.js";
 import { Link } from "../routes/router.jsx";
+import { getOrderById } from "../services/database.js";
 import { formatCurrency } from "../utils/formatCurrency.js";
 
 export function OrderTrackingPage({ slug, orderId }) {
-  const { orders } = usePediData();
-  const order = orders.find((item) => item.id === orderId && item.storeSlug === slug);
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const formatAdditional = (addon) =>
     `${addon.optionName || addon.name} ${
       Number(addon.price) > 0 ? `+ ${formatCurrency(addon.price)}` : "Grátis"
     }`;
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError(false);
+    getOrderById(orderId, slug)
+      .then((result) => {
+        if (active) setOrder(result);
+      })
+      .catch(() => {
+        if (active) setError(true);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [orderId, slug]);
+
+  if (loading) {
+    return <main className="not-found"><Card><h1>Carregando pedido...</h1></Card></main>;
+  }
+
+  if (error) {
+    return <main className="not-found"><Card><h1>Não foi possível carregar o pedido</h1></Card></main>;
+  }
 
   if (!order) {
     return (
