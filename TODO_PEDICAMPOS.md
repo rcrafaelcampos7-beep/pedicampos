@@ -387,3 +387,12 @@ Legenda:
 - [x] Recarregar lojas apos cada operacao.
 - [ ] Executar CRUD temporario no navegador com a sessao master e conferir a linha no Table Editor.
 - [ ] Migrar categorias como proxima entidade.
+
+## Seed de planos Supabase - 2026-07-12
+
+- [x] Confirmar que `plans` estava vazia e era exigida pela FK de lojas.
+- [x] Criar `003_seed_plans.sql` com os tres planos oficiais e precos atuais.
+- [x] Garantir idempotencia sem sobrescrever registros existentes.
+- [ ] Executar a migration 003 no SQL Editor.
+- [ ] Conferir Start, Pro e Premium no Table Editor.
+- [ ] Repetir CRUD real de loja com master autenticado.

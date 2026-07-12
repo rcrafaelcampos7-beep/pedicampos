@@ -159,3 +159,17 @@ O master ja foi autorizado e as telas de lojas foram conectadas ao adapter assin
 Lojas gravadas remotamente sao compartilhadas entre desenvolvimento local e dominio porque ambos consultam `public.stores`. A listagem consulta novamente depois de cada operacao. Nao ha Supabase Realtime: `subscribeDatabase` observa somente localStorage.
 
 Para validar, crie uma loja descartavel com slug `teste-supabase-[timestamp]`, confira no Table Editor, edite o nome, desative e confirme `active = false`. Depois remova o registro manualmente apenas se nao quiser mante-lo. A proxima entidade planejada e categorias; produtos, adicionais e pedidos ainda nao foram migrados.
+
+## Migration 003 - carga inicial de planos
+
+A tabela `plans` estava vazia. Como `stores.plan_key` referencia `plans.key`, os planos precisam existir antes do primeiro cadastro remoto de loja.
+
+Execute `supabase/migrations/003_seed_plans.sql` no SQL Editor. O arquivo insere:
+
+- `start`: Start, R$ 99,99/mes, ativo;
+- `pro`: Pro, R$ 179,99/mes, ativo;
+- `premium`: Premium, R$ 199,99/mes, ativo.
+
+A migration usa `on conflict (key) do nothing`. Ela pode ser executada novamente sem duplicar linhas e sem sobrescrever precos ou outros dados ja existentes. Alteracoes comerciais futuras devem ser feitas pelo painel master.
+
+Depois da execucao, confirme os tres registros no Table Editor e repita o teste de criacao, edicao e desativacao de uma loja temporaria.

@@ -32,6 +32,15 @@ Atualizado em: 2026-07-12
 - Lojas persistidas no Supabase passam a ser compartilhadas entre local e dominio. `subscribeDatabase` continua observando apenas localStorage; atualizacoes remotas aparecem ao recarregar a listagem, nao por Realtime.
 - Categorias sao a proxima entidade planejada. Produtos, adicionais e pedidos continuam locais.
 
+## Seed inicial dos planos Supabase - 2026-07-12
+
+- A tabela `plans` foi confirmada vazia, bloqueando a FK `stores.plan_key` para `start`, `pro` e `premium`.
+- Criada a migration incremental `supabase/migrations/003_seed_plans.sql`.
+- A carga inicial insere Start por R$ 99,99, Pro por R$ 179,99 e Premium por R$ 199,99, todos ativos.
+- `on conflict (key) do nothing` torna a migration idempotente e impede sobrescrever precos ou configuracoes existentes.
+- Alteracoes comerciais futuras continuam destinadas ao painel master.
+- Proximo passo: executar a migration no Supabase e depois testar criacao, edicao e desativacao de uma loja real.
+
 Este arquivo e a memoria principal do projeto PediCampos. Ele registra o estado atual do codigo, as decisoes ja tomadas, o que esta implementado, o que esta parcial e o que ainda e pendente.
 
 ## Identidade do projeto

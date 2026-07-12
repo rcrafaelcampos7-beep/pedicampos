@@ -876,3 +876,11 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - O teste CRUD remoto ainda deve ser executado com uma sessao master no navegador e confirmado no Table Editor.
 - Realtime e sincronizacao global do `usePediData` nao fazem parte desta etapa.
 - Proxima entidade: categorias. Produtos, adicionais e pedidos permanecem pendentes.
+
+## Migration 003 - seed de planos
+
+- Detectado bloqueio: `plans` vazia impedia gravar `stores.plan_key` por chave estrangeira.
+- Criada carga inicial idempotente para `start`, `pro` e `premium` com os precos oficiais atuais.
+- Conflitos por `key` sao ignorados para nunca restaurar ou sobrescrever precos alterados futuramente.
+- Proximo passo operacional: executar a migration, conferir os tres registros e testar CRUD de loja real.
+- Depois de estabilizar lojas, a proxima entidade continua sendo categorias.

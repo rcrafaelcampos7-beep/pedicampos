@@ -1020,3 +1020,10 @@ Build:
 - Adicionados estados de carregamento, erro, lista vazia e bloqueio durante operacoes.
 - A lista remota e atualizada depois de edicao, ativacao ou desativacao.
 - Nenhuma entidade alem de lojas foi migrada; fallback local foi mantido.
+
+## 2026-07-12 - Migration inicial dos planos
+
+- Adicionada `003_seed_plans.sql` para preencher a dependencia de `stores.plan_key`.
+- Incluidos Start (99.99), Pro (179.99) e Premium (199.99), ativos e na ordem comercial atual.
+- A migration usa conflito pela chave com `do nothing`, sem alterar precos previamente existentes.
+- Nenhuma tela, regra comercial ou entidade de catalogo/pedidos foi alterada.

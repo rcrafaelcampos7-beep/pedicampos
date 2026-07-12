@@ -982,3 +982,9 @@ O fallback de login usa `sessionStorage`, exige build DEV e flag explicita. Ele 
 `MasterCreateStore` consulta as lojas antes de gerar o slug e aguarda `createStore()`. O adapter decide entre Supabase e fallback; a tela nao grava uma copia adicional no localStorage.
 
 `subscribeDatabase` continua sendo uma assinatura de eventos do localStorage e nao recebe eventos remotos Supabase. Nao foi adicionado Realtime nesta etapa; abrir/recarregar a listagem dispara uma consulta atualizada.
+
+## Seed relacional dos planos
+
+`stores.plan_key` referencia a chave unica `plans.key`. Como o schema inicial nao inclui dados, `003_seed_plans.sql` cria somente as linhas basicas necessarias para satisfazer essa integridade referencial.
+
+A migration usa `on conflict (key) do nothing`: primeira execucao insere os planos ausentes; execucoes posteriores preservam integralmente registros existentes, inclusive precos que venham a ser alterados pelo painel master. Features e regras comerciais do frontend nao sao regravadas por este seed.
