@@ -848,3 +848,12 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - [x] Revisar linguagem publica para remover termos de simulacao.
 - [ ] Testar fluxo completo online no dominio.
 - [ ] Remover dependencia obrigatoria de localStorage somente depois da validacao.
+## Resultado da etapa de lojas - 2026-07-12
+
+- Concluido no adapter: leitura geral, busca por slug, busca por id, criacao, atualizacao e desativacao Supabase-first.
+- Fallback: `storage.js` quando nao ha client ou quando Supabase retorna erro; resposta vazia bem-sucedida nao usa mocks.
+- Fora do escopo: `store_settings`, `payment_methods`, produtos, categorias, adicionais e pedidos.
+- Teste real: select permitido e tabela vazia; insert anonimo negado com `42501 permission denied for table stores`.
+- Risco prioritario: as policies exigem usuario master/autenticado para insert e acesso autorizado para update, mas o app ainda usa login fake.
+- Proxima acao: definir Supabase Auth/policy segura para master, depois integrar o hook/telas ao adapter assincromo e repetir CRUD temporario completo.
+- Proximas entidades, somente apos estabilizar lojas: produtos, categorias, adicionais e pedidos, nessa ordem planejada.

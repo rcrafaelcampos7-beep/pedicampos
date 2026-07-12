@@ -1,6 +1,16 @@
 # PROJECT_CONTEXT - PediCampos
 
-Atualizado em: 2026-07-11
+Atualizado em: 2026-07-12
+
+## Migracao incremental de lojas - 2026-07-12
+
+- `database.js` passou a usar Supabase primeiro em `getStores`, `getStoreBySlug`, `getStoreById`, `createStore`, `updateStore` e `deactivateStore`.
+- `storeFromSupabase` e `storeToSupabase` convertem entre snake_case relacional e o formato camelCase atual das telas.
+- Somente colunas de `stores` sao enviadas. Campos de `store_settings`, pagamentos e colecoes aninhadas continuam locais.
+- Client ausente ou erro Supabase aciona fallback para `storage.js`. Uma consulta remota bem-sucedida e vazia retorna `[]`, sem mocks.
+- Leitura anonima foi validada e retornou zero lojas. Escrita anonima foi bloqueada pela RLS (`42501 permission denied for table stores`).
+- Nenhum dado temporario foi criado remotamente.
+- `usePediData` e as telas master ainda usam o snapshot/assinatura local sincrona; nao ha realtime Supabase nesta etapa. Assim, local e dominio ainda nao compartilham lojas criadas pelas telas ate o fluxo assincromo ser ligado a elas e a escrita ser autorizada.
 
 Este arquivo e a memoria principal do projeto PediCampos. Ele registra o estado atual do codigo, as decisoes ja tomadas, o que esta implementado, o que esta parcial e o que ainda e pendente.
 

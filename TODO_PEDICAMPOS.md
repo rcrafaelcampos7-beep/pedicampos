@@ -357,3 +357,13 @@ Legenda:
 - [ ] Criar apresentacao comercial.
 - [ ] Preparar prints/videos da demo.
 - [ ] Definir politica de implantacao, suporte e mensalidade.
+## Supabase lojas - estado em 2026-07-12
+
+- [x] Criar conversores `storeFromSupabase` e `storeToSupabase`.
+- [x] Migrar Supabase-first `getStores`, buscas por slug/id, criacao, edicao e desativacao com fallback local.
+- [x] Confirmar que resultado remoto vazio nao injeta mocks.
+- [x] Testar leitura remota: passou, com zero lojas.
+- [ ] Resolver Auth/RLS para permitir criar e atualizar lojas; teste atual retorna PostgreSQL `42501`.
+- [ ] Ligar `usePediData` e telas master ao fluxo assincromo sem remover a assinatura local.
+- [ ] Repetir CRUD completo com loja temporaria e conferir no Table Editor.
+- [ ] Depois de lojas, planejar produtos; categorias, adicionais e pedidos permanecem fora desta etapa.

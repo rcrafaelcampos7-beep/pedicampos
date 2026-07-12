@@ -959,3 +959,10 @@ Depois, continuar pela prioridade:
 3. Conferir RLS, policies, indices e triggers de `updated_at`, se ainda nao tiver sido validado item por item.
 4. Manter `database.js/storage.js/localStorage` como fallback.
 5. Depois migrar primeiro `getStores()`, `getStoreBySlug()`, `createStore()` e `updateStore()`.
+## Adapter de lojas Supabase - 2026-07-12
+
+As operacoes exportadas de lojas em `database.js` sao assincronas e tentam Supabase primeiro. `storeToSupabase` limita writes a `plan_key`, `name`, `slug`, `segment`, `active`, `open`, `primary_color`, `whatsapp`, `logo` e `banner_url`. `storeFromSupabase` devolve o contrato camelCase atual e mantem `categories`, `products` e `additionalGroups` vazios, pois essas entidades nao foram migradas.
+
+Em client ausente ou erro de consulta/escrita, a operacao equivalente usa `storage.js`. Sucesso remoto com zero linhas e um estado valido, portanto nao aciona fallback. O fallback pode causar divergencia se uma escrita online falhar; o console registra a troca de backend.
+
+`getDatabase` e `subscribeDatabase` continuam locais e sincronos. Nao existe assinatura Realtime nem atualizacao automatica do hook a partir dessas funcoes assincronas. As telas master ainda gravam diretamente em `storage.js`, logo o compartilhamento local/dominio ainda depende de uma etapa posterior de integracao das telas e de Auth/RLS.

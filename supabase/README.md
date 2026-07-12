@@ -4,7 +4,7 @@ Esta pasta guarda os arquivos iniciais da migracao do PediCampos para Supabase.
 
 Nesta etapa, o React ainda nao foi conectado ao Supabase. O app continua usando `localStorage` por baixo de `src/services/database.js`.
 
-## Estado atual em 2026-07-11
+## Estado atual em 2026-07-12
 
 - Projeto Supabase criado com nome `pedicampos`.
 - Regiao escolhida: Oeste dos EUA (Oregon) / `us-west-2`.
@@ -21,6 +21,14 @@ Nesta etapa, o React ainda nao foi conectado ao Supabase. O app continua usando 
 - Nenhuma loja foi migrada para o banco real ainda.
 - `storage.js`, mocks e `localStorage` continuam preservados.
 - `npm run build` passou apos atualizar as memorias com este estado.
+
+### Adapter de lojas
+
+`src/services/database.js` tenta Supabase primeiro nas seis operacoes de lojas e converte somente as colunas reais de `public.stores`. Configuracoes operacionais em `store_settings`, formas de pagamento e entidades de catalogo ainda nao sao migradas.
+
+Se o client estiver ausente ou uma operacao falhar, o adapter usa `storage.js`. Se a consulta Supabase for bem-sucedida e retornar zero lojas, o resultado e vazio e mocks nao sao misturados.
+
+Teste de 2026-07-12: leitura anonima passou e encontrou zero lojas. A tentativa de criar `teste-supabase-1783864386108` foi recusada com `42501 permission denied for table stores`; portanto esse registro nao foi criado e nao precisa ser removido. As policies atuais exigem master autenticado para insert e usuario autorizado para update. Enquanto Auth e a integracao assincroma das telas nao forem concluídos, local e dominio ainda nao compartilham lojas criadas pelas telas.
 
 ## Como executar o SQL
 

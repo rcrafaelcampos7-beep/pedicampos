@@ -995,3 +995,11 @@ Build:
 - Teste visual/manual em navegador real foi realizado em `http://127.0.0.1:5174`.
 - Pendencias visuais/mobile registradas foram corrigidas no codigo; necessario testar novamente no navegador real.
 - Precos comerciais finais confirmados: implantacao R$ 599,99; Start R$ 99,99/mes; Pro R$ 179,99/mes; Premium R$ 199,99/mes.
+## 2026-07-12 - Adapter Supabase-first para lojas
+
+- Adicionados conversores explicitos entre linhas de `stores` e o modelo atual do app.
+- Migradas seis operacoes de lojas em `database.js`, com fallback para `storage.js` quando o client nao existe ou a operacao falha.
+- Preservado o formato com `plan`, `primaryColor`, `banner` e arrays locais vazios para entidades ainda nao migradas.
+- Resultado Supabase vazio passou a permanecer vazio, sem mistura automatica com mocks.
+- Teste real confirmou leitura anonima e revelou bloqueio de escrita por RLS (`42501`). Nenhuma loja de teste foi criada.
+- Telas, visual, produtos, categorias, adicionais, pedidos, `storage.js` e `localStorage` nao foram alterados.

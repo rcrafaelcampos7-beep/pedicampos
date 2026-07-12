@@ -1,5 +1,6 @@
 import { createEmptyStore } from "../data/mockStores.js";
 import { uniqueSlug } from "../utils/slug.js";
+import { supabase } from "./supabaseClient.js";
 import {
   createOrder as createStorageOrder,
   getDatabase as getStorageDatabase,
@@ -15,6 +16,61 @@ import {
 
 function makeId(prefix) {
   return `${prefix}-${crypto.randomUUID()}`;
+}
+
+const STORE_COLUMNS =
+  "id, plan_key, name, slug, segment, active, open, primary_color, whatsapp, logo, banner_url, created_at, updated_at";
+
+function getLocalStores() {
+  return getStorageDatabase().stores;
+}
+
+function getLocalStoreById(id) {
+  return getLocalStores().find((store) => store.id === id) || null;
+}
+
+export function storeFromSupabase(row) {
+  if (!row) return null;
+
+  return createEmptyStore({
+    id: row.id,
+    plan: row.plan_key || "start",
+    name: row.name || "",
+    slug: row.slug || "",
+    segment: row.segment || "",
+    active: row.active !== false,
+    open: row.open !== false,
+    primaryColor: row.primary_color || "#16a34a",
+    whatsapp: row.whatsapp || "",
+    logo: row.logo || "",
+    banner: row.banner_url || "",
+    categories: [],
+    products: [],
+    additionalGroups: [],
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  });
+}
+
+export function storeToSupabase(store = {}) {
+  const mapped = {
+    plan_key: store.plan,
+    name: store.name,
+    slug: store.slug,
+    segment: store.segment,
+    active: store.active,
+    open: store.open,
+    primary_color: store.primaryColor,
+    whatsapp: store.whatsapp,
+    logo: store.logo,
+    banner_url: store.banner,
+  };
+
+  return Object.fromEntries(Object.entries(mapped).filter(([, value]) => value !== undefined));
+}
+
+function warnAndUseLocal(operation, error) {
+  console.warn(`[PediCampos] Supabase falhou em ${operation}; usando fallback local.`, error);
 }
 
 function getStoreContaining(collectionName, itemId) {
@@ -37,20 +93,44 @@ export function subscribeDatabase(callback) {
   return subscribeStorageDatabase(callback);
 }
 
-export function getStores() {
-  return getStorageDatabase().stores;
+export async function getStores() {
+  if (!supabase) return getLocalStores();
+
+  const { data, error } = await supabase.from("stores").select(STORE_COLUMNS).order("created_at", { ascending: false });
+  if (error) {
+    warnAndUseLocal("getStores", error);
+    return getLocalStores();
+  }
+
+  return (data || []).map(storeFromSupabase);
 }
 
-export function getStoreBySlug(slug) {
-  return getStores().find((store) => store.slug === slug) || null;
+export async function getStoreBySlug(slug) {
+  if (!supabase) return getLocalStores().find((store) => store.slug === slug) || null;
+
+  const { data, error } = await supabase.from("stores").select(STORE_COLUMNS).eq("slug", slug).maybeSingle();
+  if (error) {
+    warnAndUseLocal("getStoreBySlug", error);
+    return getLocalStores().find((store) => store.slug === slug) || null;
+  }
+
+  return storeFromSupabase(data);
 }
 
-export function getStoreById(id) {
-  return getStores().find((store) => store.id === id) || null;
+export async function getStoreById(id) {
+  if (!supabase) return getLocalStoreById(id);
+
+  const { data, error } = await supabase.from("stores").select(STORE_COLUMNS).eq("id", id).maybeSingle();
+  if (error) {
+    warnAndUseLocal("getStoreById", error);
+    return getLocalStoreById(id);
+  }
+
+  return storeFromSupabase(data);
 }
 
-export function createStore(data = {}) {
-  const stores = getStores();
+export async function createStore(data = {}) {
+  const stores = supabase ? await getStores() : getLocalStores();
   const slug = uniqueSlug(data.slug || data.name || "nova-loja", stores);
   const store = createEmptyStore({
     ...data,
@@ -60,20 +140,52 @@ export function createStore(data = {}) {
     additionalGroups: data.additionalGroups || [],
   });
 
+  if (supabase) {
+    const { data: existing, error: lookupError } = await supabase
+      .from("stores")
+      .select("id")
+      .eq("slug", slug)
+      .maybeSingle();
+
+    if (!lookupError && existing) return getStoreById(existing.id);
+
+    const { data: created, error } = await supabase
+      .from("stores")
+      .insert(storeToSupabase(store))
+      .select(STORE_COLUMNS)
+      .single();
+
+    if (!error) return storeFromSupabase(created);
+    warnAndUseLocal("createStore", error);
+  }
+
   mutateDatabase((database) => {
-    database.stores = [store, ...database.stores];
+    const exists = database.stores.some((item) => item.slug === slug);
+    if (!exists) database.stores = [store, ...database.stores];
     return database;
   });
 
-  return store;
+  return getLocalStores().find((item) => item.slug === slug) || store;
 }
 
-export function updateStore(id, data) {
+export async function updateStore(id, data) {
+  if (supabase) {
+    const { data: updated, error } = await supabase
+      .from("stores")
+      .update(storeToSupabase(data))
+      .eq("id", id)
+      .select(STORE_COLUMNS)
+      .single();
+
+    if (!error) return storeFromSupabase(updated);
+    warnAndUseLocal("updateStore", error);
+  }
+
   updateStorageStore(id, data);
-  return getStoreById(id);
+  return getLocalStoreById(id);
 }
 
-export function deactivateStore(id) {
+export async function deactivateStore(id) {
   return updateStore(id, { active: false });
 }
 
@@ -82,7 +194,7 @@ export function deleteStore(id) {
 }
 
 export function getProductsByStore(storeId) {
-  return getStoreById(storeId)?.products || [];
+  return getLocalStoreById(storeId)?.products || [];
 }
 
 export function createProduct(storeId, data = {}) {
@@ -92,7 +204,7 @@ export function createProduct(storeId, data = {}) {
     description: data.description || "",
     price: Number(data.price) || 0,
     categoryId: data.categoryId || "",
-    image: data.image || getStoreById(storeId)?.banner || "",
+    image: data.image || getLocalStoreById(storeId)?.banner || "",
     active: data.active !== false,
     ...data,
   };
@@ -136,7 +248,7 @@ export function deleteProduct(productId) {
 }
 
 export function getCategoriesByStore(storeId) {
-  return getStoreById(storeId)?.categories || [];
+  return getLocalStoreById(storeId)?.categories || [];
 }
 
 export function createCategory(storeId, data = {}) {
@@ -187,7 +299,7 @@ export function deleteCategory(categoryId) {
 }
 
 export function getAdditionalGroupsByStore(storeId) {
-  return getStoreById(storeId)?.additionalGroups || [];
+  return getLocalStoreById(storeId)?.additionalGroups || [];
 }
 
 export function createAdditionalGroup(storeId, data = {}) {
@@ -249,7 +361,7 @@ export function getOrderById(orderId) {
 }
 
 export function createOrder(storeId, data = {}) {
-  const store = getStoreById(storeId);
+  const store = getLocalStoreById(storeId);
   const order = {
     ...data,
     storeId,
