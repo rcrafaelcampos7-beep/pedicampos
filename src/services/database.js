@@ -203,7 +203,7 @@ export function storeSettingsFromSupabase(row) {
   if (!row) return null;
   const serviceMode = row.service_mode || "delivery_pickup";
   return {
-    id: row.id,
+    settingsId: row.id,
     storeId: row.store_id,
     address: row.address || "",
     openingHours: row.opening_hours || "",

@@ -548,3 +548,11 @@ Legenda:
 - [x] Invalidar somente carrinhos ligados aos IDs locais removidos.
 - [x] Testar colisao, local-only, null remoto e resolucao estrita de lojateste.
 - [ ] Validar pedido/admin/status/tracking pelo navegador com bundle atual.
+
+## Conflito stores x store_settings - 2026-07-12
+
+- [x] Renomear `store_settings.id` para `settingsId` no adapter.
+- [x] Proteger merges publicos e administrativos com o ID raiz explicito.
+- [x] Confirmar `store.id`, `settingsId` e `storeId` remotos.
+- [x] Criar pedido remoto e validar tracking com tenant correto.
+- [ ] Confirmar `BB6F8698` no admin, alterar status e remover pedido/cliente temporarios.

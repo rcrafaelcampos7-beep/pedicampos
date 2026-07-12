@@ -1003,3 +1003,9 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - Limpeza local V1 e seletiva e idempotente: colisao comprovada por slug remove loja/carrinho legado; dados local-only permanecem.
 - Testes isolados confirmaram colisao, preservacao local-only e null remoto sem mock.
 - Nenhuma migration SQL foi necessaria. Pendente apenas validacao E2E do pedido/admin.
+
+## Correcao de identidade no adapter de settings
+
+- O conflito nao era de banco: a PK de `store_settings` sobrescrevia a PK de `stores` no objeto React.
+- Adapter agora usa `settingsId`; merges preservam `store.id` explicitamente.
+- Nenhuma migration/RPC foi alterada. Pedido remoto de verificacao foi criado com tenant correto.

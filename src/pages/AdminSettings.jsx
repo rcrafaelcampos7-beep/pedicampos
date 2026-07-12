@@ -47,6 +47,7 @@ export function AdminSettings({ activePath, store }) {
           ...makeInitialForm(store),
           ...(settings || {}),
           paymentMethods,
+          id: store.id,
         });
       })
       .catch(() => {

@@ -307,3 +307,7 @@ StorePage tambem exige resolucao remota antes de criar o carrinho. Carrinhos nov
 Quando Supabase esta configurado, lojas remotas sao a unica fonte das areas migradas. O banco local ainda existe para fallback/domínios pendentes, mas suas lojas nao sao publicadas pelo facade nem mescladas com resultados remotos.
 
 Na primeira lista/resolucao remota, `pedicampos.localMigration.supabaseStoresV1` registra a limpeza. Apenas uma loja local com slug remoto igual e ID diferente e removida, junto de `pedicampos.cart.<id-local>`. Lojas e carrinhos sem colisao permanecem. Resposta remota vazia nunca recebe mocks.
+
+### ID de store_settings no frontend
+
+A PK `store_settings.id` e convertida para `settingsId`; a FK permanece `storeId`. Ao hidratar uma loja, `id` sempre significa `stores.id`. Isso evita que spreads de configuracao troquem o tenant enviado a consultas e RPCs. Nao existe alteracao de schema para esta correcao.

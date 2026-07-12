@@ -1098,6 +1098,13 @@ Build:
 - A migracao local versionada `pedicampos.localMigration.supabaseStoresV1` remove apenas lojas locais cujo slug remoto existe com outro ID e somente os carrinhos desses IDs legados.
 - Lojas/carrinhos exclusivamente locais sao preservados para fallback quando nao colidem.
 
+### Correcao do ID de store_settings - 2026-07-12
+
+- Causa final do UUID incorreto: `storeSettingsFromSupabase` retornava `id` da tabela filha e o spread posterior sobrescrevia `store.id`.
+- O identificador foi renomeado para `settingsId`; `storeId` continua representando a FK.
+- StorePage, CheckoutPage e AdminSettings reafirmam explicitamente o ID raiz depois dos merges.
+- Teste remoto criou o pedido temporario `BB6F8698` com store ID `129ee8d4-e7ae-4aad-9d64-2e7489efe8b1`; tracking retornou o mesmo tenant.
+
 1. Conferir no Table Editor se as 15 tabelas do schema foram criadas.
 2. Conferir RLS, policies, indices e triggers de `updated_at`.
 3. Criar `.env.local` com `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` reais.

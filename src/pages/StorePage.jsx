@@ -80,6 +80,7 @@ export function StorePage({ slug }) {
           categories,
           products,
           additionalGroups,
+          id: result.id,
         };
       })
       .then((result) => {

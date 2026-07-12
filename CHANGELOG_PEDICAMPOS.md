@@ -1151,3 +1151,10 @@ Build:
 - Admin Auth passou a resolver a loja vinculada sem fallback local.
 - Adicionada migracao local versionada que remove apenas colisoes de slug e seus carrinhos legados.
 - Nenhuma RPC, migration SQL, policy ou dado Supabase foi alterado.
+
+## 2026-07-12 - ID raiz preservado ao hidratar settings
+
+- `store_settings.id` passou a ser exposto como `settingsId`.
+- Merges em StorePage, CheckoutPage e AdminSettings passaram a reafirmar o ID da loja.
+- Auditados payment methods e outros merges; nenhum outro objeto filho era espalhado sobre store com `id` concorrente.
+- Pedido remoto `BB6F8698` foi criado e acompanhado com o store ID correto.

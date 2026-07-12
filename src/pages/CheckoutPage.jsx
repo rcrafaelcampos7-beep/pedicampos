@@ -122,6 +122,7 @@ export function CheckoutPage({ slug }) {
           paymentInstructions: "",
           ...(settings || {}),
           paymentMethods,
+          id: result.id,
         };
       })
       .then((result) => {

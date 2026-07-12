@@ -1084,3 +1084,7 @@ StorePage usa a mesma resolucao remota estrita antes de chamar `useCart`. O form
 Com Supabase configurado, o facade nao expoe `storage.database.stores` como snapshot inicial. `usePediData` carrega lojas remotas e preserva do storage apenas dominios ainda locais, como configuracao de plataforma conforme a etapa atual. StorePage/Checkout usam slug remoto estrito; Admin usa membership remoto e ID estrito; Master CRUD usa adapters remotos.
 
 Fallback local de lojas exige ausencia de client ou erro de transporte sem codigo PostgREST. Resultado remoto vazio e erros RLS/schema nao fazem merge. A migracao `pedicampos.localMigration.supabaseStoresV1` compara slugs retornados pelo Supabase, remove apenas registros locais com ID divergente e apaga somente a chave de carrinho daquele ID legado.
+
+### Identificadores em objetos hidratados
+
+O objeto raiz `store` reserva `id` para `stores.id`. Adaptadores de tabelas filhas devem usar nomes especificos: `store_settings.id` e `settingsId`, enquanto `storeId` e a FK. Alem do contrato do adapter, merges reafirmam explicitamente o ID raiz para nao depender da ordem dos spreads. Payment methods permanecem aninhados e nao sobrescrevem a loja.
