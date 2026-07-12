@@ -3,32 +3,63 @@ import { AdminLayout } from "../components/admin/AdminLayout.jsx";
 import { Button } from "../components/ui/Button.jsx";
 import { Card } from "../components/ui/Card.jsx";
 import { Checkbox, Input, Select, Textarea } from "../components/ui/Input.jsx";
-import { updateStore } from "../services/storage.js";
+import {
+  createProduct,
+  deleteProduct as deleteDatabaseProduct,
+  getCategoriesByStore,
+  getProductsByStore,
+  updateProduct,
+} from "../services/database.js";
 import { formatCurrency } from "../utils/formatCurrency.js";
 
 const emptyProduct = {
-  id: "",
   name: "",
   description: "",
   price: 0,
   categoryId: "",
   image: "",
   active: true,
-  additionalGroupIds: [],
 };
 
 export function AdminProducts({ activePath, store }) {
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [editingId, setEditingId] = useState("");
   const [form, setForm] = useState(emptyProduct);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [pendingProductId, setPendingProductId] = useState("");
   const productFormRef = useRef(null);
 
+  async function loadData() {
+    setLoading(true);
+    setError("");
+
+    try {
+      const [nextProducts, nextCategories] = await Promise.all([
+        getProductsByStore(store.id),
+        getCategoriesByStore(store.id),
+      ]);
+      setProducts(nextProducts);
+      setCategories(nextCategories);
+      setForm((current) => ({
+        ...current,
+        categoryId: current.categoryId || nextCategories[0]?.id || "",
+        image: current.image || store.banner,
+      }));
+    } catch {
+      setError("Não foi possível carregar os produtos. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
-    setForm((current) => ({
-      ...current,
-      categoryId: current.categoryId || store.categories[0]?.id || "",
-      image: current.image || store.banner,
-    }));
-  }, [store]);
+    setEditingId("");
+    setForm({ ...emptyProduct, image: store.banner });
+    loadData();
+  }, [store.id]);
 
   function updateForm(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -37,10 +68,12 @@ export function AdminProducts({ activePath, store }) {
   function editProduct(product) {
     setEditingId(product.id);
     setForm({
-      ...product,
-      additionalGroupIds: (store.additionalGroups || [])
-        .filter((group) => group.productIds?.includes(product.id))
-        .map((group) => group.id),
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      categoryId: product.categoryId,
+      image: product.image,
+      active: product.active,
     });
     window.requestAnimationFrame(() => {
       productFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -51,68 +84,64 @@ export function AdminProducts({ activePath, store }) {
     setEditingId("");
     setForm({
       ...emptyProduct,
-      categoryId: store.categories[0]?.id || "",
+      categoryId: categories[0]?.id || "",
       image: store.banner,
-      active: true,
     });
   }
 
-  function saveProduct(event) {
+  async function saveProduct(event) {
     event.preventDefault();
-    const productId = editingId || `prod-${crypto.randomUUID()}`;
-    const { additionalGroupIds = [], ...productData } = form;
+    if (saving) return;
+    setSaving(true);
+    setError("");
+
     const product = {
-      ...productData,
-      id: productId,
+      ...form,
       price: Number(form.price) || 0,
       image: form.image || store.banner,
     };
 
-    updateStore(store.id, (draft) => {
-      draft.products = editingId
-        ? draft.products.map((item) => (item.id === editingId ? product : item))
-        : [product, ...draft.products];
-      draft.additionalGroups = (draft.additionalGroups || []).map((group) => {
-        const productIds = new Set(group.productIds || []);
-        if (additionalGroupIds.includes(group.id)) {
-          productIds.add(productId);
-        } else {
-          productIds.delete(productId);
-        }
-        return { ...group, productIds: Array.from(productIds) };
-      });
-      return draft;
-    });
-    resetForm();
+    try {
+      if (editingId) await updateProduct(editingId, product);
+      else await createProduct(store.id, product);
+      resetForm();
+      await loadData();
+    } catch {
+      setError("Não foi possível salvar o produto. Confira a categoria e tente novamente.");
+    } finally {
+      setSaving(false);
+    }
   }
 
-  function deleteProduct(productId) {
-    updateStore(store.id, (draft) => {
-      draft.products = draft.products.filter((product) => product.id !== productId);
-      draft.additionalGroups = (draft.additionalGroups || []).map((group) => ({
-        ...group,
-        productIds: (group.productIds || []).filter((id) => id !== productId),
-      }));
-      return draft;
-    });
+  async function deleteProduct(productId) {
+    if (pendingProductId) return;
+    setPendingProductId(productId);
+    setError("");
+
+    try {
+      await deleteDatabaseProduct(productId);
+      if (editingId === productId) resetForm();
+      await loadData();
+    } catch {
+      setError("Não foi possível excluir o produto. Tente novamente.");
+    } finally {
+      setPendingProductId("");
+    }
   }
 
-  function toggleProduct(productId) {
-    updateStore(store.id, (draft) => {
-      draft.products = draft.products.map((product) =>
-        product.id === productId ? { ...product, active: !product.active } : product
-      );
-      return draft;
-    });
-  }
+  async function toggleProduct(product) {
+    if (pendingProductId) return;
+    setPendingProductId(product.id);
+    setError("");
 
-  function toggleAdditionalGroup(groupId, checked) {
-    updateForm(
-      "additionalGroupIds",
-      checked
-        ? [...(form.additionalGroupIds || []), groupId]
-        : (form.additionalGroupIds || []).filter((id) => id !== groupId)
-    );
+    try {
+      await updateProduct(product.id, { active: !product.active });
+      await loadData();
+    } catch {
+      setError("Não foi possível alterar o status do produto. Tente novamente.");
+    } finally {
+      setPendingProductId("");
+    }
   }
 
   return (
@@ -121,6 +150,7 @@ export function AdminProducts({ activePath, store }) {
         <Card className="form-section">
           <span className="eyebrow">Produtos</span>
           <h2>{editingId ? "Editar produto" : "Novo produto"}</h2>
+          {error ? <div className="form-error">{error}</div> : null}
           <form ref={productFormRef} onSubmit={saveProduct}>
             <Input label="Nome" value={form.name} onChange={(event) => updateForm("name", event.target.value)} required />
             <Textarea
@@ -144,7 +174,7 @@ export function AdminProducts({ activePath, store }) {
                 onChange={(event) => updateForm("categoryId", event.target.value)}
               >
                 <option value="">Sem categoria</option>
-                {store.categories.map((category) => (
+                {categories.map((category) => (
                   <option key={category.id} value={category.id}>
                     {category.name}
                   </option>
@@ -159,24 +189,13 @@ export function AdminProducts({ activePath, store }) {
             <Checkbox label="Produto ativo" checked={form.active} onChange={(checked) => updateForm("active", checked)} />
             <div className="addon-list compact">
               <h3>Adicionais vinculados</h3>
-              {(store.additionalGroups || []).length ? (
-                (store.additionalGroups || []).map((group) => (
-                  <Checkbox
-                    key={group.id}
-                    label={`${group.name} (${group.options?.length || 0} opções)`}
-                    checked={(form.additionalGroupIds || []).includes(group.id)}
-                    onChange={(checked) => toggleAdditionalGroup(group.id, checked)}
-                  />
-                ))
-              ) : (
-                <p className="muted">Crie grupos em Adicionais para vinculá-los a produtos.</p>
-              )}
+              <p className="muted">Os adicionais serão conectados ao Supabase na próxima etapa.</p>
             </div>
             <div className="modal-actions">
-              <Button type="submit" variant="primary">
-                Salvar produto
+              <Button type="submit" variant="primary" disabled={saving}>
+                {saving ? "Salvando..." : "Salvar produto"}
               </Button>
-              <Button variant="ghost" onClick={resetForm}>
+              <Button variant="ghost" disabled={saving} onClick={resetForm}>
                 Limpar
               </Button>
             </div>
@@ -184,11 +203,13 @@ export function AdminProducts({ activePath, store }) {
         </Card>
 
         <div className="admin-list">
-          {store.products.map((product) => {
-            const category = store.categories.find((item) => item.id === product.categoryId);
+          {loading ? <Card><p>Carregando produtos...</p></Card> : null}
+          {!loading && !products.length ? <Card><p>Nenhum produto cadastrado.</p></Card> : null}
+          {!loading && products.map((product) => {
+            const category = categories.find((item) => item.id === product.categoryId);
             return (
               <Card key={product.id} className="admin-product-row">
-                <img src={product.image} alt={product.name} />
+                <img src={product.image || store.banner} alt={product.name} />
                 <div>
                   <strong>{product.name}</strong>
                   <span>{category?.name || "Sem categoria"}</span>
@@ -196,14 +217,14 @@ export function AdminProducts({ activePath, store }) {
                 </div>
                 <strong>{formatCurrency(product.price)}</strong>
                 <div className="row-actions">
-                  <Button variant="secondary" size="sm" onClick={() => editProduct(product)}>
+                  <Button variant="secondary" size="sm" disabled={Boolean(pendingProductId)} onClick={() => editProduct(product)}>
                     Editar
                   </Button>
-                  <Button variant={product.active ? "warning" : "success"} size="sm" onClick={() => toggleProduct(product.id)}>
-                    {product.active ? "Desativar" : "Ativar"}
+                  <Button variant={product.active ? "warning" : "success"} size="sm" disabled={Boolean(pendingProductId)} onClick={() => toggleProduct(product)}>
+                    {pendingProductId === product.id ? "Salvando..." : product.active ? "Desativar" : "Ativar"}
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => deleteProduct(product.id)}>
-                    Excluir
+                  <Button variant="ghost" size="sm" disabled={Boolean(pendingProductId)} onClick={() => deleteProduct(product.id)}>
+                    {pendingProductId === product.id ? "Excluindo..." : "Excluir"}
                   </Button>
                 </div>
               </Card>

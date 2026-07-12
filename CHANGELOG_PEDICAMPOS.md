@@ -1060,3 +1060,12 @@ Build:
 - O unico identificador de loja usado vem da rota autenticada.
 - Adicionados estados de carregamento, erro, vazio e operacao em andamento.
 - Fallback local e RLS foram preservados; produtos nao foram migrados.
+
+## 2026-07-12 - Produtos Supabase-first
+
+- Migradas as quatro operacoes de produtos e adicionados conversores snake_case/camelCase.
+- AdminProducts passou a usar produtos e categorias remotas da loja autorizada.
+- Criacao, edicao, preco, categoria, status e exclusao agora sao assincronos com recarga da lista.
+- Adicionada migration 004 com trigger de integridade entre produto, categoria e loja.
+- Scroll de edicao, URL de imagem e fallback local foram preservados.
+- Adicionais e pedidos nao foram migrados.

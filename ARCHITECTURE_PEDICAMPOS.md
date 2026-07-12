@@ -1018,3 +1018,11 @@ Um usuario pode ter varios vinculos no modelo atual. A API retorna todos; a inte
 `AdminRouter` resolve a loja autorizada a partir da sessao e passa o objeto `store` como propriedade. `AdminCategories` usa somente `store.id` para `getCategoriesByStore` e `createCategory`; update/delete trabalham pelo UUID da categoria e sao restringidos novamente pelo RLS da linha.
 
 A tela mantem estado proprio de categorias e recarrega do adapter depois de cada mutation. Reordenacao troca `sort_order` com duas atualizacoes protegidas. Nao existe sincronizacao paralela no snapshot de `usePediData`; fallback e uma decisao interna de `database.js`.
+
+## Persistencia e integridade de produtos
+
+Produtos usam `store_id`, `category_id`, `name`, `description`, `price`, `image_url`, `active` e `sort_order`. O adapter converte para o contrato camelCase atual e nunca inclui IDs de grupos de adicionais.
+
+RLS restringe writes por `can_access_store(store_id)`. Como a FK simples de `category_id` nao garantia mesma loja, a migration 004 adiciona trigger `validate_product_category_store`: categoria nula e permitida; categoria preenchida precisa existir com o mesmo `store_id` do produto, ou PostgreSQL retorna `23514`.
+
+AdminProducts recebe a loja autorizada da rota, busca categorias/produtos em paralelo e oferece apenas categorias retornadas para aquela loja. A URL de imagem continua texto; upload/Storage fica para etapa futura.

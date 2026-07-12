@@ -215,7 +215,7 @@ As roles de loja aceitas pelo schema atual sao `store_admin` e `store_staff`. Na
 
 O login `/admin` valida a sessao e o vinculo ativo. IDs salvos manualmente no navegador nao alteram a loja autorizada. Multiplos vinculos sao suportados pela camada, mas a interface usa o primeiro por ordem de criacao ate existir uma tela de selecao. Nao ha fallback fake para admin.
 
-Depois do vinculo, teste login, refresh, logout, usuario sem vinculo, usuario inativo e tentativa de acesso a outra loja. `AdminCategories` ja usa o adapter; produtos continuam pendentes.
+Depois do vinculo, teste login, refresh, logout, usuario sem vinculo, usuario inativo e tentativa de acesso a outra loja. `AdminCategories` e `AdminProducts` ja usam o adapter; adicionais continuam pendentes.
 
 ## AdminCategories conectado ao adapter
 
@@ -223,4 +223,12 @@ A rota autenticada resolve a loja pelo vinculo ativo em `store_users` e entrega 
 
 Listagem, criacao, edicao, ativacao/inativacao, exclusao e ordenacao chamam as funcoes Supabase-first e recarregam a lista. Sucesso remoto nao gera copia local paralela; erros Supabase continuam sujeitos ao fallback interno existente.
 
-Valide com uma categoria temporaria: crie, edite nome/status, reordene, exclua e acompanhe cada mudanca no Table Editor. Depois use um usuario ligado a outra loja e confirme que `can_access_store` impede alteracoes cruzadas. A proxima entidade planejada e produtos.
+Valide com uma categoria temporaria: crie, edite nome/status, reordene, exclua e acompanhe cada mudanca no Table Editor. Depois use um usuario ligado a outra loja e confirme que `can_access_store` impede alteracoes cruzadas. Produtos foram conectados na etapa seguinte.
+
+## Produtos Supabase e migration 004
+
+`AdminProducts` agora usa o CRUD Supabase-first e carrega as categorias da loja autenticada. O formulario nao aceita `store_id`; usa exclusivamente o `store.id` resolvido pelo Auth. Imagens continuam sendo URL/string em `image_url`, sem upload real.
+
+Antes de testar, execute `supabase/migrations/004_product_category_store.sql` no SQL Editor. O trigger idempotente valida que `category_id`, quando informado, pertence ao mesmo `store_id` do produto. Categoria de outra loja e rejeitada com erro PostgreSQL `23514`; RLS continua bloqueando writes de usuarios nao vinculados.
+
+Depois teste criacao, edicao de nome/preco/categoria, status e exclusao no Table Editor. Teste tambem Loja A x Loja B e categoria cruzada. Adicionais nao sao salvos dentro do produto e serao a proxima etapa; pedidos continuam pendentes.

@@ -919,3 +919,12 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - Nenhuma migration ou mudanca de policy foi necessaria.
 - Pendente: teste CRUD temporario no navegador/Table Editor e teste cruzado Loja A x Loja B.
 - Proxima entidade: produtos. Adicionais e pedidos permanecem fora do escopo.
+
+## Produtos conectados
+
+- Concluido no codigo: adapter CRUD e AdminProducts assincrono com categorias remotas.
+- Criada migration 004 idempotente para rejeitar categoria pertencente a outra loja.
+- Policies existentes de leitura publica e write autenticado foram preservadas.
+- Pendente: executar migration, testar CRUD real e validar erros `23514`/RLS em acesso cruzado.
+- Upload real continua pendente; `image_url` armazena string/URL.
+- Proxima entidade: adicionais. Pedidos permanecem fora do escopo.

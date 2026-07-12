@@ -21,6 +21,8 @@ function makeId(prefix) {
 const STORE_COLUMNS =
   "id, plan_key, name, slug, segment, active, open, primary_color, whatsapp, logo, banner_url, created_at, updated_at";
 const CATEGORY_COLUMNS = "id, store_id, name, active, sort_order, created_at, updated_at";
+const PRODUCT_COLUMNS =
+  "id, store_id, category_id, name, description, price, image_url, active, sort_order, created_at, updated_at";
 
 function getLocalStores() {
   return getStorageDatabase().stores;
@@ -90,6 +92,39 @@ export function categoryToSupabase(category = {}, storeId) {
     name: category.name,
     active: category.active,
     sort_order: category.order,
+  };
+
+  return Object.fromEntries(Object.entries(mapped).filter(([, value]) => value !== undefined));
+}
+
+export function productFromSupabase(row) {
+  if (!row) return null;
+
+  return {
+    id: row.id,
+    storeId: row.store_id,
+    categoryId: row.category_id || "",
+    name: row.name || "",
+    description: row.description || "",
+    price: Number(row.price) || 0,
+    image: row.image_url || "",
+    active: row.active !== false,
+    order: Number(row.sort_order) || 0,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export function productToSupabase(product = {}, storeId) {
+  const mapped = {
+    store_id: storeId ?? product.storeId,
+    category_id: product.categoryId === undefined ? undefined : product.categoryId || null,
+    name: product.name,
+    description: product.description,
+    price: product.price === undefined ? undefined : Number(product.price) || 0,
+    image_url: product.image,
+    active: product.active,
+    sort_order: product.order,
   };
 
   return Object.fromEntries(Object.entries(mapped).filter(([, value]) => value !== undefined));
@@ -219,11 +254,25 @@ export function deleteStore(id) {
   return deactivateStore(id);
 }
 
-export function getProductsByStore(storeId) {
-  return getLocalStoreById(storeId)?.products || [];
+export async function getProductsByStore(storeId) {
+  if (!supabase) return getLocalStoreById(storeId)?.products || [];
+
+  const { data, error } = await supabase
+    .from("products")
+    .select(PRODUCT_COLUMNS)
+    .eq("store_id", storeId)
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    warnAndUseLocal("getProductsByStore", error);
+    return getLocalStoreById(storeId)?.products || [];
+  }
+
+  return (data || []).map(productFromSupabase);
 }
 
-export function createProduct(storeId, data = {}) {
+export async function createProduct(storeId, data = {}) {
+  const products = await getProductsByStore(storeId);
   const product = {
     id: data.id || makeId("prod"),
     name: data.name || "",
@@ -232,8 +281,20 @@ export function createProduct(storeId, data = {}) {
     categoryId: data.categoryId || "",
     image: data.image || getLocalStoreById(storeId)?.banner || "",
     active: data.active !== false,
+    order: Number(data.order) || products.length + 1,
     ...data,
   };
+
+  if (supabase) {
+    const { data: created, error } = await supabase
+      .from("products")
+      .insert(productToSupabase(product, storeId))
+      .select(PRODUCT_COLUMNS)
+      .single();
+
+    if (!error) return productFromSupabase(created);
+    warnAndUseLocal("createProduct", error);
+  }
 
   updateStorageStore(storeId, (store) => ({
     ...store,
@@ -243,7 +304,19 @@ export function createProduct(storeId, data = {}) {
   return product;
 }
 
-export function updateProduct(productId, data) {
+export async function updateProduct(productId, data) {
+  if (supabase) {
+    const { data: updated, error } = await supabase
+      .from("products")
+      .update(productToSupabase(data))
+      .eq("id", productId)
+      .select(PRODUCT_COLUMNS)
+      .maybeSingle();
+
+    if (!error) return productFromSupabase(updated);
+    warnAndUseLocal("updateProduct", error);
+  }
+
   const store = getStoreContaining("products", productId);
   if (!store) return null;
 
@@ -254,10 +327,22 @@ export function updateProduct(productId, data) {
     ),
   }));
 
-  return getProductsByStore(store.id).find((product) => product.id === productId) || null;
+  return getLocalStoreById(store.id)?.products.find((product) => product.id === productId) || null;
 }
 
-export function deleteProduct(productId) {
+export async function deleteProduct(productId) {
+  if (supabase) {
+    const { data: deleted, error } = await supabase
+      .from("products")
+      .delete()
+      .eq("id", productId)
+      .select("id")
+      .maybeSingle();
+
+    if (!error) return deleted?.id || null;
+    warnAndUseLocal("deleteProduct", error);
+  }
+
   const store = getStoreContaining("products", productId);
   if (!store) return null;
 

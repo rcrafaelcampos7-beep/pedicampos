@@ -415,7 +415,7 @@ Legenda:
 - [ ] Criar Supabase Auth para admins das lojas e vincular em `store_users`.
 - [ ] Integrar `AdminCategories` somente depois da autenticacao real.
 - [ ] Executar CRUD temporario autenticado e conferir no Table Editor.
-- [ ] Manter produtos pendentes ate categorias estarem validadas.
+- [x] Manter produtos pendentes ate categorias estarem validadas.
 
 ## Auth real dos usuarios de loja - 2026-07-12
 
@@ -436,4 +436,16 @@ Legenda:
 - [x] Remover escrita direta em `storage.js` da tela.
 - [ ] Executar CRUD real com categoria temporaria e conferir no Table Editor.
 - [ ] Confirmar com dois usuarios/lojas que RLS bloqueia acesso cruzado.
-- [ ] Migrar produtos como proxima entidade.
+- [x] Migrar produtos depois de categorias.
+
+## Produtos Supabase - 2026-07-12
+
+- [x] Criar conversores de produtos e migrar quatro funcoes para Supabase-first.
+- [x] Integrar AdminProducts com produtos e categorias remotas.
+- [x] Preservar scroll automatico ao editar.
+- [x] Criar migration 004 para validar categoria e produto na mesma loja.
+- [ ] Executar migration 004 no SQL Editor.
+- [ ] Testar CRUD, status, categoria e exclusao no Table Editor.
+- [ ] Testar bloqueio de categoria de outra loja e isolamento Loja A x Loja B.
+- [ ] Planejar upload real de imagens futuramente.
+- [ ] Migrar adicionais na proxima etapa; pedidos permanecem pendentes.
