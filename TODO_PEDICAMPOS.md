@@ -367,3 +367,14 @@ Legenda:
 - [ ] Ligar `usePediData` e telas master ao fluxo assincromo sem remover a assinatura local.
 - [ ] Repetir CRUD completo com loja temporaria e conferir no Table Editor.
 - [ ] Depois de lojas, planejar produtos; categorias, adicionais e pedidos permanecem fora desta etapa.
+
+## Auth master - 2026-07-12
+
+- [x] Criar camada Supabase Auth para master.
+- [x] Remover credencial fixa do login master e proteger rotas por sessao + `store_users`.
+- [x] Criar migration incremental de autorizacao e policies administrativas de `stores`.
+- [ ] Criar manualmente o usuario em Authentication > Users.
+- [ ] Substituir UUID/e-mail em `002_master_auth.sql` e executar no SQL Editor.
+- [ ] Testar login, logout e bloqueio de usuario autenticado sem role master.
+- [ ] Integrar telas master de lojas ao adapter assincrono; elas ainda gravam localmente.
+- [ ] Migrar admins de loja em etapa posterior.

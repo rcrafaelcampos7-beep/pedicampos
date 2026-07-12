@@ -131,3 +131,23 @@ Nunca usar a senha do banco no React. A `anon public key` pode ir no frontend, d
 - As policies permitem leitura publica apenas de catalogo ativo.
 - Pedidos podem ser criados publicamente, mas dados de clientes e pedidos nao ficam publicamente legiveis por padrao.
 - Para acompanhamento publico de pedido em producao, a recomendacao e criar uma RPC ou Edge Function segura em etapa posterior.
+
+## Criar e autorizar o primeiro master
+
+1. No Supabase, abra `Authentication > Users`.
+2. Use `Add user` para criar o e-mail do master com uma senha forte.
+3. Marque/confirme o usuario para permitir login por senha.
+4. Copie o UUID exibido para o usuario criado.
+5. Abra `supabase/migrations/002_master_auth.sql`.
+6. Substitua todas as ocorrencias de `00000000-0000-0000-0000-000000000000` pelo UUID copiado.
+7. Substitua todas as ocorrencias de `master@example.com` pelo e-mail criado.
+8. Execute o arquivo completo no SQL Editor.
+9. Confira em `store_users` uma linha com `store_id = null`, o UUID correto, `role = master` e `active = true`.
+
+Nao coloque service role, senha do banco ou senha do usuario no frontend. A migration registra somente UUID e e-mail; a senha permanece no Supabase Auth.
+
+Depois da migration, lojas ativas continuam publicamente legiveis. INSERT, UPDATE/desativacao e DELETE de `stores` exigem role `authenticated` e `public.is_master()`. `platform_settings` e `plans` continuam publicamente legiveis nos limites atuais, mas somente master pode administra-los. `store_users` permite a cada autenticado ler a propria autorizacao e ao master administrar registros.
+
+O fallback fake e opcional somente no servidor Vite de desenvolvimento. Para usa-lo, configure localmente `VITE_ENABLE_FAKE_MASTER_AUTH=true`, `VITE_DEV_MASTER_EMAIL` e `VITE_DEV_MASTER_PASSWORD`. Nao configure essas variaveis na Vercel. Esse fallback nao gera JWT e nao permite writes no Supabase.
+
+Mesmo apos autorizar o master, `MasterCreateStore` e `MasterStores` ainda precisam ser conectados ao adapter assincrono para que botoes das telas gravem no Supabase. Admins das lojas continuam pendentes.

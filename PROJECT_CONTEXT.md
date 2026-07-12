@@ -12,6 +12,16 @@ Atualizado em: 2026-07-12
 - Nenhum dado temporario foi criado remotamente.
 - `usePediData` e as telas master ainda usam o snapshot/assinatura local sincrona; nao ha realtime Supabase nesta etapa. Assim, local e dominio ainda nao compartilham lojas criadas pelas telas ate o fluxo assincromo ser ligado a elas e a escrita ser autorizada.
 
+## Supabase Auth do master - 2026-07-12
+
+- Criada a camada `src/services/auth.js` com login por senha, logout, sessao, usuario, assinatura de eventos e validacao da role master em `store_users`.
+- A rota `/master/*` exige sessao Supabase valida e uma linha ativa `role = 'master'` ligada a `auth.uid()`; a chave local antiga nao autoriza mais o master.
+- `MasterLogin` nao contem senha fixa e preserva o layout, com erro generico e estado de carregamento.
+- `002_master_auth.sql` restringe INSERT/UPDATE/DELETE de `stores` a master autenticado. Leitura publica de lojas ativas continua.
+- O primeiro usuario deve ser criado manualmente em Supabase Authentication e depois autorizado em `store_users` pela migration com UUID/e-mail substituidos.
+- Fallback fake existe somente com `import.meta.env.DEV` e `VITE_ENABLE_FAKE_MASTER_AUTH=true`; nunca funciona no build de producao.
+- Admins de lojas continuam com login local e ficam pendentes.
+
 Este arquivo e a memoria principal do projeto PediCampos. Ele registra o estado atual do codigo, as decisoes ja tomadas, o que esta implementado, o que esta parcial e o que ainda e pendente.
 
 ## Identidade do projeto

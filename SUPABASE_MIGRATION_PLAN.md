@@ -857,3 +857,13 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - Risco prioritario: as policies exigem usuario master/autenticado para insert e acesso autorizado para update, mas o app ainda usa login fake.
 - Proxima acao: definir Supabase Auth/policy segura para master, depois integrar o hook/telas ao adapter assincromo e repetir CRUD temporario completo.
 - Proximas entidades, somente apos estabilizar lojas: produtos, categorias, adicionais e pedidos, nessa ordem planejada.
+
+## Etapa Auth master - 2026-07-12
+
+- Implementado login Supabase Auth e autorizacao separada via `store_users`.
+- Criada migration `002_master_auth.sql`, que deve ser personalizada com o UUID/e-mail do primeiro master.
+- Policies de `stores`: SELECT publico somente para ativas; master autenticado le todas pela policy de acesso e e o unico autorizado a inserir, atualizar/desativar ou excluir.
+- `plans` e `platform_settings` mantem leitura publica adequada e writes somente master.
+- A criacao anteriormente bloqueada com `42501` permanece evidência de que anon nao possui write.
+- Pendente antes do teste: criar usuario Auth, executar migration e integrar `MasterCreateStore`/`MasterStores` ao adapter assincrono.
+- Auth dos admins de loja permanece para etapa futura.

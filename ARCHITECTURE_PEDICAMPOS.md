@@ -966,3 +966,11 @@ As operacoes exportadas de lojas em `database.js` sao assincronas e tentam Supab
 Em client ausente ou erro de consulta/escrita, a operacao equivalente usa `storage.js`. Sucesso remoto com zero linhas e um estado valido, portanto nao aciona fallback. O fallback pode causar divergencia se uma escrita online falhar; o console registra a troca de backend.
 
 `getDatabase` e `subscribeDatabase` continuam locais e sincronos. Nao existe assinatura Realtime nem atualizacao automatica do hook a partir dessas funcoes assincronas. As telas master ainda gravam diretamente em `storage.js`, logo o compartilhamento local/dominio ainda depende de uma etapa posterior de integracao das telas e de Auth/RLS.
+
+## Autorizacao master
+
+Supabase Auth mantem a sessao no client. A autorizacao nao depende apenas da autenticacao: `isMasterUser` consulta uma linha ativa em `store_users` cujo `auth_user_id` corresponde ao usuario e cuja role e `master`. No banco, `public.is_master()` repete a mesma regra com `auth.uid()` para RLS.
+
+Auditoria: `platform_settings` tem SELECT publico e administracao master; `plans` tem SELECT publico apenas de ativos e administracao master; `stores` tem leitura publica de ativos e, apos a migration 002, INSERT/UPDATE/DELETE somente master; `store_users` permite ao autenticado ler a propria linha e ao master gerenciar autorizacoes. O role `anon` nao recebe write administrativo.
+
+O fallback de login usa `sessionStorage`, exige build DEV e flag explicita. Ele nao produz JWT Supabase e, portanto, nao contorna RLS nem habilita writes remotos.

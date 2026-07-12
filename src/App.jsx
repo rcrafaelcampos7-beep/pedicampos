@@ -21,6 +21,12 @@ import { MasterSettings } from "./pages/MasterSettings.jsx";
 import { MasterStores } from "./pages/MasterStores.jsx";
 import { OrderTrackingPage } from "./pages/OrderTrackingPage.jsx";
 import { StorePage } from "./pages/StorePage.jsx";
+import {
+  getCurrentUser,
+  hasDevelopmentMasterSession,
+  isMasterUser,
+  subscribeAuthChanges,
+} from "./services/auth.js";
 
 function useSessionVersion() {
   const [version, setVersion] = useState(0);
@@ -86,9 +92,32 @@ function AdminRouter({ path, stores, platform }) {
 }
 
 function MasterRouter({ path }) {
-  const auth = window.localStorage.getItem("pedicampos.master.auth") === "true";
+  const [authState, setAuthState] = useState({ loading: true, authorized: false });
 
-  if (!auth) return <MasterLogin />;
+  useEffect(() => {
+    let active = true;
+
+    async function verifyMaster() {
+      if (hasDevelopmentMasterSession()) {
+        if (active) setAuthState({ loading: false, authorized: true });
+        return;
+      }
+
+      const user = await getCurrentUser();
+      const authorized = await isMasterUser(user);
+      if (active) setAuthState({ loading: false, authorized });
+    }
+
+    verifyMaster();
+    const unsubscribe = subscribeAuthChanges(() => window.setTimeout(verifyMaster, 0));
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, []);
+
+  if (authState.loading) return null;
+  if (!authState.authorized) return <MasterLogin />;
   if (path === "/master") {
     navigate("/master/dashboard");
     return null;

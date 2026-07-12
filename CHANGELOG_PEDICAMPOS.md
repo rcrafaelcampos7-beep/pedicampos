@@ -1003,3 +1003,12 @@ Build:
 - Resultado Supabase vazio passou a permanecer vazio, sem mistura automatica com mocks.
 - Teste real confirmou leitura anonima e revelou bloqueio de escrita por RLS (`42501`). Nenhuma loja de teste foi criada.
 - Telas, visual, produtos, categorias, adicionais, pedidos, `storage.js` e `localStorage` nao foram alterados.
+
+## 2026-07-12 - Supabase Auth para master
+
+- Adicionada camada `auth.js` usando `signInWithPassword` e verificacao da role master ativa em `store_users`.
+- Login master passou a usar credenciais digitadas, erro amigavel e sem senha fixa no codigo.
+- Rotas master e logout passaram a usar sessao real do Supabase.
+- Adicionada migration idempotente `002_master_auth.sql`; writes em `stores` ficam exclusivos do master autenticado.
+- Fallback fake opcional limitado ao modo DEV e configurado somente por variaveis explicitas.
+- Admins das lojas e telas de dados continuam fora desta migracao.

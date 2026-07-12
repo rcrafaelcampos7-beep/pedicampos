@@ -1,6 +1,7 @@
 import { Sidebar } from "../layout/Sidebar.jsx";
 import { Button } from "../ui/Button.jsx";
 import { navigate } from "../../routes/router.jsx";
+import { signOut } from "../../services/auth.js";
 
 const masterLinks = [
   { to: "/master/dashboard", label: "Dashboard", icon: "D" },
@@ -12,8 +13,8 @@ const masterLinks = [
 ];
 
 export function MasterLayout({ children, activePath }) {
-  function logout() {
-    window.localStorage.removeItem("pedicampos.master.auth");
+  async function logout() {
+    await signOut();
     navigate("/master");
   }
 
