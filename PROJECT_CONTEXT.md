@@ -70,7 +70,7 @@ Atualizado em: 2026-07-12
 - Master continua autorizado separadamente pela role `master`; uma role master nao e aceita como usuario de loja.
 - Nenhuma migration foi necessaria porque schema, `can_access_store` e policies atuais ja atendem ao isolamento.
 - Multiplos vinculos ja sao retornados pela camada; nesta versao o primeiro por data de criacao e usado, sem tela de selecao.
-- Nao foi mantido fallback fake para admin. `AdminCategories` e `AdminProducts` ja foram integrados; adicionais permanecem pendentes.
+- Nao foi mantido fallback fake para admin. Categorias, produtos e adicionais ja foram integrados; pedidos permanecem pendentes.
 
 ## AdminCategories no Supabase - 2026-07-12
 
@@ -92,6 +92,17 @@ Atualizado em: 2026-07-12
 - Upload real nao existe: `image_url` recebe somente a URL/string atual.
 - Adicionais nao sao gravados nem vinculados nesta etapa; pedidos tambem continuam pendentes.
 - A migration 004 deve ser executada antes do teste CRUD cruzado. Proxima etapa: adicionais.
+
+## Adicionais no Supabase - 2026-07-12
+
+- Grupos, opcoes e vinculos com produtos agora usam as tres tabelas relacionais do Supabase.
+- `AdminAdditionals` carrega grupos e produtos remotos e executa criacao, edicao, status e exclusao assincronos.
+- Criada `005_additionals_integrity.sql` com validacoes de mesma loja e RPC atomica `save_additional_group` com `security invoker`.
+- A RPC substitui opcoes/vinculos dentro de uma transacao, evita estado parcial e elimina vinculos duplicados.
+- Preco zero continua Gratis; precos positivos continuam numericos e somaveis.
+- `store.id` vem somente da sessao autorizada e RLS permanece ativo. INSERT anon foi bloqueado com `42501`.
+- Fallback local permanece; resposta remota vazia nao mistura mocks.
+- Pedidos continuam locais. Proxima etapa correta: configuracoes da loja e formas de pagamento, dependencias do checkout antes de pedidos.
 
 Este arquivo e a memoria principal do projeto PediCampos. Ele registra o estado atual do codigo, as decisoes ja tomadas, o que esta implementado, o que esta parcial e o que ainda e pendente.
 

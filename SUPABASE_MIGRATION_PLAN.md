@@ -928,3 +928,12 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - Pendente: executar migration, testar CRUD real e validar erros `23514`/RLS em acesso cruzado.
 - Upload real continua pendente; `image_url` armazena string/URL.
 - Proxima entidade: adicionais. Pedidos permanecem fora do escopo.
+
+## Adicionais conectados
+
+- Concluido no codigo: adapter e AdminAdditionals para grupos, opcoes e produtos vinculados.
+- Migration 005 cria integridade por loja e RPC atomica sujeita a RLS.
+- INSERT anonimo permaneceu bloqueado com `42501`; nenhuma linha de teste foi criada.
+- Pendente: executar migration e testar CRUD/cross-store nas tres tabelas.
+- Pedidos continuam pendentes.
+- Proxima etapa recomendada: `store_settings` e `payment_methods`, pois checkout/pedidos dependem dessas configuracoes online.

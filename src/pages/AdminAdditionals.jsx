@@ -4,11 +4,16 @@ import { Button } from "../components/ui/Button.jsx";
 import { Card } from "../components/ui/Card.jsx";
 import { Badge } from "../components/ui/Badge.jsx";
 import { Checkbox, Input, Select, Textarea } from "../components/ui/Input.jsx";
-import { updateStore } from "../services/storage.js";
+import {
+  createAdditionalGroup,
+  deleteAdditionalGroup,
+  getAdditionalGroupsByStore,
+  getProductsByStore,
+  updateAdditionalGroup,
+} from "../services/database.js";
 import { formatCurrency } from "../utils/formatCurrency.js";
 
 const emptyGroup = {
-  id: "",
   name: "",
   description: "",
   required: false,
@@ -30,12 +35,37 @@ function makeOption() {
 }
 
 export function AdminAdditionals({ activePath, store }) {
+  const [groups, setGroups] = useState([]);
+  const [products, setProducts] = useState([]);
   const [editingId, setEditingId] = useState("");
-  const [form, setForm] = useState(emptyGroup);
+  const [form, setForm] = useState({ ...emptyGroup, options: [makeOption()] });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [pendingGroupId, setPendingGroupId] = useState("");
   const additionalFormRef = useRef(null);
+
+  async function loadData() {
+    setLoading(true);
+    setError("");
+
+    try {
+      const [nextGroups, nextProducts] = await Promise.all([
+        getAdditionalGroupsByStore(store.id),
+        getProductsByStore(store.id),
+      ]);
+      setGroups(nextGroups);
+      setProducts(nextProducts);
+    } catch {
+      setError("Não foi possível carregar os adicionais. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
     resetForm();
+    loadData();
   }, [store.id]);
 
   function resetForm() {
@@ -62,7 +92,9 @@ export function AdminAdditionals({ activePath, store }) {
   function toggleProduct(productId, checked) {
     updateForm(
       "productIds",
-      checked ? [...form.productIds, productId] : form.productIds.filter((id) => id !== productId)
+      checked
+        ? Array.from(new Set([...form.productIds, productId]))
+        : form.productIds.filter((id) => id !== productId)
     );
   }
 
@@ -76,10 +108,7 @@ export function AdminAdditionals({ activePath, store }) {
   }
 
   function addOption() {
-    setForm((current) => ({
-      ...current,
-      options: [...current.options, makeOption()],
-    }));
+    setForm((current) => ({ ...current, options: [...current.options, makeOption()] }));
   }
 
   function removeOption(optionId) {
@@ -89,11 +118,14 @@ export function AdminAdditionals({ activePath, store }) {
     }));
   }
 
-  function saveGroup(event) {
+  async function saveGroup(event) {
     event.preventDefault();
+    if (saving) return;
+    setSaving(true);
+    setError("");
+
     const group = {
       ...form,
-      id: editingId || `group-${crypto.randomUUID()}`,
       storeId: store.id,
       min: Number(form.min) || 0,
       max: Number(form.max) || 0,
@@ -106,30 +138,47 @@ export function AdminAdditionals({ activePath, store }) {
         })),
     };
 
-    updateStore(store.id, (draft) => {
-      draft.additionalGroups = editingId
-        ? (draft.additionalGroups || []).map((item) => (item.id === editingId ? group : item))
-        : [group, ...(draft.additionalGroups || [])];
-      return draft;
-    });
-    resetForm();
+    try {
+      if (editingId) await updateAdditionalGroup(editingId, group);
+      else await createAdditionalGroup(store.id, group);
+      resetForm();
+      await loadData();
+    } catch {
+      setError("Não foi possível salvar o grupo. Confira produtos e opções e tente novamente.");
+    } finally {
+      setSaving(false);
+    }
   }
 
-  function deleteGroup(groupId) {
-    updateStore(store.id, (draft) => {
-      draft.additionalGroups = (draft.additionalGroups || []).filter((group) => group.id !== groupId);
-      return draft;
-    });
-    if (editingId === groupId) resetForm();
+  async function deleteGroup(groupId) {
+    if (pendingGroupId) return;
+    setPendingGroupId(groupId);
+    setError("");
+
+    try {
+      await deleteAdditionalGroup(groupId);
+      if (editingId === groupId) resetForm();
+      await loadData();
+    } catch {
+      setError("Não foi possível excluir o grupo. Tente novamente.");
+    } finally {
+      setPendingGroupId("");
+    }
   }
 
-  function toggleGroup(groupId) {
-    updateStore(store.id, (draft) => {
-      draft.additionalGroups = (draft.additionalGroups || []).map((group) =>
-        group.id === groupId ? { ...group, active: !group.active } : group
-      );
-      return draft;
-    });
+  async function toggleGroup(group) {
+    if (pendingGroupId) return;
+    setPendingGroupId(group.id);
+    setError("");
+
+    try {
+      await updateAdditionalGroup(group.id, { storeId: store.id, active: !group.active });
+      await loadData();
+    } catch {
+      setError("Não foi possível alterar o status do grupo. Tente novamente.");
+    } finally {
+      setPendingGroupId("");
+    }
   }
 
   return (
@@ -138,6 +187,7 @@ export function AdminAdditionals({ activePath, store }) {
         <Card className="form-section">
           <span className="eyebrow">Adicionais</span>
           <h2>{editingId ? "Editar grupo" : "Novo grupo"}</h2>
+          {error ? <div className="form-error">{error}</div> : null}
           <form ref={additionalFormRef} onSubmit={saveGroup}>
             <Input label="Nome do grupo" value={form.name} onChange={(event) => updateForm("name", event.target.value)} required />
             <Textarea
@@ -147,29 +197,12 @@ export function AdminAdditionals({ activePath, store }) {
               placeholder="Ex: escolha até 3 acompanhamentos"
             />
             <div className="form-grid">
-              <Select
-                label="Tipo de seleção"
-                value={form.selectionType}
-                onChange={(event) => updateForm("selectionType", event.target.value)}
-              >
+              <Select label="Tipo de seleção" value={form.selectionType} onChange={(event) => updateForm("selectionType", event.target.value)}>
                 <option value="multiple">Múltipla</option>
                 <option value="single">Única</option>
               </Select>
-              <Input
-                label="Mínimo"
-                type="number"
-                min="0"
-                value={form.min}
-                onChange={(event) => updateForm("min", event.target.value)}
-              />
-              <Input
-                label="Máximo"
-                type="number"
-                min="0"
-                value={form.max}
-                onChange={(event) => updateForm("max", event.target.value)}
-                help="Use 0 para sem limite"
-              />
+              <Input label="Mínimo" type="number" min="0" value={form.min} onChange={(event) => updateForm("min", event.target.value)} />
+              <Input label="Máximo" type="number" min="0" value={form.max} onChange={(event) => updateForm("max", event.target.value)} help="Use 0 para sem limite" />
             </div>
             <div className="settings-switches">
               <Checkbox label="Grupo obrigatório" checked={form.required} onChange={(checked) => updateForm("required", checked)} />
@@ -179,66 +212,41 @@ export function AdminAdditionals({ activePath, store }) {
             <div className="addon-list compact">
               <div className="addon-group-heading">
                 <h3>Opções do grupo</h3>
-                <Button variant="secondary" size="sm" onClick={addOption}>
-                  Adicionar opção
-                </Button>
+                <Button variant="secondary" size="sm" onClick={addOption}>Adicionar opção</Button>
               </div>
               {form.options.map((option) => (
                 <div className="option-editor-row" key={option.id}>
-                  <Input
-                    label="Nome"
-                    value={option.name}
-                    onChange={(event) => updateOption(option.id, "name", event.target.value)}
-                  />
-                  <Input
-                    label="Preço"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={option.price}
-                    onChange={(event) => updateOption(option.id, "price", event.target.value)}
-                  />
-                  <Checkbox
-                    label="Ativa"
-                    checked={option.active}
-                    onChange={(checked) => updateOption(option.id, "active", checked)}
-                  />
-                  <Button variant="ghost" size="sm" onClick={() => removeOption(option.id)}>
-                    Remover
-                  </Button>
+                  <Input label="Nome" value={option.name} onChange={(event) => updateOption(option.id, "name", event.target.value)} />
+                  <Input label="Preço" type="number" min="0" step="0.01" value={option.price} onChange={(event) => updateOption(option.id, "price", event.target.value)} />
+                  <Checkbox label="Ativa" checked={option.active} onChange={(checked) => updateOption(option.id, "active", checked)} />
+                  <Button variant="ghost" size="sm" onClick={() => removeOption(option.id)}>Remover</Button>
                 </div>
               ))}
             </div>
 
             <div className="addon-list compact">
               <h3>Produtos vinculados</h3>
-              {store.products.length ? (
-                store.products.map((product) => (
-                  <Checkbox
-                    key={product.id}
-                    label={product.name}
-                    checked={form.productIds.includes(product.id)}
-                    onChange={(checked) => toggleProduct(product.id, checked)}
-                  />
-                ))
-              ) : (
-                <p className="muted">Cadastre produtos antes de vincular este grupo.</p>
-              )}
+              {products.length ? products.map((product) => (
+                <Checkbox
+                  key={product.id}
+                  label={product.name}
+                  checked={form.productIds.includes(product.id)}
+                  onChange={(checked) => toggleProduct(product.id, checked)}
+                />
+              )) : <p className="muted">Cadastre produtos antes de vincular este grupo.</p>}
             </div>
 
             <div className="modal-actions">
-              <Button type="submit" variant="primary">
-                Salvar grupo
-              </Button>
-              <Button variant="ghost" onClick={resetForm}>
-                Limpar
-              </Button>
+              <Button type="submit" variant="primary" disabled={saving}>{saving ? "Salvando..." : "Salvar grupo"}</Button>
+              <Button variant="ghost" disabled={saving} onClick={resetForm}>Limpar</Button>
             </div>
           </form>
         </Card>
 
         <div className="admin-list">
-          {(store.additionalGroups || []).map((group) => (
+          {loading ? <Card><p>Carregando adicionais...</p></Card> : null}
+          {!loading && !groups.length ? <Card><p>Nenhum grupo de adicionais cadastrado.</p></Card> : null}
+          {!loading && groups.map((group) => (
             <Card key={group.id} className="additional-group-card">
               <div className="additional-group-card-header">
                 <div>
@@ -249,30 +257,22 @@ export function AdminAdditionals({ activePath, store }) {
                 <div className="store-card-metrics">
                   <span>{group.required ? "Obrigatório" : "Opcional"}</span>
                   <strong>{group.selectionType === "single" ? "Única" : "Múltipla"}</strong>
-                  <small>
-                    min {group.min || 0} · max {group.max || "sem limite"}
-                  </small>
+                  <small>min {group.min || 0} · max {group.max || "sem limite"}</small>
                 </div>
               </div>
               <div className="additional-options-preview">
                 {(group.options || []).map((option) => (
-                  <span key={option.id}>
-                    {option.name} · {Number(option.price) > 0 ? formatCurrency(option.price) : "Grátis"}
-                  </span>
+                  <span key={option.id}>{option.name} · {Number(option.price) > 0 ? formatCurrency(option.price) : "Grátis"}</span>
                 ))}
               </div>
-              <p className="muted">
-                Vinculado a {group.productIds?.length || 0} produto(s).
-              </p>
+              <p className="muted">Vinculado a {group.productIds?.length || 0} produto(s).</p>
               <div className="row-actions">
-                <Button variant="secondary" size="sm" onClick={() => editGroup(group)}>
-                  Editar
+                <Button variant="secondary" size="sm" disabled={Boolean(pendingGroupId)} onClick={() => editGroup(group)}>Editar</Button>
+                <Button variant={group.active ? "warning" : "success"} size="sm" disabled={Boolean(pendingGroupId)} onClick={() => toggleGroup(group)}>
+                  {pendingGroupId === group.id ? "Salvando..." : group.active ? "Desativar" : "Ativar"}
                 </Button>
-                <Button variant={group.active ? "warning" : "success"} size="sm" onClick={() => toggleGroup(group.id)}>
-                  {group.active ? "Desativar" : "Ativar"}
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => deleteGroup(group.id)}>
-                  Excluir
+                <Button variant="ghost" size="sm" disabled={Boolean(pendingGroupId)} onClick={() => deleteGroup(group.id)}>
+                  {pendingGroupId === group.id ? "Excluindo..." : "Excluir"}
                 </Button>
               </div>
             </Card>

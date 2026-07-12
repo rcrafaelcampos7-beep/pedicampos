@@ -215,7 +215,7 @@ As roles de loja aceitas pelo schema atual sao `store_admin` e `store_staff`. Na
 
 O login `/admin` valida a sessao e o vinculo ativo. IDs salvos manualmente no navegador nao alteram a loja autorizada. Multiplos vinculos sao suportados pela camada, mas a interface usa o primeiro por ordem de criacao ate existir uma tela de selecao. Nao ha fallback fake para admin.
 
-Depois do vinculo, teste login, refresh, logout, usuario sem vinculo, usuario inativo e tentativa de acesso a outra loja. `AdminCategories` e `AdminProducts` ja usam o adapter; adicionais continuam pendentes.
+Depois do vinculo, teste login, refresh, logout, usuario sem vinculo, usuario inativo e tentativa de acesso a outra loja. Categorias, produtos e adicionais ja usam o adapter; pedidos continuam pendentes.
 
 ## AdminCategories conectado ao adapter
 
@@ -231,4 +231,14 @@ Valide com uma categoria temporaria: crie, edite nome/status, reordene, exclua e
 
 Antes de testar, execute `supabase/migrations/004_product_category_store.sql` no SQL Editor. O trigger idempotente valida que `category_id`, quando informado, pertence ao mesmo `store_id` do produto. Categoria de outra loja e rejeitada com erro PostgreSQL `23514`; RLS continua bloqueando writes de usuarios nao vinculados.
 
-Depois teste criacao, edicao de nome/preco/categoria, status e exclusao no Table Editor. Teste tambem Loja A x Loja B e categoria cruzada. Adicionais nao sao salvos dentro do produto e serao a proxima etapa; pedidos continuam pendentes.
+Depois teste criacao, edicao de nome/preco/categoria, status e exclusao no Table Editor. Teste tambem Loja A x Loja B e categoria cruzada. Os vinculos de adicionais sao mantidos na tabela relacional propria; pedidos continuam pendentes.
+
+## Adicionais Supabase e migration 005
+
+Execute `supabase/migrations/005_additionals_integrity.sql` antes de usar a tela. A migration cria validacoes para que opcoes, grupos, produtos e links pertençam ao mesmo `store_id`, alem da RPC atomica `save_additional_group`.
+
+A RPC e `security invoker`, concedida somente a `authenticated`, e continua obedecendo RLS/can_access_store. Ela salva grupo, opcoes e vinculos na mesma transacao. A constraint unica e a deduplicacao do adapter impedem repetir o mesmo vinculo grupo-produto.
+
+`AdminAdditionals` agora carrega grupos e produtos remotos. Preco `0` aparece como Gratis; valores positivos sao mantidos em `numeric(10,2)`. Para validar, crie um grupo com opcao gratis e paga, vincule a produto, edite/status/exclua e confira `additional_groups`, `additional_options` e `additional_group_products`.
+
+Teste tambem produto de outra loja e confirme erro `23514` ou bloqueio RLS. Pedidos continuam pendentes. A proxima etapa recomendada e migrar `store_settings` e `payment_methods` antes de checkout/pedidos.

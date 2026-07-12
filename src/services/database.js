@@ -23,6 +23,10 @@ const STORE_COLUMNS =
 const CATEGORY_COLUMNS = "id, store_id, name, active, sort_order, created_at, updated_at";
 const PRODUCT_COLUMNS =
   "id, store_id, category_id, name, description, price, image_url, active, sort_order, created_at, updated_at";
+const ADDITIONAL_GROUP_COLUMNS =
+  "id, store_id, name, description, required, min_choices, max_choices, selection_type, active, sort_order, created_at, updated_at";
+const ADDITIONAL_OPTION_COLUMNS =
+  "id, store_id, additional_group_id, name, price, active, sort_order, created_at, updated_at";
 
 function getLocalStores() {
   return getStorageDatabase().stores;
@@ -128,6 +132,66 @@ export function productToSupabase(product = {}, storeId) {
   };
 
   return Object.fromEntries(Object.entries(mapped).filter(([, value]) => value !== undefined));
+}
+
+export function additionalOptionFromSupabase(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    storeId: row.store_id,
+    groupId: row.additional_group_id,
+    name: row.name || "",
+    price: Number(row.price) || 0,
+    active: row.active !== false,
+    order: Number(row.sort_order) || 0,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export function additionalOptionToSupabase(option = {}, storeId, groupId) {
+  return {
+    store_id: storeId ?? option.storeId,
+    additional_group_id: groupId ?? option.groupId,
+    name: option.name || "",
+    price: Number(option.price) || 0,
+    active: option.active !== false,
+    sort_order: Number(option.order) || 0,
+  };
+}
+
+export function additionalGroupFromSupabase(row, options = [], productIds = []) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    storeId: row.store_id,
+    name: row.name || "",
+    description: row.description || "",
+    required: Boolean(row.required),
+    min: Number(row.min_choices) || 0,
+    max: Number(row.max_choices) || 0,
+    selectionType: row.selection_type === "single" ? "single" : "multiple",
+    productIds,
+    active: row.active !== false,
+    order: Number(row.sort_order) || 0,
+    options,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export function additionalGroupToSupabase(group = {}, storeId) {
+  return {
+    store_id: storeId ?? group.storeId,
+    name: group.name || "",
+    description: group.description || "",
+    required: Boolean(group.required),
+    min_choices: Number(group.min) || 0,
+    max_choices: Number(group.max) || 0,
+    selection_type: group.selectionType === "single" ? "single" : "multiple",
+    active: group.active !== false,
+    sort_order: Number(group.order) || 0,
+  };
 }
 
 function warnAndUseLocal(operation, error) {
@@ -457,11 +521,76 @@ export async function deleteCategory(categoryId) {
   return categoryId;
 }
 
-export function getAdditionalGroupsByStore(storeId) {
-  return getLocalStoreById(storeId)?.additionalGroups || [];
+export async function getAdditionalGroupsByStore(storeId) {
+  if (!supabase) return getLocalStoreById(storeId)?.additionalGroups || [];
+
+  const [groupsResult, optionsResult, linksResult] = await Promise.all([
+    supabase.from("additional_groups").select(ADDITIONAL_GROUP_COLUMNS).eq("store_id", storeId).order("sort_order"),
+    supabase.from("additional_options").select(ADDITIONAL_OPTION_COLUMNS).eq("store_id", storeId).order("sort_order"),
+    supabase.from("additional_group_products").select("additional_group_id, product_id").eq("store_id", storeId),
+  ]);
+
+  const error = groupsResult.error || optionsResult.error || linksResult.error;
+  if (error) {
+    warnAndUseLocal("getAdditionalGroupsByStore", error);
+    return getLocalStoreById(storeId)?.additionalGroups || [];
+  }
+
+  const optionsByGroup = new Map();
+  for (const row of optionsResult.data || []) {
+    const options = optionsByGroup.get(row.additional_group_id) || [];
+    options.push(additionalOptionFromSupabase(row));
+    optionsByGroup.set(row.additional_group_id, options);
+  }
+
+  const productsByGroup = new Map();
+  for (const row of linksResult.data || []) {
+    const productIds = productsByGroup.get(row.additional_group_id) || [];
+    productIds.push(row.product_id);
+    productsByGroup.set(row.additional_group_id, productIds);
+  }
+
+  return (groupsResult.data || []).map((row) =>
+    additionalGroupFromSupabase(
+      row,
+      optionsByGroup.get(row.id) || [],
+      productsByGroup.get(row.id) || []
+    )
+  );
 }
 
-export function createAdditionalGroup(storeId, data = {}) {
+async function saveAdditionalGroupToSupabase(storeId, groupId, group) {
+  const payload = additionalGroupToSupabase(group, storeId);
+  const productIds = Array.from(new Set(Array.isArray(group.productIds) ? group.productIds : []));
+  const options = (Array.isArray(group.options) ? group.options : []).map((option, index) => ({
+    name: option.name || "",
+    price: Number(option.price) || 0,
+    active: option.active !== false,
+    order: index + 1,
+  }));
+
+  const { data, error } = await supabase.rpc("save_additional_group", {
+    p_group_id: groupId || null,
+    p_store_id: storeId,
+    p_name: payload.name,
+    p_description: payload.description,
+    p_required: payload.required,
+    p_min_choices: payload.min_choices,
+    p_max_choices: payload.max_choices,
+    p_selection_type: payload.selection_type,
+    p_active: payload.active,
+    p_sort_order: payload.sort_order,
+    p_options: options,
+    p_product_ids: productIds,
+  });
+
+  if (error) throw error;
+  const groups = await getAdditionalGroupsByStore(storeId);
+  return groups.find((item) => item.id === data) || null;
+}
+
+export async function createAdditionalGroup(storeId, data = {}) {
+  const groups = await getAdditionalGroupsByStore(storeId);
   const group = {
     id: data.id || makeId("group"),
     storeId,
@@ -474,8 +603,17 @@ export function createAdditionalGroup(storeId, data = {}) {
     productIds: Array.isArray(data.productIds) ? data.productIds : [],
     active: data.active !== false,
     options: Array.isArray(data.options) ? data.options : [],
+    order: Number(data.order) || groups.length + 1,
     ...data,
   };
+
+  if (supabase) {
+    try {
+      return await saveAdditionalGroupToSupabase(storeId, null, group);
+    } catch (error) {
+      warnAndUseLocal("createAdditionalGroup", error);
+    }
+  }
 
   updateStorageStore(storeId, (store) => ({
     ...store,
@@ -485,7 +623,30 @@ export function createAdditionalGroup(storeId, data = {}) {
   return group;
 }
 
-export function updateAdditionalGroup(groupId, data) {
+export async function updateAdditionalGroup(groupId, data) {
+  if (supabase) {
+    const { data: groupRow, error: lookupError } = await supabase
+      .from("additional_groups")
+      .select("store_id")
+      .eq("id", groupId)
+      .maybeSingle();
+
+    if (!lookupError && !groupRow) return null;
+    if (lookupError) {
+      warnAndUseLocal("updateAdditionalGroup lookup", lookupError);
+    } else {
+      const currentGroups = await getAdditionalGroupsByStore(groupRow.store_id);
+      const current = currentGroups.find((group) => group.id === groupId);
+      if (!current) return null;
+
+      try {
+        return await saveAdditionalGroupToSupabase(current.storeId, groupId, { ...current, ...data });
+      } catch (error) {
+        warnAndUseLocal("updateAdditionalGroup", error);
+      }
+    }
+  }
+
   const store = getAdditionalGroupStore(groupId);
   if (!store) return null;
 
@@ -496,10 +657,22 @@ export function updateAdditionalGroup(groupId, data) {
     ),
   }));
 
-  return getAdditionalGroupsByStore(store.id).find((group) => group.id === groupId) || null;
+  return getLocalStoreById(store.id)?.additionalGroups.find((group) => group.id === groupId) || null;
 }
 
-export function deleteAdditionalGroup(groupId) {
+export async function deleteAdditionalGroup(groupId) {
+  if (supabase) {
+    const { data: deleted, error } = await supabase
+      .from("additional_groups")
+      .delete()
+      .eq("id", groupId)
+      .select("id")
+      .maybeSingle();
+
+    if (!error) return deleted?.id || null;
+    warnAndUseLocal("deleteAdditionalGroup", error);
+  }
+
   const store = getAdditionalGroupStore(groupId);
   if (!store) return null;
 

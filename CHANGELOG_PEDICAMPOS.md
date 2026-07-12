@@ -1069,3 +1069,12 @@ Build:
 - Adicionada migration 004 com trigger de integridade entre produto, categoria e loja.
 - Scroll de edicao, URL de imagem e fallback local foram preservados.
 - Adicionais e pedidos nao foram migrados.
+
+## 2026-07-12 - Adicionais Supabase-first
+
+- Migradas leitura e manutencao de grupos, opcoes e links grupo-produto.
+- AdminAdditionals passou a usar dados remotos da loja autenticada com estados assincronos.
+- Adicionada migration 005 com dois triggers de integridade e RPC atomica protegida por RLS.
+- Vinculos sao deduplicados e opcoes gratis/pagas preservam seus valores.
+- Scroll automatico, layout e fallback local foram mantidos.
+- Pedidos nao foram migrados.

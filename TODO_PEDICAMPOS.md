@@ -448,4 +448,16 @@ Legenda:
 - [ ] Testar CRUD, status, categoria e exclusao no Table Editor.
 - [ ] Testar bloqueio de categoria de outra loja e isolamento Loja A x Loja B.
 - [ ] Planejar upload real de imagens futuramente.
-- [ ] Migrar adicionais na proxima etapa; pedidos permanecem pendentes.
+- [x] Migrar adicionais depois de produtos; pedidos permanecem pendentes.
+
+## Adicionais Supabase - 2026-07-12
+
+- [x] Migrar grupos, opcoes e vinculos para adapter Supabase-first.
+- [x] Integrar AdminAdditionals e preservar scroll de edicao.
+- [x] Criar migration 005 com integridade por loja e save atomico.
+- [x] Preservar valores gratis e pagos e impedir links duplicados.
+- [ ] Executar migration 005 no SQL Editor.
+- [ ] Testar CRUD completo e conferir as tres tabelas.
+- [ ] Testar produto de outra loja e isolamento Loja A x Loja B.
+- [ ] Migrar configuracoes da loja/formas de pagamento antes dos pedidos.
+- [ ] Manter pedidos pendentes.

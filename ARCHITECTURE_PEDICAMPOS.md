@@ -1026,3 +1026,11 @@ Produtos usam `store_id`, `category_id`, `name`, `description`, `price`, `image_
 RLS restringe writes por `can_access_store(store_id)`. Como a FK simples de `category_id` nao garantia mesma loja, a migration 004 adiciona trigger `validate_product_category_store`: categoria nula e permitida; categoria preenchida precisa existir com o mesmo `store_id` do produto, ou PostgreSQL retorna `23514`.
 
 AdminProducts recebe a loja autorizada da rota, busca categorias/produtos em paralelo e oferece apenas categorias retornadas para aquela loja. A URL de imagem continua texto; upload/Storage fica para etapa futura.
+
+## Persistencia relacional de adicionais
+
+`additional_groups` guarda regras do grupo; `additional_options` guarda opcoes/precos; `additional_group_products` representa os vinculos N:N. O adapter recompõe o formato aninhado esperado pela UI usando tres consultas filtradas por `store_id`.
+
+A migration 005 adiciona triggers que exigem a mesma loja entre opcao/grupo e entre grupo/produto. A constraint unica existente e `Set` no adapter impedem links duplicados.
+
+Criacao/edicao usam `save_additional_group`, uma RPC `security invoker`: ela continua sujeita ao JWT, grants e RLS do chamador, mas agrupa alteracao do grupo, substituicao de opcoes e links em uma unica transacao. Falhas revertem tudo antes do fallback. IDs das opcoes podem ser recriados durante edicao; pedidos ainda nao usam esses IDs porque nao foram migrados.
