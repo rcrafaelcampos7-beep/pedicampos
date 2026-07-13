@@ -1145,3 +1145,12 @@ Build:
 - `create_public_order` e `get_public_order` mantem owner postgres, SECURITY DEFINER, `search_path=public` e EXECUTE somente para anon/authenticated.
 - Aplicacao e testes remotos permanecem manuais; o diagnostico read-only 009 deve ser executado depois da migration.
 - Validacao estrutural local, build, checks JS e diff check passaram; testes A-I continuam pendentes ate a aplicacao remota.
+
+### Validacao server-side de adicionais - 2026-07-13
+
+- Criada migration 010 que substitui a identidade exata de `create_public_order` sem alterar o payload do frontend.
+- Cada item valida opcoes distintas, grupo informado correto, tenant, atividade, vinculo produto/grupo, required/min/max e selecao unica antes de qualquer escrita.
+- Grupos inativos ou nao vinculados nao sao exigidos; opcoes deles nao podem ser enviadas. Quantidade do produto escala preco, nao a contagem selecionada.
+- Erros adulterados retornam SQLSTATE `23514`; a transacao continua atomica.
+- Criado teste A-J com fixtures efemeras e ROLLBACK. Execucao remota da migration/teste permanece manual.
+- Build, checks JS, diff check e assercoes estruturais da cobertura A-J passaram.

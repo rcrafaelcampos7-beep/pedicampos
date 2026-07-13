@@ -339,3 +339,9 @@ Execute `supabase/migrations/009_lock_direct_order_writes.sql` depois da 008. El
 Depois execute `supabase/diagnostics/009_lock_direct_order_writes_audit.sql`. As tres mensagens PASS confirmam ausencia de privilegios/policies publicos e endurecimento das RPCs. Em seguida teste checkout, tracking, admin da mesma loja e isolamento com outra loja. A migration preserva os grants de authenticated, mas o acesso continua limitado pelas policies RLS existentes.
 
 O diagnostico de catalogo cobre A-D/F sem criar dados: sem privilegio efetivo de tabela, o papel anon falha antes mesmo da avaliacao RLS. E/G/H/I exigem o teste funcional no projeto remoto depois da 009; nao os considere aprovados apenas porque o arquivo local foi criado.
+
+### Migration 010 - regras de grupos de adicionais
+
+Execute `supabase/migrations/010_validate_order_additionals.sql` depois da 009. Ela mantem a assinatura do frontend e passa a rejeitar no banco opcao duplicada, grupo incorreto/nao vinculado/inativo, opcao inativa, minimo obrigatorio, maximo e mais de uma opcao em grupo single.
+
+Depois rode `supabase/diagnostics/010_validate_order_additionals_test.sql`. O script cria uma loja/catalogo de teste dentro de uma transacao, imprime PASS para A-J e executa ROLLBACK. Confira que nenhuma fixture `teste-rpc-add-*` permaneceu caso a execucao seja interrompida; uma transacao abortada tambem deve ser revertida antes de reutilizar a sessao SQL.

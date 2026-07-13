@@ -46,12 +46,12 @@ Escopo: arquitetura React, autenticacao, adapters, Supabase/RLS, banco, desempen
 
 ## ALTO
 
-### A1 - regras obrigatorias de adicionais existem apenas na UI
+### A1 - regras obrigatorias de adicionais existem apenas na UI (corrigido localmente; aplicacao remota pendente)
 
 - Arquivo: `supabase/migrations/007_orders.sql` (linhas 66-90 e 113-159).
 - Problema: a RPC valida opcao ativa e vinculo com produto, mas nao valida grupo obrigatorio nem `min_choices`/`max_choices` por grupo.
 - Impacto: uma chamada direta pode criar pedido que a interface impediria.
-- Correcao sugerida: validar contagem por grupo dentro da RPC em migration incremental e cobrir com testes SQL.
+- Correcao: criada `010_validate_order_additionals.sql`. A RPC valida, antes de qualquer INSERT, grupo/opcao ativos e do mesmo tenant, grupo vinculado ao produto, correspondencia `groupId`/`optionId`, duplicidade, required/min/max e selecao unica. O teste transacional `010_validate_order_additionals_test.sql` cobre A-J e termina em ROLLBACK. Aplicacao e teste remoto permanecem pendentes.
 
 ### A2 - entitlement de plano e fonte comercial sao client-side/locais
 
@@ -196,6 +196,13 @@ Escopo: arquitetura React, autenticacao, adapters, Supabase/RLS, banco, desempen
 - E e G: RPCs, owner, SECURITY DEFINER, search_path e EXECUTE foram preservados no SQL; checkout/tracking pos-migration pendentes.
 - H e I: grants authenticated e policies tenant foram preservados; teste com sessoes Loja A/Loja B permanece pendente.
 - Nao foi possivel executar a migration remotamente a partir do repositorio; nenhum resultado pos-009 e declarado antes da aplicacao no SQL Editor.
+
+### Validacao da migration 010
+
+- A funcao conserva a identidade de sete parametros, owner postgres, SECURITY DEFINER, `search_path=public` e EXECUTE para anon/authenticated.
+- Todos os erros de adicionais usam SQLSTATE controlado `23514` e acontecem na fase anterior ao primeiro INSERT.
+- O teste rollback-only cria fixtures isoladas e cobre obrigatorio, min, max, single, duplicidade, mismatch, vinculo, grupo/opcao inativos, pedidos validos, quantidade > 1 e ausencia de registros parciais.
+- A estrutura local e o build passaram; os notices PASS do teste so podem ser confirmados depois de executar 010 no Supabase.
 
 ## Notas
 

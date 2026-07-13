@@ -584,7 +584,8 @@ Legenda:
 - [x] Criar migration 009 para remover INSERT anonimo direto e manter a RPC como unica escrita publica.
 - [ ] Executar migration 009 e diagnostico 009 no Supabase remoto.
 - [ ] Repetir matriz anon/RPC/tracking/Admin Loja A x Loja B depois da aplicacao.
-- [ ] Validar required/min/max de adicionais dentro de `create_public_order`.
+- [x] Criar migration 010 para validar required/min/max e integridade de adicionais dentro de `create_public_order`.
+- [ ] Executar migration 010 e o teste rollback-only A-J no Supabase.
 - [ ] Aplicar entitlement comercial relevante no servidor e migrar platform/plans.
 - [ ] Migrar dashboard/pedidos globais do master sem N+1.
 - [ ] Adicionar rate limit, limites de payload, paginacao e testes automatizados de RLS/RPC/E2E.

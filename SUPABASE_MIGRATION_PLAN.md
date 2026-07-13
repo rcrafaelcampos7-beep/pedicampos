@@ -1039,3 +1039,11 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - Reafirma owner postgres, SECURITY DEFINER, `search_path=public` e grants restritos das RPCs create/get public order.
 - Apos executar, rode `supabase/diagnostics/009_lock_direct_order_writes_audit.sql` e a matriz checkout/tracking/admin/isolamento.
 - Nao editar nem reaplicar destrutivamente as migrations 007/008; a 009 e incremental e idempotente.
+
+## Migration 010 - validar regras de adicionais no pedido
+
+- Arquivo: `supabase/migrations/010_validate_order_additionals.sql`.
+- Substitui somente a implementacao da assinatura existente de `create_public_order`.
+- Valida antes de INSERT: IDs/tipos do payload, opcoes distintas, opcao no grupo informado, atividade, mesmo tenant, vinculo grupo/produto, required/min/max e single.
+- Preserva preco do catalogo, snapshots, atomicidade e configuracao de seguranca estabelecida pelas migrations 008/009.
+- Execute depois da 009 e rode `supabase/diagnostics/010_validate_order_additionals_test.sql`; o teste cria fixtures na transacao e finaliza com ROLLBACK.

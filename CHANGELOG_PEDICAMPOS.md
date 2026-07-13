@@ -1190,3 +1190,12 @@ Build:
 - Criado diagnostico read-only para grants, policies, owner, SECURITY DEFINER, search_path e funcoes DML anonimas.
 - Nenhuma alteracao de frontend, regra comercial ou layout foi feita; execucao remota permanece manual.
 - Build, node check, diff check e assercoes estruturais SQL passaram; matriz remota A-I ficou documentada como pendente pos-aplicacao.
+
+## 2026-07-13 - Validacao server-side de adicionais no pedido
+
+- Criada migration `010_validate_order_additionals.sql` com a assinatura existente de `create_public_order`.
+- A fase pre-write passou a validar required/min/max, selecao unica, duplicidade, correspondencia opcao/grupo, atividade e vinculo com produto/loja.
+- Preservados calculo server-side, snapshots, atomicidade, owner postgres, SECURITY DEFINER, search_path e grants da RPC.
+- Criado `010_validate_order_additionals_test.sql`, com fixtures isoladas, cenarios A-J e ROLLBACK final.
+- Nenhuma tela ou payload do checkout foi alterado; execucao remota permanece pendente.
+- Build, node check, diff check e cobertura estrutural A-J passaram localmente.

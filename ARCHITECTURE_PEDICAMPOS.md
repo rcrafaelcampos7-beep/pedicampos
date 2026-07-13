@@ -1116,3 +1116,11 @@ O legado restante esta concentrado em `usePediData` para platform/pedidos globai
 A migration 009 remove a dupla autorizacao antiga (GRANT de INSERT + policy publica) das quatro tabelas de snapshot. `anon` nao possui SELECT/INSERT/UPDATE/DELETE direto; a unica escrita publica e EXECUTE da identidade exata de `create_public_order`.
 
 A funcao roda como owner postgres/SECURITY DEFINER com `search_path=public`. `get_public_order` e a unica leitura publica do snapshot, limitada por token + slug. `authenticated` mantem privilegios de tabela, mas RLS aplica `can_access_store`: admin/staff ficam no tenant vinculado e master mantem o acesso previsto.
+
+### Invariantes de adicionais na fronteira de pedidos
+
+A migration 010 move para `create_public_order` as mesmas invariantes essenciais aplicadas pelo modal. Para cada item logico, a RPC cria um conjunto de option IDs sem duplicidade, valida o `groupId` informado e conta as selecoes por grupo ativo vinculado ao produto.
+
+Required usa no minimo `greatest(min_choices, 1)`; opcionais vazios continuam opcionais, mas uma selecao iniciada respeita `min_choices`; `max_choices > 0` limita qualquer grupo; single limita a uma opcao. A quantidade do produto nao entra nessa contagem e apenas multiplica o valor do item.
+
+Toda essa fase ocorre antes de customers/orders/items/additionals. Qualquer SQLSTATE 23514 aborta a chamada; mesmo uma falha posterior reverte a transacao completa. A assinatura e o payload React permanecem inalterados.
