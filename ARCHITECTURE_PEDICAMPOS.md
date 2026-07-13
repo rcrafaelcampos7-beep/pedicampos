@@ -1088,3 +1088,9 @@ Fallback local de lojas exige ausencia de client ou erro de transporte sem codig
 ### Identificadores em objetos hidratados
 
 O objeto raiz `store` reserva `id` para `stores.id`. Adaptadores de tabelas filhas devem usar nomes especificos: `store_settings.id` e `settingsId`, enquanto `storeId` e a FK. Alem do contrato do adapter, merges reafirmam explicitamente o ID raiz para nao depender da ordem dos spreads. Payment methods permanecem aninhados e nao sobrescrevem a loja.
+
+## Atualizacao do painel administrativo
+
+AdminRouter entrega a loja resolvida por Supabase Auth/store_users. AdminDashboard usa esse `store.id` para consultar pedidos e produtos em paralelo; AdminOrders consulta pedidos ao montar e depois de mutations. Nenhuma dessas telas usa o snapshot local como fonte operacional.
+
+Sem Realtime, consistencia e obtida por nova carga na entrada da rota, reload do navegador ou botao Atualizar. Nao ha polling.

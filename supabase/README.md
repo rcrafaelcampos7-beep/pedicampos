@@ -311,3 +311,9 @@ Na primeira lista/resolucao remota, `pedicampos.localMigration.supabaseStoresV1`
 ### ID de store_settings no frontend
 
 A PK `store_settings.id` e convertida para `settingsId`; a FK permanece `storeId`. Ao hidratar uma loja, `id` sempre significa `stores.id`. Isso evita que spreads de configuracao troquem o tenant enviado a consultas e RPCs. Nao existe alteracao de schema para esta correcao.
+
+### Dashboard e pedidos do admin
+
+AdminDashboard consulta pedidos e produtos da loja autenticada ao abrir. AdminOrders consulta pedidos ao abrir e depois de atualizar status. Ambas as telas possuem Atualizar manual; nao foi habilitado Realtime ou polling.
+
+Novos pedidos aparecem ao recarregar, navegar novamente para a rota ou clicar em Atualizar. As policies continuam limitando os dados ao `store_id` autorizado.

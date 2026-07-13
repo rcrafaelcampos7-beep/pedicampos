@@ -1158,3 +1158,10 @@ Build:
 - Merges em StorePage, CheckoutPage e AdminSettings passaram a reafirmar o ID da loja.
 - Auditados payment methods e outros merges; nenhum outro objeto filho era espalhado sobre store com `id` concorrente.
 - Pedido remoto `BB6F8698` foi criado e acompanhado com o store ID correto.
+
+## 2026-07-13 - Dashboard administrativo Supabase-first
+
+- AdminDashboard passou a buscar pedidos e produtos remotos ao montar.
+- Metricas e ultimos pedidos deixaram de usar o snapshot local de usePediData.
+- Adicionados estados de carregamento, erro e vazio.
+- Dashboard e AdminOrders receberam acao manual Atualizar, sem polling ou Realtime.

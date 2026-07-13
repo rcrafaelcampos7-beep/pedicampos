@@ -556,3 +556,13 @@ Legenda:
 - [x] Confirmar `store.id`, `settingsId` e `storeId` remotos.
 - [x] Criar pedido remoto e validar tracking com tenant correto.
 - [ ] Confirmar `BB6F8698` no admin, alterar status e remover pedido/cliente temporarios.
+
+## Dashboard admin Supabase - 2026-07-13
+
+- [x] Remover pedidos/produtos locais dos calculos do dashboard.
+- [x] Carregar pedidos e produtos remotos por `store.id` autorizado.
+- [x] Tratar loading, erro e lista vazia.
+- [x] Adicionar Atualizar no dashboard e pedidos.
+- [x] Confirmar que AdminOrders recarrega ao montar e apos mutation.
+- [ ] Validar metricas, status e retorno ao dashboard com sessao admin real.
+- [ ] Avaliar Realtime somente em etapa futura.

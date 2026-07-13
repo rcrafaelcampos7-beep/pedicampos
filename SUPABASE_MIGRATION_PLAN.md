@@ -1009,3 +1009,10 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - O conflito nao era de banco: a PK de `store_settings` sobrescrevia a PK de `stores` no objeto React.
 - Adapter agora usa `settingsId`; merges preservam `store.id` explicitamente.
 - Nenhuma migration/RPC foi alterada. Pedido remoto de verificacao foi criado com tenant correto.
+
+## Painel administrativo depois de pedidos
+
+- AdminDashboard foi conectado a `getOrdersByStore` e `getProductsByStore`.
+- AdminOrders ja recarregava na entrada e apos status; recebeu refresh manual.
+- Nao houve mudanca SQL. Realtime permanece opcional para etapa posterior.
+- Pendente validacao visual autenticada das metricas e sincronizacao por nova carga.

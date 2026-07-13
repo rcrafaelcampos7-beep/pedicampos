@@ -1105,6 +1105,14 @@ Build:
 - StorePage, CheckoutPage e AdminSettings reafirmam explicitamente o ID raiz depois dos merges.
 - Teste remoto criou o pedido temporario `BB6F8698` com store ID `129ee8d4-e7ae-4aad-9d64-2e7489efe8b1`; tracking retornou o mesmo tenant.
 
+### Dashboard administrativo remoto - 2026-07-13
+
+- AdminDashboard deixou de calcular metricas com `usePediData().orders`/localStorage.
+- Ao abrir, carrega em paralelo `getOrdersByStore(store.id)` e `getProductsByStore(store.id)`.
+- Pedidos de hoje, faturamento, em preparo, produtos ativos, ticket medio e ultimos pedidos usam os resultados remotos.
+- AdminDashboard e AdminOrders possuem botao Atualizar; AdminOrders tambem recarrega ao montar e depois de alterar status.
+- Realtime continua pendente e nao e necessario nesta etapa: navegar, recarregar ou atualizar executa nova consulta.
+
 1. Conferir no Table Editor se as 15 tabelas do schema foram criadas.
 2. Conferir RLS, policies, indices e triggers de `updated_at`.
 3. Criar `.env.local` com `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` reais.

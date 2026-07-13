@@ -70,10 +70,15 @@ export function AdminOrders({ activePath, store }) {
       <section className="panel-section">
         <div className="panel-heading">
           <div><span className="eyebrow">Pedidos</span><h2>Pedidos da loja</h2></div>
-          <select value={filter} onChange={(event) => setFilter(event.target.value)}>
-            <option value="todos">Todos os status</option>
-            {Object.values(ORDER_STATUS).map((status) => <option key={status} value={status}>{status}</option>)}
-          </select>
+          <div className="row-actions">
+            <select value={filter} onChange={(event) => setFilter(event.target.value)}>
+              <option value="todos">Todos os status</option>
+              {Object.values(ORDER_STATUS).map((status) => <option key={status} value={status}>{status}</option>)}
+            </select>
+            <Button variant="secondary" size="sm" disabled={loading || pending} onClick={loadOrders}>
+              {loading ? "Atualizando..." : "Atualizar"}
+            </Button>
+          </div>
         </div>
         {error ? <div className="form-error">{error}</div> : null}
         {loading ? <Card><p>Carregando pedidos...</p></Card> : null}
