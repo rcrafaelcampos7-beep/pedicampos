@@ -481,6 +481,7 @@ export async function createStore(data = {}) {
       .eq("slug", slug)
       .maybeSingle();
 
+    if (lookupError) useLocalForConnectionFailure("createStore lookup", lookupError);
     if (!lookupError && existing) return getStoreById(existing.id);
 
     const { data: created, error } = await supabase
@@ -490,7 +491,7 @@ export async function createStore(data = {}) {
       .single();
 
     if (!error) return storeFromSupabase(created);
-    warnAndUseLocal("createStore", error);
+    useLocalForConnectionFailure("createStore", error);
   }
 
   mutateDatabase((database) => {
@@ -512,7 +513,7 @@ export async function updateStore(id, data) {
       .single();
 
     if (!error) return storeFromSupabase(updated);
-    warnAndUseLocal("updateStore", error);
+    useLocalForConnectionFailure("updateStore", error);
   }
 
   updateStorageStore(id, data);
@@ -538,7 +539,7 @@ export async function updateStorePublicProfile(storeId, data) {
     });
 
     if (!error) return storeFromSupabase(updated);
-    warnAndUseLocal("updateStorePublicProfile", error);
+    useLocalForConnectionFailure("updateStorePublicProfile", error);
   }
 
   updateStorageStore(storeId, data);
@@ -570,7 +571,7 @@ export async function getStoreSettings(storeId) {
     .maybeSingle();
 
   if (error) {
-    warnAndUseLocal("getStoreSettings", error);
+    useLocalForConnectionFailure("getStoreSettings", error);
     const store = getLocalStoreById(storeId);
     return store ? storeSettingsFromSupabase({
       store_id: storeId,
@@ -599,7 +600,7 @@ export async function updateStoreSettings(storeId, data) {
       .single();
 
     if (!error) return storeSettingsFromSupabase(updated);
-    warnAndUseLocal("updateStoreSettings", error);
+    useLocalForConnectionFailure("updateStoreSettings", error);
   }
 
   updateStorageStore(storeId, data);
@@ -616,7 +617,7 @@ export async function getPaymentMethodsByStore(storeId) {
     .eq("store_id", storeId);
 
   if (error) {
-    warnAndUseLocal("getPaymentMethodsByStore", error);
+    useLocalForConnectionFailure("getPaymentMethodsByStore", error);
     return getLocalStoreById(storeId)?.paymentMethods || {};
   }
 
@@ -642,7 +643,7 @@ export async function updatePaymentMethods(storeId, methods = {}) {
       .upsert(rows, { onConflict: "store_id,type" });
 
     if (!error) return getPaymentMethodsByStore(storeId);
-    warnAndUseLocal("updatePaymentMethods", error);
+    useLocalForConnectionFailure("updatePaymentMethods", error);
   }
 
   updateStorageStore(storeId, { paymentMethods: methods });
@@ -663,7 +664,7 @@ export async function getProductsByStore(storeId) {
     .order("sort_order", { ascending: true });
 
   if (error) {
-    warnAndUseLocal("getProductsByStore", error);
+    useLocalForConnectionFailure("getProductsByStore", error);
     return getLocalStoreById(storeId)?.products || [];
   }
 
@@ -692,7 +693,7 @@ export async function createProduct(storeId, data = {}) {
       .single();
 
     if (!error) return productFromSupabase(created);
-    warnAndUseLocal("createProduct", error);
+    useLocalForConnectionFailure("createProduct", error);
   }
 
   updateStorageStore(storeId, (store) => ({
@@ -713,7 +714,7 @@ export async function updateProduct(productId, data) {
       .maybeSingle();
 
     if (!error) return productFromSupabase(updated);
-    warnAndUseLocal("updateProduct", error);
+    useLocalForConnectionFailure("updateProduct", error);
   }
 
   const store = getStoreContaining("products", productId);
@@ -739,7 +740,7 @@ export async function deleteProduct(productId) {
       .maybeSingle();
 
     if (!error) return deleted?.id || null;
-    warnAndUseLocal("deleteProduct", error);
+    useLocalForConnectionFailure("deleteProduct", error);
   }
 
   const store = getStoreContaining("products", productId);
@@ -767,7 +768,7 @@ export async function getCategoriesByStore(storeId) {
     .order("sort_order", { ascending: true });
 
   if (error) {
-    warnAndUseLocal("getCategoriesByStore", error);
+    useLocalForConnectionFailure("getCategoriesByStore", error);
     return getLocalStoreById(storeId)?.categories || [];
   }
 
@@ -792,7 +793,7 @@ export async function createCategory(storeId, data = {}) {
       .single();
 
     if (!error) return categoryFromSupabase(created);
-    warnAndUseLocal("createCategory", error);
+    useLocalForConnectionFailure("createCategory", error);
   }
 
   updateStorageStore(storeId, (store) => ({
@@ -813,7 +814,7 @@ export async function updateCategory(categoryId, data) {
       .maybeSingle();
 
     if (!error) return categoryFromSupabase(updated);
-    warnAndUseLocal("updateCategory", error);
+    useLocalForConnectionFailure("updateCategory", error);
   }
 
   const store = getStoreContaining("categories", categoryId);
@@ -839,7 +840,7 @@ export async function deleteCategory(categoryId) {
       .maybeSingle();
 
     if (!error) return deleted?.id || null;
-    warnAndUseLocal("deleteCategory", error);
+    useLocalForConnectionFailure("deleteCategory", error);
   }
 
   const store = getStoreContaining("categories", categoryId);
@@ -867,7 +868,7 @@ export async function getAdditionalGroupsByStore(storeId) {
 
   const error = groupsResult.error || optionsResult.error || linksResult.error;
   if (error) {
-    warnAndUseLocal("getAdditionalGroupsByStore", error);
+    useLocalForConnectionFailure("getAdditionalGroupsByStore", error);
     return getLocalStoreById(storeId)?.additionalGroups || [];
   }
 
@@ -946,7 +947,7 @@ export async function createAdditionalGroup(storeId, data = {}) {
     try {
       return await saveAdditionalGroupToSupabase(storeId, null, group);
     } catch (error) {
-      warnAndUseLocal("createAdditionalGroup", error);
+      useLocalForConnectionFailure("createAdditionalGroup", error);
     }
   }
 
@@ -968,7 +969,7 @@ export async function updateAdditionalGroup(groupId, data) {
 
     if (!lookupError && !groupRow) return null;
     if (lookupError) {
-      warnAndUseLocal("updateAdditionalGroup lookup", lookupError);
+      useLocalForConnectionFailure("updateAdditionalGroup lookup", lookupError);
     } else {
       const currentGroups = await getAdditionalGroupsByStore(groupRow.store_id);
       const current = currentGroups.find((group) => group.id === groupId);
@@ -977,7 +978,7 @@ export async function updateAdditionalGroup(groupId, data) {
       try {
         return await saveAdditionalGroupToSupabase(current.storeId, groupId, { ...current, ...data });
       } catch (error) {
-        warnAndUseLocal("updateAdditionalGroup", error);
+        useLocalForConnectionFailure("updateAdditionalGroup", error);
       }
     }
   }
@@ -1005,7 +1006,7 @@ export async function deleteAdditionalGroup(groupId) {
       .maybeSingle();
 
     if (!error) return deleted?.id || null;
-    warnAndUseLocal("deleteAdditionalGroup", error);
+    useLocalForConnectionFailure("deleteAdditionalGroup", error);
   }
 
   const store = getAdditionalGroupStore(groupId);

@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MasterLayout } from "../components/master/MasterLayout.jsx";
 import { Button } from "../components/ui/Button.jsx";
 import { Card } from "../components/ui/Card.jsx";
 import { PlanCard } from "../components/ui/PlanCard.jsx";
 import { Select } from "../components/ui/Input.jsx";
 import { usePediData } from "../hooks/usePediData.js";
-import { updateStore } from "../services/storage.js";
+import { updateStore } from "../services/database.js";
 import { formatCurrency } from "../utils/formatCurrency.js";
 import { getActivePlans, getPlanName, getPlanPriceLabel, PLAN_KEYS } from "../utils/plans.js";
 
@@ -13,14 +13,29 @@ export function MasterPlans({ activePath }) {
   const { stores, platform } = usePediData();
   const [storeId, setStoreId] = useState(stores[0]?.id || "");
   const [plan, setPlan] = useState("pro");
+  const [saving, setSaving] = useState(false);
+  const [feedback, setFeedback] = useState("");
   const activePlans = getActivePlans(platform).map((item) => ({
     ...item,
     price: item.priceLabel || `${formatCurrency(item.price)}/mês`,
   }));
 
-  function assignPlan() {
-    if (!storeId) return;
-    updateStore(storeId, { plan });
+  useEffect(() => {
+    if (!storeId && stores[0]?.id) setStoreId(stores[0].id);
+  }, [storeId, stores]);
+
+  async function assignPlan() {
+    if (!storeId || saving) return;
+    setSaving(true);
+    setFeedback("");
+    try {
+      await updateStore(storeId, { plan });
+      setFeedback("Plano atualizado com sucesso.");
+    } catch {
+      setFeedback("Não foi possível atualizar o plano da loja. Tente novamente.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -56,8 +71,9 @@ export function MasterPlans({ activePath }) {
             ))}
           </Select>
         </div>
-        <Button variant="primary" onClick={assignPlan}>
-          Salvar plano da loja
+        {feedback ? <p role="status">{feedback}</p> : null}
+        <Button variant="primary" onClick={assignPlan} disabled={!storeId || saving}>
+          {saving ? "Salvando..." : "Salvar plano da loja"}
         </Button>
       </Card>
     </MasterLayout>

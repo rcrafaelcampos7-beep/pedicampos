@@ -1100,3 +1100,19 @@ Sem Realtime, consistencia e obtida por nova carga na entrada da rota, reload do
 `orderStatus.js` e a fonte unica das sequencias. Delivery percorre OUT_FOR_DELIVERY; pickup percorre READY_FOR_PICKUP. Componentes recebem `order.fulfillment` e normalizam valores antigos antes de calcular progresso ou rotulo.
 
 A compatibilidade e somente de leitura/apresentacao: um pickup salvo como `out_for_delivery` ou “Saiu para entrega” aparece como “Pronto para retirada”. Nenhuma reescrita de historico ou migration e feita.
+
+## Auditoria de fronteiras - Sprint 1
+
+Nas entidades migradas, fallback e estrategia de disponibilidade, nao alternativa para erro de autorizacao ou integridade. Client ausente/falha de transporte pode usar storage; erros com codigo Postgres/PostgREST sao propagados. Isso impede estado local divergente depois de RLS, FK, schema ou validacao.
+
+AdminRouter continua sendo a fronteira de tenant: resolve `auth.uid()` em `store_users` e entrega a loja autorizada. URLs e formularios nao definem o UUID operacional. StorePage/Checkout usam slug remoto estrito e a RPC recalcula precos.
+
+O schema atual ainda contradiz a intencao de RPC unica: existem policies de INSERT para anon nas quatro tabelas de pedidos. Antes de producao, uma migration deve revogar essa via direta e preservar apenas EXECUTE da funcao validada. Tambem permanecem server-side: required/min/max de adicionais, entitlement comercial e protecao de abuso.
+
+O legado restante esta concentrado em `usePediData` para platform/pedidos globais do master e em `storage.js` para fallback. Nao deve ser removido sem a migracao dessas dependencias, mas nao pode voltar a ser fonte operacional das entidades ja remotas.
+
+### Fronteira publica exclusiva de pedidos
+
+A migration 009 remove a dupla autorizacao antiga (GRANT de INSERT + policy publica) das quatro tabelas de snapshot. `anon` nao possui SELECT/INSERT/UPDATE/DELETE direto; a unica escrita publica e EXECUTE da identidade exata de `create_public_order`.
+
+A funcao roda como owner postgres/SECURITY DEFINER com `search_path=public`. `get_public_order` e a unica leitura publica do snapshot, limitada por token + slug. `authenticated` mantem privilegios de tabela, mas RLS aplica `can_access_store`: admin/staff ficam no tenant vinculado e master mantem o acesso previsto.

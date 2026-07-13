@@ -1127,3 +1127,21 @@ Build:
 5. Testar conexao basica Supabase com `src/services/supabaseClient.js`.
 6. Manter `database.js` com `storage.js/localStorage` como fallback.
 7. Depois migrar primeiro `getStores()`, `getStoreBySlug()`, `createStore()` e `updateStore()`.
+
+### Auditoria de producao - Sprint 1 - 2026-07-13
+
+- Relatorio completo criado em `AUDIT_PEDICAMPOS_SPRINT1.md`.
+- Corrigido o fallback amplo: entidades migradas so usam storage quando o client nao existe ou ha falha real de transporte; RLS, FK, schema e validacao agora chegam a UI.
+- MasterPlans passou a atualizar `stores.plan_key` pelo adapter Supabase-first, com bloqueio de envio duplicado e feedback.
+- Bloqueador critico documentado: policies base ainda permitem INSERT anonimo direto em tabelas de pedidos e podem contornar `create_public_order`.
+- Painel master global, configuracao comercial/entitlements, paginacao, antiabuso e testes automatizados permanecem pendentes antes de producao.
+- Build, `node --check` e `git diff --check` passaram; o build confirmou chunk JS de 537,52 kB e tres PNGs entre 1,57 MB e 2,38 MB.
+
+### Bloqueio da escrita anonima direta - 2026-07-13
+
+- O schema concedia INSERT a `anon, authenticated` e mantinha quatro policies publicas nas tabelas de pedidos.
+- Criada `009_lock_direct_order_writes.sql`: `PUBLIC`/`anon` ficam sem privilegios diretos nas quatro tabelas; as policies publicas sao removidas.
+- `authenticated` preserva CRUD, sempre limitado pelas policies `can_access_store(store_id)`; master continua abrangido por essa funcao.
+- `create_public_order` e `get_public_order` mantem owner postgres, SECURITY DEFINER, `search_path=public` e EXECUTE somente para anon/authenticated.
+- Aplicacao e testes remotos permanecem manuais; o diagnostico read-only 009 deve ser executado depois da migration.
+- Validacao estrutural local, build, checks JS e diff check passaram; testes A-I continuam pendentes ate a aplicacao remota.

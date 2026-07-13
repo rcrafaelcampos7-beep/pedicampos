@@ -24,17 +24,17 @@ Admin da loja:
 
 ```text
 http://127.0.0.1:5174/admin
-admin@neguinho.com
-123456
 ```
+
+Use um usuario criado no Supabase Auth e vinculado como `store_admin` ou `store_staff` ativo em `store_users`. Nao existem credenciais fixas de producao no frontend.
 
 Master:
 
 ```text
 http://127.0.0.1:5174/master
-master@pedicampos.com.br
-123456
 ```
+
+Use um usuario do Supabase Auth vinculado como `master` ativo em `store_users`. O fallback fake exige build DEV e flag de ambiente explicita; nao deve ser habilitado no dominio.
 
 Lojas demo:
 
@@ -42,3 +42,9 @@ Lojas demo:
 http://127.0.0.1:5174/neguinhodoacai
 http://127.0.0.1:5174/gordinhoburguer
 ```
+
+Com Supabase configurado, lojas remotas sao a fonte de verdade. As lojas demo locais acima so existem no fallback e podem nao aparecer no ambiente remoto.
+
+## Auditoria de producao
+
+Consulte `AUDIT_PEDICAMPOS_SPRINT1.md`. A migration 009 foi preparada para remover INSERT anonimo direto das tabelas de pedidos e manter `create_public_order` como unica fronteira publica de escrita; ela ainda deve ser executada e validada no Supabase antes do go-live. A auditoria tambem registra pendencias de validacao server-side, painel master, paginacao, antiabuso, bundle e testes automatizados.

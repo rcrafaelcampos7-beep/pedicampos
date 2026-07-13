@@ -323,3 +323,19 @@ Novos pedidos aparecem ao recarregar, navegar novamente para a rota ou clicar em
 O frontend usa `orders.fulfillment`: `delivery` mostra “Saiu para entrega” e `pickup` mostra “Pronto para retirada”. A mesma funcao alimenta timeline e botoes do admin.
 
 Pedidos pickup antigos com `out_for_delivery`/“Saiu para entrega” sao apresentados como prontos para retirada. O valor historico nao e modificado no banco.
+
+## Auditoria de producao - Sprint 1
+
+O relatorio `AUDIT_PEDICAMPOS_SPRINT1.md` identificou um bloqueador: o schema base ainda possui policies de INSERT para anon em customers, orders, order_items e order_item_additionals. Como a migration 008 torna a RPC SECURITY DEFINER, a escrita publica direta nao e necessaria e permite contornar validacoes/totais da funcao.
+
+Nenhuma policy foi alterada nesta sprint. Antes do go-live, crie e revise uma migration incremental que remova somente a via de INSERT direto para anon, mantenha RLS e preserve EXECUTE em `create_public_order`. Valide tambem required/min/max de adicionais dentro da RPC, rate limit/limites de payload e a configuracao remota real de grants/owner/search_path.
+
+No frontend, adapters migrados agora propagam RLS/FK/schema/validacao e so usam storage em falha real de transporte ou client ausente. Isso evita sucesso local falso.
+
+### Migration 009 - RPC como unica escrita publica
+
+Execute `supabase/migrations/009_lock_direct_order_writes.sql` depois da 008. Ela remove os grants/policies que permitiam INSERT anonimo direto nas quatro tabelas do pedido. Nao conceda privilegios de tabela novamente ao anon.
+
+Depois execute `supabase/diagnostics/009_lock_direct_order_writes_audit.sql`. As tres mensagens PASS confirmam ausencia de privilegios/policies publicos e endurecimento das RPCs. Em seguida teste checkout, tracking, admin da mesma loja e isolamento com outra loja. A migration preserva os grants de authenticated, mas o acesso continua limitado pelas policies RLS existentes.
+
+O diagnostico de catalogo cobre A-D/F sem criar dados: sem privilegio efetivo de tabela, o papel anon falha antes mesmo da avaliacao RLS. E/G/H/I exigem o teste funcional no projeto remoto depois da 009; nao os considere aprovados apenas porque o arquivo local foi criado.

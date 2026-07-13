@@ -1172,3 +1172,21 @@ Build:
 - Timeline e acoes administrativas agora variam entre delivery e pickup.
 - Status legado de entrega em pedido pickup e normalizado apenas na apresentacao.
 - Badges, filtros do admin e template WhatsApp seguem a mesma regra compartilhada.
+
+## 2026-07-13 - Auditoria de producao Sprint 1
+
+- Criado `AUDIT_PEDICAMPOS_SPRINT1.md` com achados criticos, altos, medios e baixos.
+- CRUD Supabase-first deixou de converter erros RLS/FK/schema/validacao em gravacoes locais aparentes; fallback permanece apenas para conectividade/client ausente.
+- MasterPlans deixou de gravar plano somente no localStorage e passou a usar `database.updateStore` assincrono.
+- Documentado como bloqueador o INSERT anonimo direto nas tabelas de pedidos, alem de pendencias de validacao da RPC, entitlement, painel master, escala e testes.
+- Nenhuma migration, layout, regra comercial, commit ou push foi realizado.
+- Build, checks JS e diff check passaram; o alerta de chunk acima de 500 kB foi registrado como pendencia de performance.
+
+## 2026-07-13 - Bloqueio de escrita anonima direta em pedidos
+
+- Criada migration idempotente `009_lock_direct_order_writes.sql`.
+- Removidas as quatro policies publicas de INSERT e revogados todos os privilegios diretos de tabela de `PUBLIC` e `anon`.
+- Preservados CRUD de authenticated sob RLS e EXECUTE anon/authenticated nas RPCs publicas endurecidas.
+- Criado diagnostico read-only para grants, policies, owner, SECURITY DEFINER, search_path e funcoes DML anonimas.
+- Nenhuma alteracao de frontend, regra comercial ou layout foi feita; execucao remota permanece manual.
+- Build, node check, diff check e assercoes estruturais SQL passaram; matriz remota A-I ficou documentada como pendente pos-aplicacao.

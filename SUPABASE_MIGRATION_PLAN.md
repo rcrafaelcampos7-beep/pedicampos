@@ -1022,3 +1022,20 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - Ajuste exclusivamente frontend; `orders.fulfillment` ja diferencia delivery/pickup.
 - Timeline e admin usam funcoes compartilhadas e status pickup especifico.
 - Legado e normalizado visualmente. Nenhuma migration ou mudanca de dados foi necessaria.
+
+## Auditoria de producao - Sprint 1
+
+- Nenhuma migration foi criada nesta auditoria.
+- Prioridade critica da proxima etapa SQL: retirar INSERT anonimo direto de customers, orders, order_items e order_item_additionals, deixando `create_public_order` como unica fronteira publica de escrita.
+- Endurecimentos seguintes: validar required/min/max dos adicionais na RPC, limites de payload/abuso, constraints de dominio e entitlement comercial server-side.
+- Antes de qualquer SQL, auditar policies/grants e definicao efetivamente instalados no projeto remoto; os achados desta sprint vieram dos arquivos locais.
+- Manter indices atuais por tenant e acrescentar somente indices guiados pelas consultas paginadas/EXPLAIN.
+
+## Migration 009 - bloquear escrita anonima direta
+
+- Arquivo: `supabase/migrations/009_lock_direct_order_writes.sql`.
+- Remove policies `Public can create ...` de customers, orders, order_items e order_item_additionals.
+- Revoga todos os privilegios dessas tabelas de `PUBLIC` e `anon`; reafirma CRUD de authenticated sob RLS.
+- Reafirma owner postgres, SECURITY DEFINER, `search_path=public` e grants restritos das RPCs create/get public order.
+- Apos executar, rode `supabase/diagnostics/009_lock_direct_order_writes_audit.sql` e a matriz checkout/tracking/admin/isolamento.
+- Nao editar nem reaplicar destrutivamente as migrations 007/008; a 009 e incremental e idempotente.
