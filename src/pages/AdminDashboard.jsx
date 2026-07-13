@@ -85,7 +85,7 @@ export function AdminDashboard({ activePath, store }) {
                     <td>{order.customer.name}</td>
                     <td>{formatCurrency(order.total)}</td>
                     <td><StatusBadge status={order.paymentStatus} /></td>
-                    <td><StatusBadge status={order.orderStatus} /></td>
+                    <td><StatusBadge status={order.orderStatus} fulfillment={order.fulfillment} /></td>
                   </tr>
                 ))}
               </tbody>

@@ -1165,3 +1165,10 @@ Build:
 - Metricas e ultimos pedidos deixaram de usar o snapshot local de usePediData.
 - Adicionados estados de carregamento, erro e vazio.
 - Dashboard e AdminOrders receberam acao manual Atualizar, sem polling ou Realtime.
+
+## 2026-07-13 - Timeline especifica por atendimento
+
+- Adicionado status “Pronto para retirada”.
+- Timeline e acoes administrativas agora variam entre delivery e pickup.
+- Status legado de entrega em pedido pickup e normalizado apenas na apresentacao.
+- Badges, filtros do admin e template WhatsApp seguem a mesma regra compartilhada.

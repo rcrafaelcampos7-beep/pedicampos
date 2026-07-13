@@ -566,3 +566,12 @@ Legenda:
 - [x] Confirmar que AdminOrders recarrega ao montar e apos mutation.
 - [ ] Validar metricas, status e retorno ao dashboard com sessao admin real.
 - [ ] Avaliar Realtime somente em etapa futura.
+
+## Timeline delivery x pickup - 2026-07-13
+
+- [x] Centralizar sequencias e acoes por fulfillment.
+- [x] Usar Pronto para retirada em pedidos pickup.
+- [x] Remover Saiu para entrega das acoes de retirada.
+- [x] Normalizar status legado sem migration.
+- [x] Atualizar tracking, badges, filtro admin e mensagem WhatsApp.
+- [ ] Validar visualmente pedido real de entrega, retirada e legado.

@@ -1,12 +1,18 @@
-import { isOrderStepDone, ORDER_STATUS, ORDER_TIMELINE } from "../../utils/orderStatus.js";
+import {
+  getOrderTimeline,
+  isOrderStepDone,
+  normalizeOrderStatusForFulfillment,
+  ORDER_STATUS,
+} from "../../utils/orderStatus.js";
 
-export function OrderTimeline({ status }) {
-  const steps = status === ORDER_STATUS.CANCELED ? [ORDER_STATUS.CANCELED] : ORDER_TIMELINE;
+export function OrderTimeline({ status, fulfillment }) {
+  const normalizedStatus = normalizeOrderStatusForFulfillment(status, fulfillment);
+  const steps = normalizedStatus === ORDER_STATUS.CANCELED ? [ORDER_STATUS.CANCELED] : getOrderTimeline(fulfillment);
 
   return (
-    <ol className={`timeline ${status === ORDER_STATUS.CANCELED ? "timeline-canceled" : ""}`.trim()}>
+    <ol className={`timeline ${normalizedStatus === ORDER_STATUS.CANCELED ? "timeline-canceled" : ""}`.trim()}>
       {steps.map((step) => (
-        <li key={step} className={isOrderStepDone(status, step) || status === step ? "done" : ""}>
+        <li key={step} className={isOrderStepDone(normalizedStatus, step, fulfillment) || normalizedStatus === step ? "done" : ""}>
           <span />
           <strong>{step}</strong>
         </li>

@@ -1113,6 +1113,13 @@ Build:
 - AdminDashboard e AdminOrders possuem botao Atualizar; AdminOrders tambem recarrega ao montar e depois de alterar status.
 - Realtime continua pendente e nao e necessario nesta etapa: navegar, recarregar ou atualizar executa nova consulta.
 
+### Timeline por tipo de pedido - 2026-07-13
+
+- O campo real e `order.fulfillment`, com valores `delivery` e `pickup`.
+- Entrega usa “Saiu para entrega”; retirada usa “Pronto para retirada” na timeline, badges, filtros e acoes do admin.
+- Funcoes compartilhadas em `orderStatus.js` fornecem timeline, acoes e normalizacao conforme fulfillment.
+- Pedidos antigos pickup com `out_for_delivery` ou “Saiu para entrega” sao exibidos como “Pronto para retirada”, sem alterar o banco.
+
 1. Conferir no Table Editor se as 15 tabelas do schema foram criadas.
 2. Conferir RLS, policies, indices e triggers de `updated_at`.
 3. Criar `.env.local` com `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` reais.

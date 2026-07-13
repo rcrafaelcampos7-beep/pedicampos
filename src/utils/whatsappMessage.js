@@ -41,6 +41,7 @@ export function generateWhatsAppMessage(order, status) {
     "Pedido recebido": `Olá, ${customer}! Seu pedido #${number} foi recebido pela ${storeName}.\n${trackingDetails}`,
     "Em preparo": `Olá, ${customer}! Seu pedido #${number} está em preparo na ${storeName}.\n${trackingDetails}`,
     "Saiu para entrega": `Olá, ${customer}! Seu pedido #${number} saiu para entrega.\n${trackingDetails}`,
+    "Pronto para retirada": `Olá, ${customer}! Seu pedido #${number} está pronto para retirada.\n${trackingDetails}`,
     Finalizado: `Olá, ${customer}! Seu pedido #${number} foi finalizado. Obrigado por comprar na ${storeName}!`,
     Cancelado: `Olá, ${customer}! Seu pedido #${number} foi cancelado pela ${storeName}. Fale conosco pelo WhatsApp para mais detalhes.`,
   };

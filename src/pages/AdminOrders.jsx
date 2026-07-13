@@ -8,17 +8,9 @@ import { StatusBadge } from "../components/ui/StatusBadge.jsx";
 import { usePediData } from "../hooks/usePediData.js";
 import { getOrdersByStore, updateOrder } from "../services/database.js";
 import { formatCurrency } from "../utils/formatCurrency.js";
-import { ORDER_STATUS, PAYMENT_STATUS } from "../utils/orderStatus.js";
+import { getOrderStatusActions, normalizeOrderStatusForFulfillment, ORDER_STATUS, PAYMENT_STATUS } from "../utils/orderStatus.js";
 import { planHasFeature } from "../utils/plans.js";
 import { generateWhatsAppMessage } from "../utils/whatsappMessage.js";
-
-const statusActions = [
-  ORDER_STATUS.RECEIVED,
-  ORDER_STATUS.PREPARING,
-  ORDER_STATUS.OUT_FOR_DELIVERY,
-  ORDER_STATUS.FINISHED,
-  ORDER_STATUS.CANCELED,
-];
 
 export function AdminOrders({ activePath, store }) {
   const { platform } = usePediData();
@@ -28,7 +20,9 @@ export function AdminOrders({ activePath, store }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
-  const filteredOrders = filter === "todos" ? orders : orders.filter((order) => order.orderStatus === filter);
+  const filteredOrders = filter === "todos"
+    ? orders
+    : orders.filter((order) => normalizeOrderStatusForFulfillment(order.orderStatus, order.fulfillment) === filter);
   const selectedOrder = useMemo(() => orders.find((order) => order.id === selectedOrderId), [orders, selectedOrderId]);
 
   async function loadOrders() {
@@ -90,7 +84,7 @@ export function AdminOrders({ activePath, store }) {
                 <tr key={order.id}>
                   <td>#{order.number}</td><td>{order.customer.name}</td><td>{order.customer.phone}</td>
                   <td>{formatCurrency(order.total)}</td><td><StatusBadge status={order.paymentStatus} /></td>
-                  <td><StatusBadge status={order.orderStatus} /></td>
+                  <td><StatusBadge status={order.orderStatus} fulfillment={order.fulfillment} /></td>
                   <td>{new Date(order.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</td>
                   <td><Button variant="secondary" size="sm" onClick={() => setSelectedOrderId(order.id)}>Ver</Button></td>
                 </tr>
@@ -106,7 +100,7 @@ export function AdminOrders({ activePath, store }) {
             <div className="detail-grid">
               <Card><h3>Cliente</h3><p>{selectedOrder.customer.name}</p><p>{selectedOrder.customer.phone}</p></Card>
               <Card><h3>Pagamento</h3><p>{selectedOrder.paymentMethod}</p><StatusBadge status={selectedOrder.paymentStatus} /></Card>
-              <Card><h3>Status</h3><StatusBadge status={selectedOrder.orderStatus} /></Card>
+              <Card><h3>Status</h3><StatusBadge status={selectedOrder.orderStatus} fulfillment={selectedOrder.fulfillment} /></Card>
             </div>
             <Card>
               <h3>Itens</h3>
@@ -123,7 +117,7 @@ export function AdminOrders({ activePath, store }) {
             {selectedOrder.address ? <Card><h3>Endereço</h3><p>{selectedOrder.address.street}, {selectedOrder.address.number} - {selectedOrder.address.district}{selectedOrder.address.complement ? `, ${selectedOrder.address.complement}` : ""}</p>{selectedOrder.notes ? <p>Obs: {selectedOrder.notes}</p> : null}</Card> : null}
             <div className="action-grid">
               <Button variant="success" disabled={pending} onClick={() => changeOrder(selectedOrder.id, { paymentStatus: PAYMENT_STATUS.APPROVED, orderStatus: ORDER_STATUS.PAYMENT_CONFIRMED })}>Confirmar pagamento</Button>
-              {statusActions.map((status) => <Button key={status} variant="secondary" disabled={pending} onClick={() => changeOrder(selectedOrder.id, { orderStatus: status })}>{status}</Button>)}
+              {getOrderStatusActions(selectedOrder.fulfillment).map((status) => <Button key={status} variant="secondary" disabled={pending} onClick={() => changeOrder(selectedOrder.id, { orderStatus: status })}>{status}</Button>)}
             </div>
             {planHasFeature(store.plan, "whatsappAutomation", platform) ? <Card className="whatsapp-preview"><span>Prévia da mensagem automática de WhatsApp</span><p>{generateWhatsAppMessage(selectedOrder, selectedOrder.orderStatus)}</p></Card> : null}
           </div>

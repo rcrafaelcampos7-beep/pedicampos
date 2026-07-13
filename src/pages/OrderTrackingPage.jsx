@@ -63,7 +63,7 @@ export function OrderTrackingPage({ slug, orderId }) {
           <span className="brand-mark">{order.storeName.slice(0, 2)}</span>
           <strong>{order.storeName}</strong>
         </Link>
-        <StatusBadge status={order.orderStatus} />
+        <StatusBadge status={order.orderStatus} fulfillment={order.fulfillment} />
       </header>
 
       <main className="order-grid">
@@ -82,7 +82,7 @@ export function OrderTrackingPage({ slug, orderId }) {
                 <StatusBadge status={order.paymentStatus} />
               </div>
             </div>
-            <OrderTimeline status={order.orderStatus} />
+            <OrderTimeline status={order.orderStatus} fulfillment={order.fulfillment} />
           </Card>
 
           <Card className="whatsapp-preview">

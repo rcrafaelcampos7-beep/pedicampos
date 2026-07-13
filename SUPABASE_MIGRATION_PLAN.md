@@ -1016,3 +1016,9 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - AdminOrders ja recarregava na entrada e apos status; recebeu refresh manual.
 - Nao houve mudanca SQL. Realtime permanece opcional para etapa posterior.
 - Pendente validacao visual autenticada das metricas e sincronizacao por nova carga.
+
+## Status por entrega/retirada
+
+- Ajuste exclusivamente frontend; `orders.fulfillment` ja diferencia delivery/pickup.
+- Timeline e admin usam funcoes compartilhadas e status pickup especifico.
+- Legado e normalizado visualmente. Nenhuma migration ou mudanca de dados foi necessaria.

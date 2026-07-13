@@ -317,3 +317,9 @@ A PK `store_settings.id` e convertida para `settingsId`; a FK permanece `storeId
 AdminDashboard consulta pedidos e produtos da loja autenticada ao abrir. AdminOrders consulta pedidos ao abrir e depois de atualizar status. Ambas as telas possuem Atualizar manual; nao foi habilitado Realtime ou polling.
 
 Novos pedidos aparecem ao recarregar, navegar novamente para a rota ou clicar em Atualizar. As policies continuam limitando os dados ao `store_id` autorizado.
+
+### Status por fulfillment
+
+O frontend usa `orders.fulfillment`: `delivery` mostra “Saiu para entrega” e `pickup` mostra “Pronto para retirada”. A mesma funcao alimenta timeline e botoes do admin.
+
+Pedidos pickup antigos com `out_for_delivery`/“Saiu para entrega” sao apresentados como prontos para retirada. O valor historico nao e modificado no banco.

@@ -1094,3 +1094,9 @@ O objeto raiz `store` reserva `id` para `stores.id`. Adaptadores de tabelas filh
 AdminRouter entrega a loja resolvida por Supabase Auth/store_users. AdminDashboard usa esse `store.id` para consultar pedidos e produtos em paralelo; AdminOrders consulta pedidos ao montar e depois de mutations. Nenhuma dessas telas usa o snapshot local como fonte operacional.
 
 Sem Realtime, consistencia e obtida por nova carga na entrada da rota, reload do navegador ou botao Atualizar. Nao ha polling.
+
+## Maquina de status por fulfillment
+
+`orderStatus.js` e a fonte unica das sequencias. Delivery percorre OUT_FOR_DELIVERY; pickup percorre READY_FOR_PICKUP. Componentes recebem `order.fulfillment` e normalizam valores antigos antes de calcular progresso ou rotulo.
+
+A compatibilidade e somente de leitura/apresentacao: um pickup salvo como `out_for_delivery` ou “Saiu para entrega” aparece como “Pronto para retirada”. Nenhuma reescrita de historico ou migration e feita.
