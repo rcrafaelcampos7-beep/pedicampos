@@ -1152,3 +1152,31 @@ No banco, `store_has_feature(store_id, feature)` e a primitiva de autorizacao. `
 O plano Start continua tecnicamente ativo. Para deixar de oferece-lo sem afetar contratos existentes, adicionar futuramente `plans.available_for_new_stores`; seletores de nova venda filtram essa coluna, enquanto lojas ja ligadas continuam resolvendo `plan_key` e `feature_flags`.
 
 Preco oficial deve permanecer em `plans.price`. Condicoes individuais devem usar uma futura `store_commercial_terms` com `store_id`, preco contratado/snapshot, desconto, taxa de implantacao, isencao e vigencia. Isso preserva preco oficial e historico sem codificar promocao nos entitlements.
+
+### Imagens publicas com escrita tenant
+
+Supabase Storage usa dois buckets: `store-assets` e `product-images`. A leitura e publica porque os assets aparecem no catalogo anonimo; qualquer mutation exige sessao authenticated e `can_access_store` sobre o UUID no primeiro segmento.
+
+Paths sao estritos: `store-assets/{storeId}/logo|banner/{nome-unico}` e `product-images/{storeId}/{productId}/{nome-unico}`. Nomes sao imutaveis e recebem cache de um ano; troca de imagem cria URL nova em vez de sobrescrever objeto cacheado.
+
+O fluxo de substituicao e upload -> persistencia no banco -> delete tardio do objeto anterior. Se persistencia falha, o novo objeto e removido por compensacao e o antigo permanece. Parsing aceita somente a origem Supabase configurada, buckets conhecidos, UUIDs e profundidade esperada; URLs externas retornam false na exclusao.
+
+Produto novo usa abordagem database-first: cria a linha para obter `products.id`, envia para essa pasta e atualiza `image_url`. Se o upload falha, o produto continua salvo com a URL/fallback anterior e pode ser reaberto para nova tentativa.
+
+### Identidade visual da loja
+
+`stores.logo` contém somente a URL da logo e `stores.banner_url` contém somente a URL do banner. As iniciais visuais ficam em `store_settings.extra.fallbackInitials`, aproveitando o JSON de configurações já existente. O adapter expõe esses valores como `store.logo`, `store.banner` e `store.fallbackInitials`.
+
+StoreHeader nunca usa a URL como texto: tenta a imagem da logo e, em ausência/erro, usa as iniciais configuradas ou calcula até duas letras a partir do nome. Banner e logo não são mesclados entre si.
+
+### Pipeline cliente de recorte
+
+`ImageCropModal` usa `react-easy-crop` somente para interação e entrega a área final em pixels. `storageImages.createCroppedImageFile` concentra decode, orientação nativa da imagem, canvas, redimensionamento, MIME, compressão e validação final.
+
+O fluxo é arquivo original validado -> object URL temporária -> enquadramento -> File recortado -> preview do File final -> upload existente. Cancelamento não altera formulário ou arquivo previamente confirmado; URLs temporárias são revogadas na troca, fechamento e desmontagem.
+
+### Confirmação de escrita de assets
+
+Após upload, `AdminSettings` chama `update_store_public_profile` com `p_logo` e `p_banner_url`. O adapter canônico mapeia a resposta para `store.logo` a partir de `stores.logo` e `store.banner` a partir de `stores.banner_url`; não existe `stores.logo_url`.
+
+O frontend só confirma sucesso quando a resposta, ou uma releitura estrita, contém exatamente as duas URLs esperadas. Em divergência, o File novo entra no fluxo compensatório de remoção e as URLs antigas permanecem referenciadas.

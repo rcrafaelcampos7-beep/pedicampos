@@ -3,6 +3,7 @@ import { AdminLayout } from "../components/admin/AdminLayout.jsx";
 import { Button } from "../components/ui/Button.jsx";
 import { Card } from "../components/ui/Card.jsx";
 import { Checkbox, Input, Select, Textarea } from "../components/ui/Input.jsx";
+import { ImageCropModal } from "../components/ui/ImageCropModal.jsx";
 import {
   createProduct,
   deleteProduct as deleteDatabaseProduct,
@@ -11,6 +12,11 @@ import {
   updateProduct,
 } from "../services/database.js";
 import { formatCurrency } from "../utils/formatCurrency.js";
+import {
+  deleteStoredImage,
+  uploadProductImage,
+  validateImageFile,
+} from "../services/storageImages.js";
 
 const emptyProduct = {
   name: "",
@@ -30,7 +36,20 @@ export function AdminProducts({ activePath, store }) {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [pendingProductId, setPendingProductId] = useState("");
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const [uploadingLabel, setUploadingLabel] = useState("");
+  const [fileInputVersion, setFileInputVersion] = useState(0);
+  const [cropRequest, setCropRequest] = useState(null);
   const productFormRef = useRef(null);
+
+  useEffect(() => () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+  }, [imagePreview]);
+
+  useEffect(() => () => {
+    if (cropRequest?.sourceUrl) URL.revokeObjectURL(cropRequest.sourceUrl);
+  }, [cropRequest?.sourceUrl]);
 
   async function loadData() {
     setLoading(true);
@@ -56,6 +75,10 @@ export function AdminProducts({ activePath, store }) {
   }
 
   useEffect(() => {
+    setImageFile(null);
+    setImagePreview("");
+    setCropRequest(null);
+    setFileInputVersion((current) => current + 1);
     setEditingId("");
     setForm({ ...emptyProduct, image: store.banner });
     loadData();
@@ -66,6 +89,10 @@ export function AdminProducts({ activePath, store }) {
   }
 
   function editProduct(product) {
+    setImageFile(null);
+    setImagePreview("");
+    setCropRequest(null);
+    setFileInputVersion((current) => current + 1);
     setEditingId(product.id);
     setForm({
       name: product.name,
@@ -81,12 +108,48 @@ export function AdminProducts({ activePath, store }) {
   }
 
   function resetForm() {
+    setImageFile(null);
+    setImagePreview("");
+    setCropRequest(null);
+    setFileInputVersion((current) => current + 1);
     setEditingId("");
     setForm({
       ...emptyProduct,
       categoryId: categories[0]?.id || "",
       image: store.banner,
     });
+  }
+
+  function selectProductImage(event) {
+    const file = event.target.files?.[0] || null;
+    if (!file) return;
+    try {
+      validateImageFile(file);
+      setError("");
+      setCropRequest({
+        kind: "product",
+        file,
+        sourceUrl: URL.createObjectURL(file),
+        title: "Recortar imagem do produto",
+        aspect: 1,
+        output: { width: 800, height: 800 },
+      });
+    } catch (imageError) {
+      event.target.value = "";
+      setError(imageError.message);
+    }
+  }
+
+  function cancelCrop() {
+    setCropRequest(null);
+    setFileInputVersion((current) => current + 1);
+  }
+
+  function confirmCrop(file) {
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+    setCropRequest(null);
+    setFileInputVersion((current) => current + 1);
   }
 
   async function saveProduct(event) {
@@ -101,14 +164,48 @@ export function AdminProducts({ activePath, store }) {
       image: form.image || store.banner,
     };
 
+    let uploadedImage = null;
     try {
-      if (editingId) await updateProduct(editingId, product);
-      else await createProduct(store.id, product);
+      if (editingId) {
+        const previousImage = products.find((item) => item.id === editingId)?.image || "";
+        let nextImage = product.image;
+        if (imageFile) {
+          setUploadingLabel("Enviando imagem...");
+          uploadedImage = await uploadProductImage(store.id, editingId, imageFile);
+          nextImage = uploadedImage.publicUrl;
+        }
+
+        setUploadingLabel("Salvando produto...");
+        await updateProduct(editingId, { ...product, image: nextImage });
+        if (previousImage !== nextImage) {
+          await Promise.allSettled([deleteStoredImage(previousImage)]);
+        }
+      } else {
+        setUploadingLabel("Salvando produto...");
+        const created = await createProduct(store.id, product);
+        if (imageFile) {
+          try {
+            setUploadingLabel("Enviando imagem...");
+            uploadedImage = await uploadProductImage(store.id, created.id, imageFile);
+            await updateProduct(created.id, { image: uploadedImage.publicUrl });
+          } catch (imageError) {
+            if (uploadedImage) await Promise.allSettled([deleteStoredImage(uploadedImage.publicUrl)]);
+            await loadData();
+            setEditingId(created.id);
+            setForm({ ...product, image: created.image });
+            setError(`Produto salvo, mas a imagem nao foi enviada. ${imageError.message || "Tente novamente."}`);
+            return;
+          }
+        }
+      }
+
       resetForm();
       await loadData();
-    } catch {
-      setError("Não foi possível salvar o produto. Confira a categoria e tente novamente.");
+    } catch (saveError) {
+      if (uploadedImage) await Promise.allSettled([deleteStoredImage(uploadedImage.publicUrl)]);
+      setError(saveError.message || "Nao foi possivel salvar o produto. Confira a categoria e tente novamente.");
     } finally {
+      setUploadingLabel("");
       setSaving(false);
     }
   }
@@ -119,7 +216,9 @@ export function AdminProducts({ activePath, store }) {
     setError("");
 
     try {
+      const product = products.find((item) => item.id === productId);
       await deleteDatabaseProduct(productId);
+      if (product?.image) await Promise.allSettled([deleteStoredImage(product.image)]);
       if (editingId === productId) resetForm();
       await loadData();
     } catch {
@@ -186,6 +285,11 @@ export function AdminProducts({ activePath, store }) {
               value={form.image}
               onChange={(event) => updateForm("image", event.target.value)}
             />
+            <label>
+              <span>Enviar imagem do produto</span>
+              <input key={fileInputVersion} type="file" accept="image/jpeg,image/png,image/webp" onChange={selectProductImage} />
+            </label>
+            {imagePreview ? <img src={imagePreview} alt="Previa da nova imagem do produto" className="settings-image-preview" /> : null}
             <Checkbox label="Produto ativo" checked={form.active} onChange={(checked) => updateForm("active", checked)} />
             <div className="addon-list compact">
               <h3>Adicionais vinculados</h3>
@@ -193,7 +297,7 @@ export function AdminProducts({ activePath, store }) {
             </div>
             <div className="modal-actions">
               <Button type="submit" variant="primary" disabled={saving}>
-                {saving ? "Salvando..." : "Salvar produto"}
+                {uploadingLabel || (saving ? "Salvando..." : "Salvar produto")}
               </Button>
               <Button variant="ghost" disabled={saving} onClick={resetForm}>
                 Limpar
@@ -232,6 +336,7 @@ export function AdminProducts({ activePath, store }) {
           })}
         </div>
       </section>
+      <ImageCropModal request={cropRequest} onCancel={cancelCrop} onConfirm={confirmCrop} />
     </AdminLayout>
   );
 }

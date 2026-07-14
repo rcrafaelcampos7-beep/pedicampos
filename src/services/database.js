@@ -217,6 +217,7 @@ export function storeSettingsFromSupabase(row) {
     deliveryEnabled: serviceMode === "delivery" || serviceMode === "delivery_pickup",
     pickupEnabled: serviceMode === "pickup" || serviceMode === "delivery_pickup",
     paymentInstructions: row.extra?.paymentInstructions || "",
+    fallbackInitials: row.extra?.fallbackInitials || "",
     extra: row.extra || {},
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -246,6 +247,7 @@ export function storeSettingsToSupabase(data = {}, storeId) {
     extra: {
       ...(data.extra || {}),
       paymentInstructions: data.paymentInstructions || "",
+      fallbackInitials: data.fallbackInitials || "",
     },
   };
 }
@@ -612,7 +614,7 @@ export async function deactivateStore(id) {
 
 export async function updateStorePublicProfile(storeId, data) {
   if (supabase) {
-    const { data: updated, error } = await supabase.rpc("update_store_public_profile", {
+    const rpcPayload = {
       p_store_id: storeId,
       p_name: data.name || "",
       p_slug: data.slug || "",
@@ -622,9 +624,77 @@ export async function updateStorePublicProfile(storeId, data) {
       p_whatsapp: data.whatsapp || "",
       p_logo: data.logo || "",
       p_banner_url: data.banner || "",
-    });
+    };
+    if (import.meta.env.DEV) {
+      console.info("[PediCampos] Atualizando identidade visual da loja.", {
+        storeId,
+        logo: rpcPayload.p_logo,
+        banner: rpcPayload.p_banner_url,
+      });
+    }
 
-    if (!error) return storeFromSupabase(updated);
+    const { data: updated, error } = await supabase.rpc("update_store_public_profile", rpcPayload);
+
+    if (error && import.meta.env.DEV) {
+      console.error("[PediCampos] update_store_public_profile falhou.", {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      });
+    }
+
+    if (!error) {
+      const returnedRow = Array.isArray(updated) ? updated[0] : updated;
+      const returnedStore = storeFromSupabase(returnedRow);
+      const responseMatches = returnedStore
+        && returnedStore.logo === rpcPayload.p_logo
+        && returnedStore.banner === rpcPayload.p_banner_url;
+
+      const { data: confirmedRow, error: confirmationError } = responseMatches
+        ? { data: returnedRow, error: null }
+        : await supabase.from("stores").select(STORE_COLUMNS).eq("id", storeId).single();
+
+      if (confirmationError) {
+        if (import.meta.env.DEV) {
+          console.error("[PediCampos] Falha ao confirmar identidade visual salva.", {
+            code: confirmationError.code,
+            message: confirmationError.message,
+            details: confirmationError.details,
+            hint: confirmationError.hint,
+          });
+        }
+        throwDatabaseError("confirmar a identidade visual da loja", confirmationError);
+      }
+
+      const confirmedStore = storeFromSupabase(confirmedRow);
+      if (!confirmedStore
+        || confirmedStore.logo !== rpcPayload.p_logo
+        || confirmedStore.banner !== rpcPayload.p_banner_url) {
+        const confirmationFailure = new Error("O banco nao confirmou as novas imagens da loja.");
+        confirmationFailure.code = "STORE_IMAGES_NOT_PERSISTED";
+        confirmationFailure.details = {
+          expectedLogo: rpcPayload.p_logo,
+          returnedLogo: confirmedStore?.logo || "",
+          expectedBanner: rpcPayload.p_banner_url,
+          returnedBanner: confirmedStore?.banner || "",
+        };
+        if (import.meta.env.DEV) {
+          console.error("[PediCampos] Identidade visual nao persistida.", confirmationFailure.details);
+        }
+        throw confirmationFailure;
+      }
+
+      if (import.meta.env.DEV) {
+        console.info("[PediCampos] Identidade visual confirmada no banco.", {
+          storeId: confirmedStore.id,
+          logo: confirmedStore.logo,
+          banner: confirmedStore.banner,
+        });
+      }
+      return confirmedStore;
+    }
+
     useLocalForConnectionFailure("updateStorePublicProfile", error);
   }
 
@@ -647,6 +717,7 @@ export async function getStoreSettings(storeId) {
       deliveryEnabled: store.deliveryEnabled !== false,
       pickupEnabled: store.pickupEnabled !== false,
       paymentInstructions: store.paymentInstructions || "",
+      fallbackInitials: store.fallbackInitials || "",
     };
   }
 
@@ -668,7 +739,10 @@ export async function getStoreSettings(storeId) {
       pix_key: store.pixKey,
       minimum_order_value: store.minimumOrderValue,
       service_mode: store.deliveryEnabled === false ? "pickup" : store.pickupEnabled === false ? "delivery" : "delivery_pickup",
-      extra: { paymentInstructions: store.paymentInstructions || "" },
+      extra: {
+        paymentInstructions: store.paymentInstructions || "",
+        fallbackInitials: store.fallbackInitials || "",
+      },
     }) : null;
   }
 

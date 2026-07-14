@@ -229,3 +229,30 @@ Escopo: arquitetura React, autenticacao, adapters, Supabase/RLS, banco, desempen
 - Organizacao do codigo: 6,5/10
 
 O projeto nao deve ser considerado pronto para producao antes de aplicar/validar a 009 no ambiente remoto, adicionar testes automatizados dos fluxos criticos, retirar dados operacionais locais do master, impor entitlement no servidor e introduzir paginacao/controles de abuso.
+
+## Sprint 2.1 - imagens no Supabase Storage
+
+- Migration 013 cria/configura somente `store-assets` e `product-images` como buckets publicos de leitura, com 5 MB e MIME JPG/PNG/WEBP.
+- O primeiro segmento e sempre `store_id`; policies authenticated usam `can_access_store`, incluindo master, e nao criam escrita anonima.
+- O cliente valida arquivo, extensao, bucket, origem e formato completo do path antes de upload/exclusao.
+- Substituicao e compensatoria: URL nova so substitui a antiga depois do banco confirmar; falha de banco remove o upload novo; URL externa nunca e removida.
+- Risco remoto: qualquer policy permissiva antiga para os mesmos buckets seria combinada por OR. O diagnostico 013 lista todas as policies que citam os buckets e deve ser revisado antes do teste multi-loja.
+
+## Correção de identidade visual - 2026-07-14
+
+- Corrigido problema de UX em que StoreHeader renderizava o valor textual de `store.logo`, inclusive URLs completas.
+- Logo, banner e iniciais agora seguem campos semânticos independentes; fallback de imagem quebrada não expõe a URL ao público.
+- Não houve mudança de banco, policies, buckets ou regras de plano. Build e diff check passaram; matriz visual/upload permanece para validação manual.
+
+## Recorte de imagens - 2026-07-14
+
+- Uploads de logo, banner e produto agora exigem confirmação do recorte antes de substituir a imagem anterior.
+- Processamento é local, limitado em dimensão e novamente validado em tamanho/MIME antes do Storage; original não é enviado após confirmação.
+- Object URLs possuem cleanup e cancelamento preserva o estado anterior. Build passou; interação mobile, EXIF e publicação real aguardam teste manual autenticado.
+
+## Confirmação de URLs de assets - 2026-07-14
+
+- Eliminado sucesso não confirmado no salvamento de logo/banner: resposta RPC e releitura remota são comparadas às URLs esperadas.
+- Schema remoto auditado em leitura pública: logo usa `stores.logo`; tentativa de `stores.logo_url` retorna 42703. Banner usa `stores.banner_url`.
+- Erros Supabase completos ficam disponíveis apenas em DEV e falhas preservam a compensação de uploads.
+- Nenhuma migration, policy ou bucket foi alterado; teste de escrita autenticada permanece manual.

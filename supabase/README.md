@@ -371,3 +371,29 @@ O banco passa a decidir recursos por `store_has_feature`: pedidos persistidos ex
 Depois execute `supabase/diagnostics/012_plan_entitlements_audit.sql` e `012_plan_entitlements_test.sql`. O teste cria uma loja efemera, valida os tres mapas e troca Start para Pro dentro de uma transacao finalizada com ROLLBACK.
 
 Para ocultar Start de novas vendas no futuro, nao use `active=false`: adicione uma coluna comercial como `available_for_new_stores`. Precos promocionais e implantacao isenta devem ficar em tabela futura por loja, preservando `plans.price` como valor oficial.
+
+### Migration 013 - imagens no Storage
+
+Execute `supabase/migrations/013_storage_images.sql`. Ela cria/configura `store-assets` e `product-images` com leitura publica, 5 MB e apenas JPEG/PNG/WEBP. Nenhum papel anon recebe policy de escrita.
+
+Os objetos devem seguir exatamente:
+
+- `store-assets/{storeId}/logo/{nome-unico}`
+- `store-assets/{storeId}/banner/{nome-unico}`
+- `product-images/{storeId}/{productId}/{nome-unico}`
+
+Policies authenticated extraem o primeiro segmento e chamam `can_access_store`; master continua autorizado pela mesma funcao. Rode `013_storage_images_audit.sql` e confirme que nao existe policy antiga permissiva para os mesmos buckets. Depois rode o checklist e os testes Loja A/Loja B no navegador.
+
+URLs externas antigas permanecem suportadas. O frontend so remove uma imagem quando reconhece origem, bucket e path PediCampos e sempre depois de a nova URL ter sido salva. Nao coloque `service_role` em variavel `VITE_`.
+
+### Logo, banner e iniciais
+
+Logo usa `stores.logo`; banner usa `stores.banner_url`. Iniciais não são URLs e ficam em `store_settings.extra.fallbackInitials`, sem migration adicional. URLs externas e URLs públicas dos buckets da migration 013 continuam aceitas. Uma logo ausente ou inválida cai para as iniciais configuradas ou derivadas do nome da loja.
+
+### Recorte antes do Storage
+
+Uploads da galeria passam por recorte obrigatório no navegador. As saídas são logo 512x512, banner 1600x900 e produto 800x800; somente o arquivo final é enviado aos mesmos buckets/paths da migration 013. JPEG/WEBP usam qualidade 0,88, PNG mantém transparência e a validação de MIME/extensão/5 MB é repetida após o canvas. Nenhuma policy adicional é necessária.
+
+### Persistência de URLs da loja
+
+A coluna da logo é `public.stores.logo`; não existe `stores.logo_url`. Banner usa `public.stores.banner_url`. A RPC da migration 006 recebe `p_logo` e `p_banner_url`, retorna a linha atualizada e o frontend exige que os valores retornados coincidam com as URLs enviadas antes de mostrar sucesso ou excluir os objetos anteriores.

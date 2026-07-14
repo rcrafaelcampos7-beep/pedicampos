@@ -1074,3 +1074,31 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - Execute depois da 011; depois rode `012_plan_entitlements_audit.sql` e `012_plan_entitlements_test.sql`.
 - Deploy do frontend deve acompanhar a migration, pois ele passa a buscar `get_store_entitlements`.
 - Disponibilidade para novas vendas e termos comerciais por loja permanecem modelagens futuras separadas.
+
+## Migration 013 - Storage de imagens
+
+- Arquivo: `supabase/migrations/013_storage_images.sql`.
+- Cria ou normaliza apenas `store-assets` e `product-images`: publicos, 5 MB, JPEG/PNG/WEBP.
+- Policies publicas sao exclusivamente SELECT. INSERT/UPDATE/DELETE exigem authenticated, path estrito e `can_access_store(store_id)`.
+- Execute depois das migrations de Auth/RLS; a 013 depende de `can_access_store`.
+- Depois rode `013_storage_images_audit.sql` e `013_storage_images_checklist.sql`.
+- Revise policies remotas desconhecidas que mencionem esses buckets, pois policies permissivas sao somadas por OR.
+- Deploy do frontend deve ocorrer depois da migration para evitar uploads bloqueados por bucket inexistente.
+
+## Ajuste de identidade visual - sem migration
+
+- Logo e banner continuam nas colunas existentes de `stores`.
+- Iniciais de fallback usam `store_settings.extra.fallbackInitials`; não foi necessária alteração de schema, bucket ou policy.
+- Migration 013 permanece inalterada e continua responsável apenas pelo Storage de imagens.
+
+## Recorte no cliente - sem migration
+
+- O recorte/redimensionamento ocorre integralmente no navegador antes do upload.
+- Não houve alteração de bucket, policy, schema ou migration 013.
+- Storage recebe somente o File final confirmado; URL manual continua disponível sem processamento.
+
+## Confirmação de logo/banner - sem migration
+
+- A migration 006 já define `update_store_public_profile(..., p_logo, p_banner_url)` e atualiza `stores.logo`/`stores.banner_url`.
+- A consulta remota confirmou que `logo_url` não é coluna de `stores`; o nome canônico existente é `logo`.
+- A correção foi exclusivamente no cliente/adapter para validar a resposta antes de sucesso; migrations 006 e 013 permanecem inalteradas.

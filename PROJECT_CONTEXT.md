@@ -1180,3 +1180,37 @@ Build:
 - Criacao de pedido salvo, tracking publico, leitura/escrita administrativa de snapshots e ativacao de pagamento online agora possuem verificacao server-side.
 - Nenhum preco, `plans.active` ou atribuicao existente foi alterado. MasterPlans usa plans/stores remotos para as decisoes de recurso.
 - Futuro comercial recomendado: `plans.available_for_new_stores` separado do estado tecnico e tabela `store_commercial_terms` para preco contratado, desconto e taxa de implantacao por loja.
+
+### Sprint 2.1 - upload real de imagens - 2026-07-14
+
+- Criada migration 013 para os buckets publicos `store-assets` e `product-images`; escrita/exclusao permanecem authenticated e isoladas por `store_id` no path.
+- Paths: `{storeId}/logo/{uuid}`, `{storeId}/banner/{uuid}` e `{storeId}/{productId}/{uuid}`.
+- Limites duplicados no cliente e bucket: 5 MB; apenas JPEG, PNG e WEBP.
+- `storageImages.js` centraliza validacao, upload, URL publica, parsing e exclusao segura.
+- AdminSettings aceita upload e URL manual para logo/banner; AdminProducts aceita upload e URL manual para produto.
+- Produto novo e criado antes do upload para usar o UUID real. URLs externas antigas continuam validas e nunca sao excluidas pelo servico.
+- Aplicacao remota da migration, auditoria de policies e matriz Loja A/Loja B permanecem manuais.
+
+### Logo, banner e iniciais - 2026-07-14
+
+- Corrigido o cabeçalho público que renderizava `store.logo` como texto; URLs de logo agora são imagens e falhas exibem iniciais.
+- Logo (`stores.logo`), banner (`stores.banner_url`) e iniciais (`store_settings.extra.fallbackInitials`) têm responsabilidades separadas, sem migration nova.
+- AdminSettings mantém URL externa/Storage e upload por galeria para logo e banner, com preview, arquivo selecionado, validação e estado de envio.
+- Valores legados de logo que eram apenas iniciais são migrados no formulário para o fallback, sem serem tratados como URL.
+- Testes reais de upload e renderização em desktop/mobile permanecem manuais.
+
+### Recorte de imagens antes do upload - 2026-07-14
+
+- Adicionado `react-easy-crop` como editor reutilizável para logo, banner e produto, com arrastar, zoom por slider/pinça, cancelamento e confirmação.
+- Saídas padronizadas: logo 1:1 em 512x512, banner 16:9 em 1600x900 e produto 1:1 em 800x800.
+- O navegador gera um novo File via canvas; JPEG/WEBP usam qualidade 0,88, PNG preserva transparência e todos os formatos continuam limitados a 5 MB.
+- O arquivo original nunca é enviado depois da confirmação. Cancelar mantém imagem/formulário anteriores e object URLs são liberadas.
+- URL manual e imagens existentes continuam inalteradas. Testes autenticados e por toque permanecem manuais.
+
+### Confirmação de persistência da identidade visual - 2026-07-14
+
+- Auditoria remota confirmou que a coluna real da logo é `stores.logo`; `stores.logo_url` não existe. Banner permanece em `stores.banner_url`.
+- `AdminSettings` envia as URLs somente após os uploads e registra em DEV as URLs, payload e retorno sem marcar sucesso antecipadamente.
+- `updateStorePublicProfile` valida logo/banner retornados pela RPC e consulta novamente quando necessário; divergência gera `STORE_IMAGES_NOT_PERSISTED`.
+- Falha ou ausência de confirmação remove os uploads novos por compensação e não executa a exclusão tardia das imagens anteriores.
+- RPC/migration 006 já continha `p_logo` e `p_banner_url`; nenhuma migration nova foi necessária. Teste autenticado de escrita permanece manual.

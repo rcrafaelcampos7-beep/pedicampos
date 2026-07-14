@@ -595,6 +595,24 @@ Legenda:
 - [ ] Executar migration 012, diagnostico e teste rollback-only no Supabase.
 - [ ] Validar Start, Pro e Premium com lojas reais e tentativa direta de recurso bloqueado.
 - [ ] Projetar `available_for_new_stores` e `store_commercial_terms` antes de promocao/cobranca real.
+
+## Sprint 2.1 - Supabase Storage - 2026-07-14
+
+- [x] Criar migration 013 com buckets, limite, MIME e policies por tenant.
+- [x] Criar servico reutilizavel de validacao/upload/exclusao segura.
+- [x] Integrar logo e banner em AdminSettings mantendo URL manual.
+- [x] Integrar imagem em AdminProducts usando UUID real do produto.
+- [x] Preservar URLs externas e implementar compensacao em falha.
+- [ ] Executar migration e diagnosticos 013 no Supabase.
+- [ ] Testar JPG/PNG/WEBP, 5 MB, MIME invalido e URL publica anonima.
+- [ ] Validar upload/delete Loja A x Loja B com duas sessoes reais.
+- [ ] Avaliar limpeza programada de arquivos orfaos e transformacao/otimizacao de imagens futuramente.
+- [x] Separar URL da logo, banner e iniciais de fallback no AdminSettings e na loja pública.
+- [ ] Validar manualmente logo externa/Storage, fallback por erro, banner e upload JPG/PNG/WEBP em desktop e celular.
+- [x] Adicionar recorte obrigatório, arraste, zoom e preview final antes de uploads de logo, banner e produto.
+- [ ] Validar recorte real com foto de celular/EXIF, zoom, cancelamento e igualdade entre preview e URL publicada.
+- [x] Exigir confirmação do banco para novas URLs de logo/banner antes de exibir sucesso.
+- [ ] Repetir em sessão autenticada: logo isolada, banner isolado, ambos e falha simulada, conferindo `stores.logo` e `stores.banner_url`.
 - [x] Migrar dashboard/pedidos globais e metricas de lojas do master sem consulta por loja.
 - [ ] Validar dashboard/pedidos globais com master e pedidos de pelo menos duas lojas.
 - [ ] Paginar consultas globais do master antes de grande volume.

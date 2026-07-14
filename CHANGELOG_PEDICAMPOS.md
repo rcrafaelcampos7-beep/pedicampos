@@ -1226,3 +1226,36 @@ Build:
 - A RPC publica de pedidos exige `saved_orders`; tracking exige `order_tracking`; RLS dos snapshots e pagamento online aplicam os mesmos flags.
 - App, checkout, loja publica, auth admin, settings, pedidos, relatorios e automacao de WhatsApp passaram a usar entitlements canonicos.
 - Criados diagnostico read-only e teste rollback-only da migration 012. Build e checks locais passaram; execucao remota permanece manual.
+
+## 2026-07-14 - Sprint 2.1 upload de imagens
+
+- Criada migration `013_storage_images.sql` com buckets publicos de leitura e escrita tenant autenticada.
+- Configurados limite de 5 MB e MIME `image/jpeg`, `image/png`, `image/webp`.
+- Criado `storageImages.js` com validacao de arquivo/path/origem, nomes UUID, cache imutavel e exclusao limitada aos buckets PediCampos.
+- AdminSettings ganhou upload e preview de logo/banner sem remover campos URL.
+- AdminProducts ganhou upload e preview; produtos novos usam primeiro o UUID criado no banco.
+- Substituicoes removem a imagem anterior somente depois de upload e persistencia; falhas tentam limpar apenas o arquivo novo.
+- Criados audit/checklist SQL. Build, node check e diff check passaram; execucao remota permanece manual.
+
+## 2026-07-14 - separação de logo, banner e iniciais
+
+- StoreHeader deixou de imprimir a URL da logo e passou a renderizar imagem com fallback seguro para iniciais configuradas ou derivadas do nome.
+- AdminSettings ganhou seções independentes para logo e banner, URLs opcionais, upload da galeria, nome do arquivo, preview e estado de envio.
+- Iniciais de fallback passaram a usar `store_settings.extra.fallbackInitials`; nenhuma coluna ou migration foi adicionada.
+- Compatibilidade com URLs externas antigas e URLs públicas do Supabase Storage foi preservada.
+
+## 2026-07-14 - editor de recorte de imagens
+
+- Adicionado `react-easy-crop` aos uploads administrativos de logo, banner e produto.
+- Criado modal responsivo com arraste, suporte a toque/pinça, zoom, cancelar e confirmar recorte.
+- Criado processamento canvas centralizado: 512x512 para logo, 1600x900 para banner e 800x800 para produto.
+- JPEG e WEBP são recomprimidos em qualidade 0,88; PNG preserva transparência e o limite de 5 MB continua aplicado antes e depois do recorte.
+- URLs manuais, imagens existentes, buckets e policies não foram alterados.
+
+## 2026-07-14 - persistência confirmada de logo e banner
+
+- Corrigido o fluxo para considerar identidade visual salva somente após confirmação dos valores retornados pelo Supabase.
+- Adicionada verificação estrita entre `p_logo`/`p_banner_url` e `stores.logo`/`stores.banner_url`, com nova leitura em retorno inesperado.
+- Logs completos de payload, resposta e erro foram limitados ao ambiente DEV.
+- Compensação continua removendo uploads novos em falha; imagens antigas só são excluídas depois da confirmação.
+- Confirmado que `stores.logo_url` não existe no schema remoto; nenhuma migration foi criada.
