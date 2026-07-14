@@ -5,16 +5,22 @@ import { Card } from "../components/ui/Card.jsx";
 import { Checkbox, Input, Select, Textarea } from "../components/ui/Input.jsx";
 import { Modal } from "../components/ui/Modal.jsx";
 import { Badge } from "../components/ui/Badge.jsx";
-import { usePediData } from "../hooks/usePediData.js";
 import { Link } from "../routes/router.jsx";
-import { deactivateStore, getStores, updateStore } from "../services/database.js";
+import {
+  deactivateStore,
+  getAllOrdersForMaster,
+  getAllStoresForMaster,
+  getPlansForMaster,
+  updateStore,
+} from "../services/database.js";
 import { formatCurrency } from "../utils/formatCurrency.js";
 import { getPlanName, getPlanPriceLabel, PLAN_KEYS } from "../utils/plans.js";
 import { uniqueSlug } from "../utils/slug.js";
 
 export function MasterStores({ activePath }) {
-  const { orders, platform } = usePediData();
   const [stores, setStores] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [platform, setPlatform] = useState({ plans: {} });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -31,7 +37,14 @@ export function MasterStores({ activePath }) {
     setLoading(true);
     setError("");
     try {
-      setStores(await getStores());
+      const [remoteStores, remoteOrders, remotePlans] = await Promise.all([
+        getAllStoresForMaster(),
+        getAllOrdersForMaster(),
+        getPlansForMaster(),
+      ]);
+      setStores(remoteStores);
+      setOrders(remoteOrders);
+      setPlatform({ plans: Object.fromEntries(remotePlans.map((plan) => [plan.key, plan])) });
     } catch {
       setError("Não foi possível carregar as lojas. Tente novamente.");
     } finally {

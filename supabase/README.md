@@ -345,3 +345,19 @@ O diagnostico de catalogo cobre A-D/F sem criar dados: sem privilegio efetivo de
 Execute `supabase/migrations/010_validate_order_additionals.sql` depois da 009. Ela mantem a assinatura do frontend e passa a rejeitar no banco opcao duplicada, grupo incorreto/nao vinculado/inativo, opcao inativa, minimo obrigatorio, maximo e mais de uma opcao em grupo single.
 
 Depois rode `supabase/diagnostics/010_validate_order_additionals_test.sql`. O script cria uma loja/catalogo de teste dentro de uma transacao, imprime PASS para A-J e executa ROLLBACK. Confira que nenhuma fixture `teste-rpc-add-*` permaneceu caso a execucao seja interrompida; uma transacao abortada tambem deve ser revertida antes de reutilizar a sessao SQL.
+
+### Migration 011 - idempotencia e limites
+
+Execute `supabase/migrations/011_order_idempotency_and_limits.sql` depois da 010. A RPC passa a exigir `p_idempotency_key uuid`; coordene a aplicacao com o deploy do frontend porque o overload publico antigo e removido deliberadamente.
+
+Limites: 50 itens, quantidade de 1 a 100, 30 opcoes por item, nota do item 500 chars, nota geral 1000, nome 120, telefone 32, endereco 8192 bytes e payload total 262144 bytes. Excesso retorna SQLSTATE 23514.
+
+Rode `supabase/diagnostics/011_order_idempotency_audit.sql` e depois `011_order_idempotency_and_limits_test.sql`. O segundo cria duas lojas efemeras, cobre A-K e termina em ROLLBACK. Rate limit por IP/usuario deve ser implementado futuramente no edge/gateway; nao use cabecalhos de proxy nao confiaveis dentro do PostgreSQL.
+
+### Leitura global do painel Master
+
+MasterDashboard, MasterOrders e as metricas de MasterStores consultam diretamente stores, plans e snapshots de pedidos. Nao ha fallback para localStorage nessas consultas: qualquer falha de client, RLS ou schema aparece como erro controlado.
+
+Nenhuma policy nova foi necessaria. As policies authenticated das tabelas de pedidos usam `can_access_store(store_id)`; essa funcao permite todas as lojas somente ao papel de aplicacao reconhecido por `is_master()`. Admins comuns continuam vendo apenas o tenant vinculado em `store_users`.
+
+As telas recarregam ao montar e pelo botao Atualizar. Realtime e paginacao nao fazem parte desta etapa e continuam pendentes para volume de producao.

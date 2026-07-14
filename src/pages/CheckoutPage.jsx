@@ -18,6 +18,76 @@ const paymentLabels = {
   card: "Cartão",
 };
 
+const ORDER_ATTEMPT_PREFIX = "pedicampos.orderAttempt.";
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const volatileOrderAttempts = new Map();
+
+function cartFingerprint(storeId, items) {
+  const source = JSON.stringify({
+    storeId,
+    items: (items || []).map((item) => ({
+      cartId: item.cartId,
+      productId: item.productId,
+      quantity: Number(item.quantity) || 1,
+      note: item.note || item.observation || "",
+      options: (item.selectedAdditionals || item.addons || [])
+        .map((option) => `${option.groupId || ""}:${option.optionId || option.id || ""}`)
+        .sort(),
+    })),
+  });
+  let hash = 2166136261;
+  for (let index = 0; index < source.length; index += 1) {
+    hash ^= source.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `${items?.length || 0}:${(hash >>> 0).toString(16)}`;
+}
+
+function getOrCreateOrderAttempt(storeId, items) {
+  const storageKey = `${ORDER_ATTEMPT_PREFIX}${storeId}`;
+  const fingerprint = cartFingerprint(storeId, items);
+  const volatile = volatileOrderAttempts.get(storeId);
+  if (volatile?.fingerprint === fingerprint && UUID_PATTERN.test(volatile.idempotencyKey || "")) {
+    return volatile.idempotencyKey;
+  }
+  try {
+    const saved = JSON.parse(window.sessionStorage.getItem(storageKey));
+    if (saved?.fingerprint === fingerprint && UUID_PATTERN.test(saved.idempotencyKey || "")) {
+      volatileOrderAttempts.set(storeId, saved);
+      return saved.idempotencyKey;
+    }
+  } catch {
+    // A fresh opaque key is enough when sessionStorage is unavailable/corrupt.
+  }
+
+  const idempotencyKey = crypto.randomUUID();
+  volatileOrderAttempts.set(storeId, { fingerprint, idempotencyKey });
+  try {
+    window.sessionStorage.setItem(storageKey, JSON.stringify({ fingerprint, idempotencyKey }));
+  } catch {
+    // The in-memory submit still uses this key; only reload persistence is lost.
+  }
+  return idempotencyKey;
+}
+
+function clearOrderAttempt(storeId, idempotencyKey = "") {
+  if (!storeId) return;
+  const storageKey = `${ORDER_ATTEMPT_PREFIX}${storeId}`;
+  const volatile = volatileOrderAttempts.get(storeId);
+  if (!idempotencyKey || volatile?.idempotencyKey === idempotencyKey) {
+    volatileOrderAttempts.delete(storeId);
+  }
+  try {
+    if (idempotencyKey) {
+      const saved = JSON.parse(window.sessionStorage.getItem(storageKey));
+      if (saved?.idempotencyKey !== idempotencyKey) return;
+    }
+    window.sessionStorage.removeItem(storageKey);
+  } catch {
+    // Nothing else is required; the in-memory attempt was already removed.
+  }
+}
+
 function getPaymentOptions(store) {
   const methods = store.paymentMethods || {};
   const options = [];
@@ -248,11 +318,13 @@ export function CheckoutPage({ slug }) {
       return;
     }
 
+    const idempotencyKey = getOrCreateOrderAttempt(store.id, cart.items);
     const number = makeOrderNumber();
     const paymentMethodLabel = paymentLabels[form.paymentMethod] || "A combinar";
     const isAutomaticPayment = canShowPixQrCode || canShowCardSimulation;
     const order = {
       id: number,
+      idempotencyKey,
       number,
       storeId: store.id,
       storeSlug: store.slug,
@@ -302,6 +374,7 @@ export function CheckoutPage({ slug }) {
     try {
       const resolvedStore = await getStoreBySlug(slug, { allowLocalFallback: false });
       if (!resolvedStore || resolvedStore.id !== store.id || (cart.storeId && cart.storeId !== resolvedStore.id)) {
+        clearOrderAttempt(store.id, idempotencyKey);
         cart.clearCart();
         setError("A loja do carrinho mudou. Adicione os produtos novamente antes de finalizar.");
         return;
@@ -315,6 +388,7 @@ export function CheckoutPage({ slug }) {
         });
       }
       const createdOrder = await createOrder(resolvedStore.id, { ...order, storeId: resolvedStore.id });
+      clearOrderAttempt(store.id, idempotencyKey);
       cart.clearCart();
       navigate(`/${store.slug}/pedido/${createdOrder.publicToken || createdOrder.id}`);
     } catch (requestError) {

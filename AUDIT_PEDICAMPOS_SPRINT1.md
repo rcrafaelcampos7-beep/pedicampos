@@ -60,19 +60,19 @@ Escopo: arquitetura React, autenticacao, adapters, Supabase/RLS, banco, desempen
 - Impacto: localStorage adulterado ou chamada direta pode liberar recurso comercial sem o plano devido; configuracoes do master nao sao compartilhadas.
 - Correcao sugerida: migrar leitura/escrita de `platform_settings`/`plans` e aplicar regras comerciais relevantes na fronteira server-side. Exige decisao de negocio e banco, portanto nao foi alterado.
 
-### A3 - pedidos globais do master ainda sao locais
+### A3 - pedidos globais do master ainda sao locais (corrigido localmente)
 
 - Arquivos: `src/pages/MasterDashboard.jsx`, `src/pages/MasterOrders.jsx`, `src/pages/MasterStores.jsx`, `src/hooks/usePediData.js`.
 - Problema: essas telas usam `usePediData().orders`, que continua vindo de `storage.js`.
 - Impacto: metricas, faturamento e listagem global podem estar vazios ou divergentes dos pedidos reais.
-- Correcao sugerida: criar uma consulta master paginada no adapter/RPC e remover o snapshot local dessas telas. Evitar uma consulta por loja.
+- Correcao: `MasterDashboard`, `MasterOrders` e as metricas de `MasterStores` passaram a usar consultas globais estritas no adapter. Nao ha merge/fallback local; RLS com `can_access_store`/`is_master` continua sendo a fronteira. Paginacao permanece na pendencia A5.
 
-### A4 - RPC publica sem protecao de abuso e limites globais
+### A4 - RPC publica sem protecao de abuso e limites globais (parcialmente corrigido; rate limit externo pendente)
 
 - Arquivo: `supabase/migrations/007_orders.sql`.
-- Problema: nao ha rate limit/captcha; quantidade por item e limitada, mas quantidade de itens, tamanho de textos/JSON e frequencia de chamadas nao possuem limite explicito.
+- Problema original: nao havia idempotencia, limites globais de itens/textos/JSON nem rate limit/captcha.
 - Impacto: spam de pedidos/clientes, crescimento de banco e custo operacional.
-- Correcao sugerida: limite no edge/backend, limites de payload e validacoes de tamanho no servidor.
+- Correcao: migration 011 adiciona UUID idempotente unico por loja, advisory lock, indice unico e limites de payload/textos/itens/opcoes/quantidade. O frontend reutiliza a chave por fingerprint do carrinho em sessionStorage. Rate limit real por IP/usuario continua pendente para Edge Function, Vercel ou gateway.
 
 ### A5 - consultas administrativas sem paginacao
 
@@ -182,7 +182,7 @@ Escopo: arquitetura React, autenticacao, adapters, Supabase/RLS, banco, desempen
 ## Validacao da sprint
 
 - `npm run build`: passou (Vite 7.3.6, 126 modulos).
-- Bundle JS principal: 537,52 kB minificado / 150,54 kB gzip; Vite emitiu alerta acima de 500 kB.
+- Bundle JS principal apos a 011: 539,04 kB minificado / 151,16 kB gzip; Vite emitiu alerta acima de 500 kB.
 - Assets raster principais: 1.569,60 kB, 2.017,41 kB e 2.376,74 kB.
 - `node --check`: passou em todos os arquivos `.js` sob `src`.
 - `git diff --check`: passou; somente avisos de normalizacao LF/CRLF, sem erro de whitespace.
@@ -203,6 +203,22 @@ Escopo: arquitetura React, autenticacao, adapters, Supabase/RLS, banco, desempen
 - Todos os erros de adicionais usam SQLSTATE controlado `23514` e acontecem na fase anterior ao primeiro INSERT.
 - O teste rollback-only cria fixtures isoladas e cobre obrigatorio, min, max, single, duplicidade, mismatch, vinculo, grupo/opcao inativos, pedidos validos, quantidade > 1 e ausencia de registros parciais.
 - A estrutura local e o build passaram; os notices PASS do teste so podem ser confirmados depois de executar 010 no Supabase.
+
+### Validacao da migration 011
+
+- Migration e frontend usam a nova identidade `(uuid, uuid, jsonb, text, jsonb, text, text, jsonb)`; o overload publico antigo e removido.
+- O teste rollback-only cobre mesma chave, lojas diferentes, chaves diferentes, todos os limites, pedido valido e ausencia de linhas parciais.
+- Diagnostico verifica coluna UUID, indice unico parcial, owner/SECURITY DEFINER/search_path, grants da funcao publica e bloqueio da implementacao privada.
+- Build/checks locais passaram; idempotencia concorrente e notices A-K dependem da execucao remota da 011.
+
+### Validacao do painel Master remoto
+
+- `MasterDashboard` carrega lojas, planos e pedidos reais, calculando pedidos/faturamento de hoje, andamento, plano mais usado e pedidos recentes.
+- `MasterOrders` carrega pedidos de todas as lojas ao montar e no botao Atualizar; loading, erro e vazio nao usam snapshots locais.
+- `MasterStores` usa pedidos e planos remotos para as metricas de cada loja.
+- As consultas globais nao possuem fallback: client ausente, RLS, schema ou consulta falha geram erro de tela.
+- Policies atuais usam `can_access_store`, que inclui `is_master`; usuario comum permanece limitado ao proprio tenant.
+- Build, `node --check` e `git diff --check` passaram. Validacao funcional no Supabase com master e duas lojas permanece manual.
 
 ## Notas
 

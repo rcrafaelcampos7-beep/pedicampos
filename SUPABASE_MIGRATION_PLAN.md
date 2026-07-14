@@ -1047,3 +1047,21 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - Valida antes de INSERT: IDs/tipos do payload, opcoes distintas, opcao no grupo informado, atividade, mesmo tenant, vinculo grupo/produto, required/min/max e single.
 - Preserva preco do catalogo, snapshots, atomicidade e configuracao de seguranca estabelecida pelas migrations 008/009.
 - Execute depois da 009 e rode `supabase/diagnostics/010_validate_order_additionals_test.sql`; o teste cria fixtures na transacao e finaliza com ROLLBACK.
+
+## Migration 011 - idempotencia e limites
+
+- Arquivo: `supabase/migrations/011_order_idempotency_and_limits.sql`.
+- Adiciona coluna UUID e indice unico parcial por loja/chave; pedidos legados permanecem com NULL.
+- Renomeia a implementacao 010 para rotina privada e cria wrapper publico de oito parametros.
+- Limita itens/quantidade/opcoes/notas/nome/telefone/endereco/payload; todos os excessos usam SQLSTATE 23514.
+- Advisory lock + indice evitam duplicidade concorrente e retries retornam os identificadores originais.
+- Execute depois da 010, publique o frontend coordenadamente e rode diagnostico/teste 011. Atualize os diagnosticos 009/010 para a assinatura atual.
+- Rate limit externo continua em etapa futura; nao confiar em IP recebido diretamente no PostgreSQL.
+
+## Painel Master remoto - sem migration
+
+- As policies existentes ja permitem leitura global ao master por `can_access_store`/`is_master`; nenhuma alteracao SQL foi necessaria.
+- `getAllStoresForMaster`, `getAllOrdersForMaster` e `getPlansForMaster` fazem leituras estritas, sem fallback local.
+- MasterDashboard agrega metricas no cliente sobre os dados remotos; MasterOrders e MasterStores reutilizam as mesmas consultas.
+- Antes de escala, substituir cargas completas por paginacao/cursor e validar indices com `EXPLAIN` usando volume representativo.
+- Testar manualmente master global e isolamento de usuario de loja antes do deploy.

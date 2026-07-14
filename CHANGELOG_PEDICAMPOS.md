@@ -1199,3 +1199,21 @@ Build:
 - Criado `010_validate_order_additionals_test.sql`, com fixtures isoladas, cenarios A-J e ROLLBACK final.
 - Nenhuma tela ou payload do checkout foi alterado; execucao remota permanece pendente.
 - Build, node check, diff check e cobertura estrutural A-J passaram localmente.
+
+## 2026-07-13 - Idempotencia e limites da criacao publica
+
+- Criada `011_order_idempotency_and_limits.sql` com chave UUID unica por loja e nova assinatura publica da RPC.
+- Advisory lock serializa retries concorrentes; uma chave existente retorna ID, numero e public token originais sem novas linhas.
+- Aplicados limites documentados de itens, quantidade, opcoes, notas, cliente, endereco e JSON total.
+- A funcao validada v10 passou a ser privada; o overload publico antigo e removido para impedir bypass.
+- Checkout/database enviam uma chave opaca reutilizada para o mesmo fingerprint de carrinho e removida no sucesso.
+- Criados diagnostico e teste rollback-only A-K. Rate limit externo continua pendente; execucao remota permanece manual.
+
+## 2026-07-14 - Dados globais remotos no painel Master
+
+- `MasterDashboard` passou a carregar lojas, pedidos e planos do Supabase e a calcular metricas do dia com dados reais.
+- `MasterOrders` passou a listar pedidos de todas as lojas com loading, erro, vazio, filtros e atualizacao manual.
+- `MasterStores` passou a calcular quantidade de pedidos e faturamento por loja com pedidos remotos e a exibir planos remotos.
+- Adicionadas consultas estritas `getAllStoresForMaster`, `getAllOrdersForMaster`, `getPlansForMaster` e `getMasterDashboardMetrics`.
+- As consultas Master nao usam localStorage em client ausente, falha de rede, RLS ou schema; a tela apresenta erro controlado.
+- Nenhuma migration, regra comercial, Realtime ou paginacao foi adicionada. Build, node check e diff check passaram.

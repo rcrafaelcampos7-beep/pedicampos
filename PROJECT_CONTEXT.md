@@ -1154,3 +1154,20 @@ Build:
 - Erros adulterados retornam SQLSTATE `23514`; a transacao continua atomica.
 - Criado teste A-J com fixtures efemeras e ROLLBACK. Execucao remota da migration/teste permanece manual.
 - Build, checks JS, diff check e assercoes estruturais da cobertura A-J passaram.
+
+### Idempotencia e limites de pedidos - 2026-07-13
+
+- Criada migration 011: `orders.idempotency_key uuid`, indice unico por `(store_id, idempotency_key)` e nova assinatura publica com oito parametros.
+- A implementacao validada da 010 vira rotina privada sem EXECUTE anon/auth; o wrapper publico aplica limites, lock transacional por loja/chave, consulta retry e delega a escrita atomica.
+- Limites: 50 itens, quantidade 1-100, 30 opcoes/item, nota do item 500 chars, nota geral 1000, nome 120, telefone 32, endereco 8192 bytes e payload total 262144 bytes.
+- Checkout gera UUID no inicio do submit e guarda somente `{fingerprint, idempotencyKey}` em sessionStorage; retry/reload do mesmo carrinho reutiliza, mudanca relevante gera nova, sucesso remove.
+- Rate limit por IP/usuario permanece para Edge/Vercel/gateway. Migration, diagnostico e teste A-K ainda precisam ser executados remotamente.
+
+### Painel Master remoto - 2026-07-14
+
+- `MasterDashboard` e `MasterOrders` deixaram de consumir pedidos do `usePediData`/localStorage.
+- `MasterStores` deixou de calcular pedidos, faturamento e planos com snapshots locais.
+- `database.js` expoe consultas globais estritas para lojas, pedidos e planos, alem das metricas do dashboard; erros remotos nunca viram dados locais.
+- RLS continua sendo a fronteira: `can_access_store` abrange todas as lojas somente quando `is_master()` e verdadeiro.
+- Dashboard calcula pedidos/faturamento do dia no fuso do navegador, pedidos em andamento e ultimos pedidos. Realtime e paginacao continuam pendentes.
+- Build, sintaxe JS e diff check passaram; conferencia dos valores no projeto remoto permanece manual.

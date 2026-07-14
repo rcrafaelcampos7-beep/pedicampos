@@ -1124,3 +1124,21 @@ A migration 010 move para `create_public_order` as mesmas invariantes essenciais
 Required usa no minimo `greatest(min_choices, 1)`; opcionais vazios continuam opcionais, mas uma selecao iniciada respeita `min_choices`; `max_choices > 0` limita qualquer grupo; single limita a uma opcao. A quantidade do produto nao entra nessa contagem e apenas multiplica o valor do item.
 
 Toda essa fase ocorre antes de customers/orders/items/additionals. Qualquer SQLSTATE 23514 aborta a chamada; mesmo uma falha posterior reverte a transacao completa. A assinatura e o payload React permanecem inalterados.
+
+### Envelope idempotente e limites
+
+A migration 011 renomeia a implementacao v10 para `create_public_order_validated_v10`, sem EXECUTE para anon/authenticated. A unica funcao publica recebe tambem `p_idempotency_key uuid`, valida tamanho/contagem e entao chama a implementacao privada.
+
+Um advisory transaction lock derivado de loja+chave serializa chamadas concorrentes. Sob o lock, uma linha existente retorna o mesmo `id`, `number` e `public_token`; caso contrario a escrita v10 ocorre e o pedido recebe a chave antes do commit. O indice unico parcial `(store_id, idempotency_key)` e a segunda barreira. A mesma chave pode existir em lojas diferentes.
+
+Checkout associa a chave a um fingerprint opaco do carrinho em sessionStorage. O fingerprint considera itens, quantidades, observacoes e opcoes, mas somente o hash e persistido. Falha/reload reutiliza; alteracao do carrinho substitui; sucesso remove. A chave UUID nao contem PII.
+
+Os limites sao 50 itens, quantidade 100, 30 opcoes por item, notas 500/1000 caracteres, nome 120, telefone 32, endereco 8 KiB e JSON total 256 KiB. Rate limit real depende de metadados confiaveis do edge/gateway e nao e simulado por IP dentro do PostgreSQL.
+
+### Consultas globais do Master
+
+As telas `MasterDashboard`, `MasterOrders` e `MasterStores` nao consomem mais `usePediData().orders`. O adapter consulta stores, orders, customers, order items, additionals e plans diretamente no Supabase e converte os snapshots para o formato React existente.
+
+Essas funcoes sao deliberadamente estritas: nao existe caminho para `storage.js` quando o client esta ausente ou uma consulta falha. O RLS permanece definitivo: as policies tenant usam `can_access_store(store_id)`, que concede abrangencia global somente a uma sessao para a qual `is_master()` seja verdadeira.
+
+As consultas relacionadas sao paralelizadas onde possivel e evitam uma chamada por loja. Ainda carregam o conjunto completo; cursor/paginacao e a proxima correcao de escala. Sem Realtime, cada tela recarrega ao montar e pelos botoes Atualizar.

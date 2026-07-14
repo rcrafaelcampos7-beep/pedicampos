@@ -32,6 +32,8 @@ const STORE_SETTINGS_COLUMNS =
   "id, store_id, address, opening_hours, delivery_time, delivery_fee, pix_key, minimum_order_value, service_mode, extra, created_at, updated_at";
 const PAYMENT_METHOD_COLUMNS =
   "id, store_id, type, label, active, provider, provider_config, manual, online_enabled, created_at, updated_at";
+const PLAN_COLUMNS =
+  "id, key, name, price, price_label, description, features, feature_flags, active, highlighted, badge, comparison_text, sort_order, created_at, updated_at";
 
 function getLocalStores() {
   return getStorageDatabase().stores;
@@ -276,6 +278,27 @@ export function paymentMethodToSupabase(method = {}, storeId) {
   };
 }
 
+export function planFromSupabase(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    key: row.key,
+    name: row.name || "",
+    price: Number(row.price) || 0,
+    priceLabel: row.price_label || "",
+    description: row.description || "",
+    features: Array.isArray(row.features) ? row.features : [],
+    featureFlags: Array.isArray(row.feature_flags) ? row.feature_flags : [],
+    active: row.active !== false,
+    highlighted: Boolean(row.highlighted),
+    badge: row.badge || "",
+    comparisonText: row.comparison_text || "",
+    order: Number(row.sort_order) || 0,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
 export function orderAdditionalFromSupabase(row) {
   return {
     groupId: row.additional_group_id,
@@ -344,6 +367,7 @@ export function customerToSupabase(customer = {}) {
 export function orderToSupabase(order = {}) {
   const paymentKeys = { Pix: "pix", Dinheiro: "cash", Cartão: "card", Cartao: "card" };
   return {
+    idempotencyKey: order.idempotencyKey || "",
     customer: customerToSupabase(order.customer),
     fulfillment: order.fulfillment === "pickup" ? "pickup" : "delivery",
     address: order.address || null,
@@ -423,6 +447,18 @@ export async function getStores() {
   const stores = (data || []).map(storeFromSupabase);
   migrateLegacyStoresForSupabase(stores, { complete: true });
   return stores;
+}
+
+export async function getAllStoresForMaster() {
+  if (!supabase) throw new Error("Supabase nao esta configurado para o painel master.");
+
+  const { data, error } = await supabase
+    .from("stores")
+    .select(STORE_COLUMNS)
+    .order("created_at", { ascending: false });
+
+  if (error) throwDatabaseError("carregar todas as lojas do master", error);
+  return (data || []).map(storeFromSupabase);
 }
 
 export async function getStoreBySlug(slug, options = {}) {
@@ -1088,6 +1124,112 @@ export async function getOrdersByStore(storeId) {
   }));
 }
 
+export async function getAllOrdersForMaster() {
+  if (!supabase) throw new Error("Supabase nao esta configurado para o painel master.");
+
+  const { data: orderRows, error: ordersError } = await supabase
+    .from("orders")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (ordersError) throwDatabaseError("carregar todos os pedidos do master", ordersError);
+  if (!orderRows?.length) return [];
+
+  const orderIds = orderRows.map((order) => order.id);
+  const customerIds = [...new Set(orderRows.map((order) => order.customer_id).filter(Boolean))];
+  const storeIds = [...new Set(orderRows.map((order) => order.store_id).filter(Boolean))];
+  const [customersResult, itemsResult, storesResult] = await Promise.all([
+    customerIds.length
+      ? supabase.from("customers").select("id, name, phone, email").in("id", customerIds)
+      : Promise.resolve({ data: [], error: null }),
+    supabase.from("order_items").select("*").in("order_id", orderIds),
+    supabase.from("stores").select("id, slug, name").in("id", storeIds),
+  ]);
+
+  const relatedError = customersResult.error || itemsResult.error || storesResult.error;
+  if (relatedError) throwDatabaseError("carregar os detalhes globais dos pedidos", relatedError);
+
+  const itemRows = itemsResult.data || [];
+  const itemIds = itemRows.map((item) => item.id);
+  const additionalsResult = itemIds.length
+    ? await supabase.from("order_item_additionals").select("*").in("order_item_id", itemIds)
+    : { data: [], error: null };
+
+  if (additionalsResult.error) {
+    throwDatabaseError("carregar os adicionais globais dos pedidos", additionalsResult.error);
+  }
+
+  const customersById = new Map((customersResult.data || []).map((customer) => [customer.id, customer]));
+  const storesById = new Map((storesResult.data || []).map((store) => [store.id, store]));
+  const additionalsByItem = new Map();
+  for (const additional of additionalsResult.data || []) {
+    const current = additionalsByItem.get(additional.order_item_id) || [];
+    current.push(additional);
+    additionalsByItem.set(additional.order_item_id, current);
+  }
+  const itemsByOrder = new Map();
+  for (const item of itemRows) {
+    const current = itemsByOrder.get(item.order_id) || [];
+    current.push({ ...item, order_item_additionals: additionalsByItem.get(item.id) || [] });
+    itemsByOrder.set(item.order_id, current);
+  }
+
+  return orderRows.map((order) => orderFromSupabase({
+    ...order,
+    customers: customersById.get(order.customer_id),
+    stores: storesById.get(order.store_id),
+    order_items: itemsByOrder.get(order.id) || [],
+  }));
+}
+
+export async function getPlansForMaster() {
+  if (!supabase) throw new Error("Supabase nao esta configurado para o painel master.");
+
+  const { data, error } = await supabase
+    .from("plans")
+    .select(PLAN_COLUMNS)
+    .order("sort_order", { ascending: true });
+
+  if (error) throwDatabaseError("carregar os planos do master", error);
+  return (data || []).map(planFromSupabase);
+}
+
+export async function getMasterDashboardMetrics() {
+  const [stores, orders, plans] = await Promise.all([
+    getAllStoresForMaster(),
+    getAllOrdersForMaster(),
+    getPlansForMaster(),
+  ]);
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const startOfTomorrow = new Date(startOfToday);
+  startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
+  const todayOrders = orders.filter((order) => {
+    const createdAt = new Date(order.createdAt);
+    return createdAt >= startOfToday && createdAt < startOfTomorrow;
+  });
+  const finishedStatuses = new Set(["Finalizado", "Cancelado"]);
+  const planCounts = stores.reduce((counts, store) => {
+    counts[store.plan] = (counts[store.plan] || 0) + 1;
+    return counts;
+  }, {});
+
+  return {
+    stores,
+    orders,
+    plans,
+    totalStores: stores.length,
+    activeStores: stores.filter((store) => store.active).length,
+    inactiveStores: stores.filter((store) => !store.active).length,
+    planCounts,
+    topPlan: Object.entries(planCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "start",
+    todayOrders: todayOrders.length,
+    todayRevenue: todayOrders.reduce((sum, order) => sum + order.total, 0),
+    inProgressOrders: orders.filter((order) => !finishedStatuses.has(order.orderStatus)).length,
+    recentOrders: orders.slice(0, 8),
+  };
+}
+
 export async function getOrderById(orderId, storeSlug = "") {
   if (supabase && storeSlug) {
     const { data, error } = await supabase.rpc("get_public_order", {
@@ -1114,8 +1256,14 @@ export async function getOrderById(orderId, storeSlug = "") {
 export async function createOrder(storeId, data = {}) {
   if (supabase) {
     const payload = orderToSupabase(data);
+    if (!payload.idempotencyKey) {
+      const error = new Error("A tentativa do pedido não possui chave de idempotência.");
+      error.code = "ORDER_IDEMPOTENCY_KEY_REQUIRED";
+      throw error;
+    }
     const { data: created, error } = await supabase.rpc("create_public_order", {
       p_store_id: storeId,
+      p_idempotency_key: payload.idempotencyKey,
       p_customer: payload.customer,
       p_fulfillment: payload.fulfillment,
       p_address: payload.address,

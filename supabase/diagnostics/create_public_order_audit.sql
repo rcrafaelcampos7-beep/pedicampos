@@ -17,11 +17,11 @@ where n.nspname = 'public'
 order by p.oid;
 
 -- The frontend currently calls this exact identity by named parameters:
--- p_store_id, p_customer, p_fulfillment, p_address, p_notes,
+-- p_store_id, p_idempotency_key, p_customer, p_fulfillment, p_address, p_notes,
 -- p_payment_method and p_items.
 select
   to_regprocedure(
-    'public.create_public_order(uuid,jsonb,text,jsonb,text,text,jsonb)'
+    'public.create_public_order(uuid,uuid,jsonb,text,jsonb,text,text,jsonb)'
   ) as frontend_target_signature;
 
 select

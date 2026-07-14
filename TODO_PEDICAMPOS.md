@@ -586,7 +586,13 @@ Legenda:
 - [ ] Repetir matriz anon/RPC/tracking/Admin Loja A x Loja B depois da aplicacao.
 - [x] Criar migration 010 para validar required/min/max e integridade de adicionais dentro de `create_public_order`.
 - [ ] Executar migration 010 e o teste rollback-only A-J no Supabase.
+- [x] Criar migration 011 com idempotencia por loja e limites server-side.
+- [x] Enviar/reutilizar idempotency key no Checkout/database adapter.
+- [ ] Executar migration, diagnostico e teste rollback-only A-K da 011.
+- [ ] Planejar rate limit real por IP/usuario em Edge Function, Vercel ou gateway.
 - [ ] Aplicar entitlement comercial relevante no servidor e migrar platform/plans.
-- [ ] Migrar dashboard/pedidos globais do master sem N+1.
+- [x] Migrar dashboard/pedidos globais e metricas de lojas do master sem consulta por loja.
+- [ ] Validar dashboard/pedidos globais com master e pedidos de pelo menos duas lojas.
+- [ ] Paginar consultas globais do master antes de grande volume.
 - [ ] Adicionar rate limit, limites de payload, paginacao e testes automatizados de RLS/RPC/E2E.
 - [ ] Remover identidade especifica da migration de bootstrap em uma estrategia segura e portavel.
