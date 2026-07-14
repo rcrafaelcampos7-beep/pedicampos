@@ -1065,3 +1065,12 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - MasterDashboard agrega metricas no cliente sobre os dados remotos; MasterOrders e MasterStores reutilizam as mesmas consultas.
 - Antes de escala, substituir cargas completas por paginacao/cursor e validar indices com `EXPLAIN` usando volume representativo.
 - Testar manualmente master global e isolamento de usuario de loja antes do deploy.
+
+## Migration 012 - entitlements por plano
+
+- Arquivo: `supabase/migrations/012_plan_entitlements.sql`.
+- Preenche `feature_flags` apenas quando ainda e `[]`; nao altera `price`, `active`, nomes ou atribuicoes de loja.
+- Cria helpers SECURITY DEFINER com `search_path=public` e endurece RPCs/policies de pedidos, tracking e pagamento online.
+- Execute depois da 011; depois rode `012_plan_entitlements_audit.sql` e `012_plan_entitlements_test.sql`.
+- Deploy do frontend deve acompanhar a migration, pois ele passa a buscar `get_store_entitlements`.
+- Disponibilidade para novas vendas e termos comerciais por loja permanecem modelagens futuras separadas.

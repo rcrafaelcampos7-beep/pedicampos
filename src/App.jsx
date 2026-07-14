@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Card } from "./components/ui/Card.jsx";
-import { usePediData } from "./hooks/usePediData.js";
 import { Link, navigate, usePath } from "./routes/router.jsx";
 import { AdminCategories } from "./pages/AdminCategories.jsx";
 import { AdminAdditionals } from "./pages/AdminAdditionals.jsx";
@@ -21,6 +20,7 @@ import { MasterSettings } from "./pages/MasterSettings.jsx";
 import { MasterStores } from "./pages/MasterStores.jsx";
 import { OrderTrackingPage } from "./pages/OrderTrackingPage.jsx";
 import { StorePage } from "./pages/StorePage.jsx";
+import { ENTITLEMENT_FEATURES } from "./utils/plans.js";
 import {
   getAuthorizedStoreForUser,
   getCurrentUser,
@@ -61,7 +61,7 @@ function NotFound() {
   );
 }
 
-function AdminRouter({ path, platform }) {
+function AdminRouter({ path }) {
   const [authState, setAuthState] = useState({ loading: true, store: null });
 
   useEffect(() => {
@@ -96,10 +96,16 @@ function AdminRouter({ path, platform }) {
     navigate("/admin/dashboard");
     return null;
   }
-  if (path === "/admin/dashboard") return <AdminDashboard activePath={path} store={store} />;
+  if (path === "/admin/dashboard") {
+    return (
+      <PlanGuard store={store} feature={ENTITLEMENT_FEATURES.SIMPLE_REPORTS} activePath={path}>
+        <AdminDashboard activePath={path} store={store} />
+      </PlanGuard>
+    );
+  }
   if (path === "/admin/pedidos") {
     return (
-      <PlanGuard store={store} platform={platform} feature="ordersPanel" activePath={path}>
+      <PlanGuard store={store} feature={ENTITLEMENT_FEATURES.SAVED_ORDERS} activePath={path}>
         <AdminOrders activePath={path} store={store} />
       </PlanGuard>
     );
@@ -108,7 +114,7 @@ function AdminRouter({ path, platform }) {
   if (path === "/admin/categorias") return <AdminCategories activePath={path} store={store} />;
   if (path === "/admin/adicionais") {
     return (
-      <PlanGuard store={store} platform={platform} feature="additionals" activePath={path}>
+      <PlanGuard store={store} feature={ENTITLEMENT_FEATURES.SAVED_ORDERS} activePath={path}>
         <AdminAdditionals activePath={path} store={store} />
       </PlanGuard>
     );
@@ -159,13 +165,12 @@ function MasterRouter({ path }) {
 
 export default function App() {
   const path = usePath();
-  const { platform } = usePediData();
   useSessionVersion();
   const segments = path.split("/").filter(Boolean);
 
   if (path === "/") return <LandingPage />;
 
-  if (segments[0] === "admin") return <AdminRouter path={path} platform={platform} />;
+  if (segments[0] === "admin") return <AdminRouter path={path} />;
   if (segments[0] === "master") return <MasterRouter path={path} />;
 
   if (segments.length === 1) return <StorePage slug={segments[0]} />;

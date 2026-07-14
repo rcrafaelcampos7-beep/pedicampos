@@ -5,12 +5,11 @@ import { Card } from "../components/ui/Card.jsx";
 import { EmptyState } from "../components/ui/EmptyState.jsx";
 import { Input, Select, Textarea } from "../components/ui/Input.jsx";
 import { useCart } from "../hooks/useCart.js";
-import { usePediData } from "../hooks/usePediData.js";
 import { Link, navigate } from "../routes/router.jsx";
-import { createOrder, getPaymentMethodsByStore, getStoreBySlug, getStoreSettings } from "../services/database.js";
+import { createOrder, getPaymentMethodsByStore, getStoreBySlug, getStoreEntitlements, getStoreSettings } from "../services/database.js";
 import { formatCurrency } from "../utils/formatCurrency.js";
 import { ORDER_STATUS, PAYMENT_STATUS } from "../utils/orderStatus.js";
-import { planHasFeature } from "../utils/plans.js";
+import { ENTITLEMENT_FEATURES, hasFeature } from "../utils/plans.js";
 
 const paymentLabels = {
   pix: "Pix",
@@ -120,7 +119,6 @@ function getStorePixKey(store) {
 }
 
 export function CheckoutPage({ slug }) {
-  const { platform } = usePediData();
   const [store, setStore] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -143,19 +141,21 @@ export function CheckoutPage({ slug }) {
     changeFor: "",
   });
 
-  const canUseSiteCheckout = store ? planHasFeature(store.plan, "siteCheckout", platform) : false;
-  const canUseAutomaticPayments = store ? planHasFeature(store.plan, "onlinePayments", platform) : false;
-  const canUsePixAutomatic = store ? planHasFeature(store.plan, "pixAutomatic", platform) : false;
-  const canUseCardAutomatic = store ? planHasFeature(store.plan, "cardAutomatic", platform) : false;
+  const canUseSiteCheckout = hasFeature(store?.entitlements, ENTITLEMENT_FEATURES.SAVED_ORDERS);
+  const canUseWhatsappOrders = hasFeature(store?.entitlements, ENTITLEMENT_FEATURES.WHATSAPP_ORDERS);
+  const canUseAutomaticPayments = hasFeature(store?.entitlements, ENTITLEMENT_FEATURES.ONLINE_PAYMENT);
+  const canUseAutomaticPaymentConfirmation = hasFeature(
+    store?.entitlements,
+    ENTITLEMENT_FEATURES.AUTOMATIC_PAYMENT_CONFIRMATION
+  );
   const canShowPixQrCode = Boolean(
     store &&
       form.paymentMethod === "pix" &&
       canUseAutomaticPayments &&
-      canUsePixAutomatic &&
       (store.paymentMethods?.pixOnline || store.paymentMethods?.pix)
   );
   const canShowCardSimulation = Boolean(
-    store && form.paymentMethod === "card" && canUseAutomaticPayments && canUseCardAutomatic && store.paymentMethods?.card
+    store && form.paymentMethod === "card" && canUseAutomaticPayments && store.paymentMethods?.card
   );
   const paymentOptions = useMemo(() => (store ? getPaymentOptions(store) : []), [store]);
   const deliveryFee = form.fulfillment === "delivery" ? store?.deliveryFee || 0 : 0;
@@ -175,9 +175,10 @@ export function CheckoutPage({ slug }) {
     getStoreBySlug(slug, { allowLocalFallback: false })
       .then(async (result) => {
         if (!result) return null;
-        const [settings, paymentMethods] = await Promise.all([
+        const [settings, paymentMethods, entitlements] = await Promise.all([
           getStoreSettings(result.id),
           getPaymentMethodsByStore(result.id),
+          getStoreEntitlements(result.id),
         ]);
         return {
           ...result,
@@ -192,6 +193,9 @@ export function CheckoutPage({ slug }) {
           paymentInstructions: "",
           ...(settings || {}),
           paymentMethods,
+          entitlements,
+          plan: entitlements?.planKey || result.plan,
+          planName: entitlements?.planName || "",
           id: result.id,
         };
       })
@@ -305,6 +309,11 @@ export function CheckoutPage({ slug }) {
       return;
     }
 
+    if (!canUseSiteCheckout && !canUseWhatsappOrders) {
+      setError("O plano atual da loja nao permite receber pedidos por este canal.");
+      return;
+    }
+
     if (!canUseSiteCheckout) {
       const url = `https://wa.me/${store.whatsapp}?text=${encodeURIComponent(buildWhatsAppOrderMessage())}`;
       setWhatsappOrderUrl(url);
@@ -321,7 +330,7 @@ export function CheckoutPage({ slug }) {
     const idempotencyKey = getOrCreateOrderAttempt(store.id, cart.items);
     const number = makeOrderNumber();
     const paymentMethodLabel = paymentLabels[form.paymentMethod] || "A combinar";
-    const isAutomaticPayment = canShowPixQrCode || canShowCardSimulation;
+    const isAutomaticPayment = (canShowPixQrCode || canShowCardSimulation) && canUseAutomaticPaymentConfirmation;
     const order = {
       id: number,
       idempotencyKey,
@@ -583,12 +592,14 @@ export function CheckoutPage({ slug }) {
                     <Button variant="secondary" onClick={() => navigator.clipboard?.writeText(pixCode)}>
                       Copiar Pix
                     </Button>
-                    <Button
-                      variant={automaticPaymentApproved ? "success" : "primary"}
-                      onClick={() => setAutomaticPaymentApproved(true)}
-                    >
-                      {automaticPaymentApproved ? "Pagamento aprovado" : "Confirmar pagamento"}
-                    </Button>
+                    {canUseAutomaticPaymentConfirmation ? (
+                      <Button
+                        variant={automaticPaymentApproved ? "success" : "primary"}
+                        onClick={() => setAutomaticPaymentApproved(true)}
+                      >
+                        {automaticPaymentApproved ? "Pagamento aprovado" : "Confirmar pagamento"}
+                      </Button>
+                    ) : null}
                   </div>
                   <p className="muted">
                     Status: {automaticPaymentApproved ? "Pagamento confirmado" : "Aguardando pagamento"}.
@@ -607,12 +618,14 @@ export function CheckoutPage({ slug }) {
                   <strong>Pagamento com cartão</strong>
                   <p className="muted">Confirme o pagamento para prosseguir com o pedido.</p>
                   <div className="pix-actions">
-                    <Button
-                      variant={automaticPaymentApproved ? "success" : "primary"}
-                      onClick={() => setAutomaticPaymentApproved(true)}
-                    >
-                      {automaticPaymentApproved ? "Pagamento aprovado" : "Confirmar pagamento"}
-                    </Button>
+                    {canUseAutomaticPaymentConfirmation ? (
+                      <Button
+                        variant={automaticPaymentApproved ? "success" : "primary"}
+                        onClick={() => setAutomaticPaymentApproved(true)}
+                      >
+                        {automaticPaymentApproved ? "Pagamento aprovado" : "Confirmar pagamento"}
+                      </Button>
+                    ) : null}
                   </div>
                   <p className="muted">
                     Status: {automaticPaymentApproved ? "Pagamento confirmado" : "Aguardando pagamento"}.
@@ -622,8 +635,14 @@ export function CheckoutPage({ slug }) {
             ) : null}
           </Card>
 
-          <Button variant="store" size="lg" type="submit" disabled={submitting || !cart.items.length || !store.active || !store.open}>
-            {submitting ? "Enviando pedido..." : canUseSiteCheckout ? "Finalizar pedido" : "Enviar pedido no WhatsApp"}
+          <Button variant="store" size="lg" type="submit" disabled={submitting || !cart.items.length || !store.active || !store.open || (!canUseSiteCheckout && !canUseWhatsappOrders)}>
+            {submitting
+              ? "Enviando pedido..."
+              : canUseSiteCheckout
+                ? "Finalizar pedido"
+                : canUseWhatsappOrders
+                  ? "Enviar pedido no WhatsApp"
+                  : "Pedidos indisponiveis"}
           </Button>
         </form>
 

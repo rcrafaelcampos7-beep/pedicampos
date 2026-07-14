@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { formatCurrency } from "../../utils/formatCurrency.js";
-import { planHasFeature } from "../../utils/plans.js";
+import { ENTITLEMENT_FEATURES, hasFeature } from "../../utils/plans.js";
 import { Button } from "../ui/Button.jsx";
 import { Textarea } from "../ui/Input.jsx";
 import { Modal } from "../ui/Modal.jsx";
 
-export function ProductModal({ product, store, platform, open, onClose, onAdd }) {
+export function ProductModal({ product, store, open, onClose, onAdd }) {
   const [quantity, setQuantity] = useState(1);
   const [note, setNote] = useState("");
   const [selectedByGroup, setSelectedByGroup] = useState({});
@@ -13,7 +13,7 @@ export function ProductModal({ product, store, platform, open, onClose, onAdd })
 
   const additionalGroups = useMemo(() => {
     if (!product) return [];
-    if (!planHasFeature(store.plan, "additionals", platform)) return [];
+    if (!hasFeature(store.entitlements, ENTITLEMENT_FEATURES.SAVED_ORDERS)) return [];
     return (store.additionalGroups || [])
       .filter((group) => group.active && group.productIds?.includes(product.id))
       .map((group) => ({

@@ -5,15 +5,13 @@ import { Card } from "../components/ui/Card.jsx";
 import { EmptyState } from "../components/ui/EmptyState.jsx";
 import { Modal } from "../components/ui/Modal.jsx";
 import { StatusBadge } from "../components/ui/StatusBadge.jsx";
-import { usePediData } from "../hooks/usePediData.js";
 import { getOrdersByStore, updateOrder } from "../services/database.js";
 import { formatCurrency } from "../utils/formatCurrency.js";
 import { getOrderStatusActions, normalizeOrderStatusForFulfillment, ORDER_STATUS, PAYMENT_STATUS } from "../utils/orderStatus.js";
-import { planHasFeature } from "../utils/plans.js";
+import { ENTITLEMENT_FEATURES, hasFeature } from "../utils/plans.js";
 import { generateWhatsAppMessage } from "../utils/whatsappMessage.js";
 
 export function AdminOrders({ activePath, store }) {
-  const { platform } = usePediData();
   const [orders, setOrders] = useState([]);
   const [selectedOrderId, setSelectedOrderId] = useState("");
   const [filter, setFilter] = useState("todos");
@@ -119,7 +117,7 @@ export function AdminOrders({ activePath, store }) {
               <Button variant="success" disabled={pending} onClick={() => changeOrder(selectedOrder.id, { paymentStatus: PAYMENT_STATUS.APPROVED, orderStatus: ORDER_STATUS.PAYMENT_CONFIRMED })}>Confirmar pagamento</Button>
               {getOrderStatusActions(selectedOrder.fulfillment).map((status) => <Button key={status} variant="secondary" disabled={pending} onClick={() => changeOrder(selectedOrder.id, { orderStatus: status })}>{status}</Button>)}
             </div>
-            {planHasFeature(store.plan, "whatsappAutomation", platform) ? <Card className="whatsapp-preview"><span>Prévia da mensagem automática de WhatsApp</span><p>{generateWhatsAppMessage(selectedOrder, selectedOrder.orderStatus)}</p></Card> : null}
+            {hasFeature(store.entitlements, ENTITLEMENT_FEATURES.WHATSAPP_AUTOMATION) ? <Card className="whatsapp-preview"><span>Prévia da mensagem automática de WhatsApp</span><p>{generateWhatsAppMessage(selectedOrder, selectedOrder.orderStatus)}</p></Card> : null}
           </div>
         ) : null}
       </Modal>

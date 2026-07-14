@@ -1,5 +1,5 @@
 import { supabase } from "./supabaseClient.js";
-import { getStoreById } from "./database.js";
+import { getStoreById, getStoreEntitlements } from "./database.js";
 
 const DEV_AUTH_KEY = "pedicampos.master.dev-auth";
 const isDevFallbackEnabled =
@@ -71,10 +71,22 @@ export async function getAuthorizedStoreForUser(user) {
   if (!memberships.length) return null;
 
   const membership = memberships[0];
-  const store = await getStoreById(membership.store_id, { allowLocalFallback: false });
+  const [store, entitlements] = await Promise.all([
+    getStoreById(membership.store_id, { allowLocalFallback: false }),
+    getStoreEntitlements(membership.store_id),
+  ]);
   if (!store) return null;
 
-  return { store, membership, memberships };
+  return {
+    store: {
+      ...store,
+      entitlements,
+      plan: entitlements?.planKey || store.plan,
+      planName: entitlements?.planName || "",
+    },
+    membership,
+    memberships,
+  };
 }
 
 export async function signInStoreUser(email, password) {

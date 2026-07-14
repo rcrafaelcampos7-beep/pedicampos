@@ -1142,3 +1142,13 @@ As telas `MasterDashboard`, `MasterOrders` e `MasterStores` nao consomem mais `u
 Essas funcoes sao deliberadamente estritas: nao existe caminho para `storage.js` quando o client esta ausente ou uma consulta falha. O RLS permanece definitivo: as policies tenant usam `can_access_store(store_id)`, que concede abrangencia global somente a uma sessao para a qual `is_master()` seja verdadeira.
 
 As consultas relacionadas sao paralelizadas onde possivel e evitam uma chamada por loja. Ainda carregam o conjunto completo; cursor/paginacao e a proxima correcao de escala. Sem Realtime, cada tela recarrega ao montar e pelos botoes Atualizar.
+
+### Entitlements tecnicos por plano
+
+`plans.feature_flags` e a fonte persistida. O frontend usa nomes snake_case canonicos por `ENTITLEMENT_FEATURES` e recebe `{storeId, planKey, planName, planActive, features}` de `get_store_entitlements`. Aliases antigos existem apenas como compatibilidade; nao sao outra fonte de autorizacao.
+
+No banco, `store_has_feature(store_id, feature)` e a primitiva de autorizacao. `create_public_order` exige `saved_orders`, `get_public_order` exige `order_tracking`, policies dos snapshots exigem `saved_orders` para nao-master e `payment_methods.online_enabled` exige `online_payment`. Master continua explicitamente autorizado pelas policies.
+
+O plano Start continua tecnicamente ativo. Para deixar de oferece-lo sem afetar contratos existentes, adicionar futuramente `plans.available_for_new_stores`; seletores de nova venda filtram essa coluna, enquanto lojas ja ligadas continuam resolvendo `plan_key` e `feature_flags`.
+
+Preco oficial deve permanecer em `plans.price`. Condicoes individuais devem usar uma futura `store_commercial_terms` com `store_id`, preco contratado/snapshot, desconto, taxa de implantacao, isencao e vigencia. Isso preserva preco oficial e historico sem codificar promocao nos entitlements.

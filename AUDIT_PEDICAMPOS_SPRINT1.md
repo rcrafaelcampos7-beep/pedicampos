@@ -53,12 +53,12 @@ Escopo: arquitetura React, autenticacao, adapters, Supabase/RLS, banco, desempen
 - Impacto: uma chamada direta pode criar pedido que a interface impediria.
 - Correcao: criada `010_validate_order_additionals.sql`. A RPC valida, antes de qualquer INSERT, grupo/opcao ativos e do mesmo tenant, grupo vinculado ao produto, correspondencia `groupId`/`optionId`, duplicidade, required/min/max e selecao unica. O teste transacional `010_validate_order_additionals_test.sql` cobre A-J e termina em ROLLBACK. Aplicacao e teste remoto permanecem pendentes.
 
-### A2 - entitlement de plano e fonte comercial sao client-side/locais
+### A2 - entitlement de plano e fonte comercial sao client-side/locais (entitlements corrigidos localmente)
 
 - Arquivos: `src/App.jsx`, `src/components/admin/PlanGuard.jsx`, `src/hooks/usePediData.js`, `src/pages/CheckoutPage.jsx`, `src/pages/MasterSettings.jsx`.
 - Problema: `platform` e regras por plano ainda vem do snapshot local; guards e checkout sao controles de interface, nao autorizacao no banco.
 - Impacto: localStorage adulterado ou chamada direta pode liberar recurso comercial sem o plano devido; configuracoes do master nao sao compartilhadas.
-- Correcao sugerida: migrar leitura/escrita de `platform_settings`/`plans` e aplicar regras comerciais relevantes na fronteira server-side. Exige decisao de negocio e banco, portanto nao foi alterado.
+- Correcao: migration 012 centraliza entitlements em `plans.feature_flags`, expoe leitura normalizada por loja e aplica `saved_orders`, `order_tracking` e `online_payment` nas RPCs/policies. Frontend usa o mesmo conjunto canonico. Precos e disponibilidade comercial continuam separados e nao foram alterados.
 
 ### A3 - pedidos globais do master ainda sao locais (corrigido localmente)
 

@@ -1217,3 +1217,12 @@ Build:
 - Adicionadas consultas estritas `getAllStoresForMaster`, `getAllOrdersForMaster`, `getPlansForMaster` e `getMasterDashboardMetrics`.
 - As consultas Master nao usam localStorage em client ausente, falha de rede, RLS ou schema; a tela apresenta erro controlado.
 - Nenhuma migration, regra comercial, Realtime ou paginacao foi adicionada. Build, node check e diff check passaram.
+
+## 2026-07-14 - Entitlements centralizados por plano
+
+- Criada migration `012_plan_entitlements.sql` sem alterar precos, atividade dos planos ou lojas vinculadas.
+- Populados somente `feature_flags` ainda vazios de Start, Pro e Premium; valores nao vazios nao sao sobrescritos.
+- Adicionados `store_has_feature` e `get_store_entitlements`, ambos com owner/search_path/grants controlados.
+- A RPC publica de pedidos exige `saved_orders`; tracking exige `order_tracking`; RLS dos snapshots e pagamento online aplicam os mesmos flags.
+- App, checkout, loja publica, auth admin, settings, pedidos, relatorios e automacao de WhatsApp passaram a usar entitlements canonicos.
+- Criados diagnostico read-only e teste rollback-only da migration 012. Build e checks locais passaram; execucao remota permanece manual.

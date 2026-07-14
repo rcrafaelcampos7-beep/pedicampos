@@ -1171,3 +1171,12 @@ Build:
 - RLS continua sendo a fronteira: `can_access_store` abrange todas as lojas somente quando `is_master()` e verdadeiro.
 - Dashboard calcula pedidos/faturamento do dia no fuso do navegador, pedidos em andamento e ultimos pedidos. Realtime e paginacao continuam pendentes.
 - Build, sintaxe JS e diff check passaram; conferencia dos valores no projeto remoto permanece manual.
+
+### Entitlements reais por plano - 2026-07-14
+
+- Criada migration 012 com `plans.feature_flags` como fonte persistida unica para recursos Start, Pro e Premium.
+- Start permanece ativo e recebe somente `whatsapp_orders`; Pro recebe pedidos salvos, tracking, pagamento online, confirmacao automatica e relatorios simples; Premium recebe todos os recursos preparados.
+- `store_has_feature` e `get_store_entitlements` centralizam decisoes SQL e leitura React. A troca de `stores.plan_key` muda os recursos automaticamente.
+- Criacao de pedido salvo, tracking publico, leitura/escrita administrativa de snapshots e ativacao de pagamento online agora possuem verificacao server-side.
+- Nenhum preco, `plans.active` ou atribuicao existente foi alterado. MasterPlans usa plans/stores remotos para as decisoes de recurso.
+- Futuro comercial recomendado: `plans.available_for_new_stores` separado do estado tecnico e tabela `store_commercial_terms` para preco contratado, desconto e taxa de implantacao por loja.

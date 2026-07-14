@@ -590,7 +590,11 @@ Legenda:
 - [x] Enviar/reutilizar idempotency key no Checkout/database adapter.
 - [ ] Executar migration, diagnostico e teste rollback-only A-K da 011.
 - [ ] Planejar rate limit real por IP/usuario em Edge Function, Vercel ou gateway.
-- [ ] Aplicar entitlement comercial relevante no servidor e migrar platform/plans.
+- [x] Aplicar entitlements tecnicos relevantes no servidor usando `plans.feature_flags`.
+- [x] Centralizar entitlements tecnicos em `plans.feature_flags` e aplicar guards server/frontend.
+- [ ] Executar migration 012, diagnostico e teste rollback-only no Supabase.
+- [ ] Validar Start, Pro e Premium com lojas reais e tentativa direta de recurso bloqueado.
+- [ ] Projetar `available_for_new_stores` e `store_commercial_terms` antes de promocao/cobranca real.
 - [x] Migrar dashboard/pedidos globais e metricas de lojas do master sem consulta por loja.
 - [ ] Validar dashboard/pedidos globais com master e pedidos de pelo menos duas lojas.
 - [ ] Paginar consultas globais do master antes de grande volume.

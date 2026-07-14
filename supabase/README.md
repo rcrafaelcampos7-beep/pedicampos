@@ -361,3 +361,13 @@ MasterDashboard, MasterOrders e as metricas de MasterStores consultam diretament
 Nenhuma policy nova foi necessaria. As policies authenticated das tabelas de pedidos usam `can_access_store(store_id)`; essa funcao permite todas as lojas somente ao papel de aplicacao reconhecido por `is_master()`. Admins comuns continuam vendo apenas o tenant vinculado em `store_users`.
 
 As telas recarregam ao montar e pelo botao Atualizar. Realtime e paginacao nao fazem parte desta etapa e continuam pendentes para volume de producao.
+
+### Migration 012 - entitlements reais
+
+Execute `supabase/migrations/012_plan_entitlements.sql` depois da 011. Ela usa `plans.feature_flags` sem alterar precos ou desativar Start, Pro ou Premium.
+
+O banco passa a decidir recursos por `store_has_feature`: pedidos persistidos exigem `saved_orders`, acompanhamento exige `order_tracking`, snapshots administrativos exigem o entitlement da loja e `online_enabled` exige `online_payment`. O frontend le o mesmo conjunto por `get_store_entitlements`.
+
+Depois execute `supabase/diagnostics/012_plan_entitlements_audit.sql` e `012_plan_entitlements_test.sql`. O teste cria uma loja efemera, valida os tres mapas e troca Start para Pro dentro de uma transacao finalizada com ROLLBACK.
+
+Para ocultar Start de novas vendas no futuro, nao use `active=false`: adicione uma coluna comercial como `available_for_new_stores`. Precos promocionais e implantacao isenta devem ficar em tabela futura por loja, preservando `plans.price` como valor oficial.

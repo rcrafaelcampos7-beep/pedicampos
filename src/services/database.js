@@ -1,4 +1,5 @@
 import { createEmptyStore } from "../data/mockStores.js";
+import { getDefaultEntitlementsForPlan, hasFeature, normalizeFeature } from "../utils/plans.js";
 import { uniqueSlug } from "../utils/slug.js";
 import { supabase } from "./supabaseClient.js";
 import {
@@ -299,6 +300,17 @@ export function planFromSupabase(row) {
   };
 }
 
+export function entitlementsFromSupabase(data, fallbackStoreId = "") {
+  if (!data) return null;
+  return {
+    storeId: data.storeId || data.store_id || fallbackStoreId,
+    planKey: data.planKey || data.plan_key || "start",
+    planName: data.planName || data.plan_name || "",
+    planActive: data.planActive ?? data.plan_active ?? true,
+    features: Array.isArray(data.features) ? data.features : [],
+  };
+}
+
 export function orderAdditionalFromSupabase(row) {
   return {
     groupId: row.additional_group_id,
@@ -497,6 +509,44 @@ export async function getStoreById(id, options = {}) {
   const store = storeFromSupabase(data);
   if (store) migrateLegacyStoresForSupabase([store]);
   return store;
+}
+
+export async function getStoreEntitlements(storeId) {
+  if (!supabase) {
+    const store = getLocalStoreById(storeId);
+    if (!store) return null;
+    return {
+      storeId,
+      planKey: store.plan,
+      planName: store.plan,
+      features: getDefaultEntitlementsForPlan(store.plan),
+    };
+  }
+
+  const { data, error } = await supabase.rpc("get_store_entitlements", { p_store_id: storeId });
+  if (error) {
+    useLocalForConnectionFailure("getStoreEntitlements", error);
+    const store = getLocalStoreById(storeId);
+    return store ? {
+      storeId,
+      planKey: store.plan,
+      planName: store.plan,
+      features: getDefaultEntitlementsForPlan(store.plan),
+    } : null;
+  }
+  return entitlementsFromSupabase(data, storeId);
+}
+
+export async function canStoreUseFeature(storeId, feature) {
+  const normalizedFeature = normalizeFeature(feature);
+  if (!supabase) return hasFeature(await getStoreEntitlements(storeId), normalizedFeature);
+
+  const { data, error } = await supabase.rpc("store_has_feature", {
+    target_store_id: storeId,
+    target_feature: normalizedFeature,
+  });
+  if (error) throwDatabaseError("validar o recurso do plano", error);
+  return Boolean(data);
 }
 
 export async function createStore(data = {}) {

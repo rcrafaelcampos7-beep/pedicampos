@@ -11,6 +11,7 @@ import {
   updateStoreSettings,
 } from "../services/database.js";
 import { slugify } from "../utils/slug.js";
+import { ENTITLEMENT_FEATURES, hasFeature } from "../utils/plans.js";
 
 function makeInitialForm(store) {
   return {
@@ -29,6 +30,7 @@ function makeInitialForm(store) {
 }
 
 export function AdminSettings({ activePath, store }) {
+  const canUseOnlinePayment = hasFeature(store.entitlements, ENTITLEMENT_FEATURES.ONLINE_PAYMENT);
   const [form, setForm] = useState(() => makeInitialForm(store));
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -46,7 +48,10 @@ export function AdminSettings({ activePath, store }) {
         setForm({
           ...makeInitialForm(store),
           ...(settings || {}),
-          paymentMethods,
+          paymentMethods: {
+            ...paymentMethods,
+            pixOnline: canUseOnlinePayment && Boolean(paymentMethods.pixOnline),
+          },
           id: store.id,
         });
       })
@@ -146,7 +151,9 @@ export function AdminSettings({ activePath, store }) {
             </div>
             <div className="settings-switches">
               <Checkbox label="Pix" checked={Boolean(form.paymentMethods.pix)} onChange={(checked) => updatePayment("pix", checked)} />
-              <Checkbox label="Pix automático / QR Code" checked={Boolean(form.paymentMethods.pixOnline)} onChange={(checked) => updatePayment("pixOnline", checked)} />
+              {canUseOnlinePayment ? (
+                <Checkbox label="Pix automático / QR Code" checked={Boolean(form.paymentMethods.pixOnline)} onChange={(checked) => updatePayment("pixOnline", checked)} />
+              ) : null}
               <Checkbox label="Dinheiro" checked={Boolean(form.paymentMethods.cash)} onChange={(checked) => updatePayment("cash", checked)} />
               <Checkbox label="Cartão" checked={Boolean(form.paymentMethods.card)} onChange={(checked) => updatePayment("card", checked)} />
             </div>

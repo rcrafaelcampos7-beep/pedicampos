@@ -8,7 +8,6 @@ import { Button } from "../components/ui/Button.jsx";
 import { Card } from "../components/ui/Card.jsx";
 import { EmptyState } from "../components/ui/EmptyState.jsx";
 import { useCart } from "../hooks/useCart.js";
-import { usePediData } from "../hooks/usePediData.js";
 import { Link } from "../routes/router.jsx";
 import {
   getAdditionalGroupsByStore,
@@ -16,12 +15,12 @@ import {
   getPaymentMethodsByStore,
   getProductsByStore,
   getStoreBySlug,
+  getStoreEntitlements,
   getStoreSettings,
 } from "../services/database.js";
-import { planHasFeature } from "../utils/plans.js";
+import { ENTITLEMENT_FEATURES, hasFeature } from "../utils/plans.js";
 
 export function StorePage({ slug }) {
-  const { platform } = usePediData();
   const [store, setStore] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -47,12 +46,13 @@ export function StorePage({ slug }) {
     getStoreBySlug(slug, { allowLocalFallback: false })
       .then(async (result) => {
         if (!result) return null;
-        const [settings, paymentMethods, remoteCategories, remoteProducts, remoteAdditionalGroups] = await Promise.all([
+        const [settings, paymentMethods, remoteCategories, remoteProducts, remoteAdditionalGroups, entitlements] = await Promise.all([
           getStoreSettings(result.id),
           getPaymentMethodsByStore(result.id),
           getCategoriesByStore(result.id),
           getProductsByStore(result.id),
           getAdditionalGroupsByStore(result.id),
+          getStoreEntitlements(result.id),
         ]);
         const categories = remoteCategories.filter((category) => category.active);
         const products = remoteProducts.filter((product) => product.active);
@@ -80,6 +80,9 @@ export function StorePage({ slug }) {
           categories,
           products,
           additionalGroups,
+          entitlements,
+          plan: entitlements?.planKey || result.plan,
+          planName: entitlements?.planName || "",
           id: result.id,
         };
       })
@@ -180,9 +183,11 @@ export function StorePage({ slug }) {
             <strong>{store.open ? "Loja aberta para pedidos" : "Loja fechada agora"}</strong>
             <p>{store.open ? store.openingHours : "O carrinho continua visível, mas o checkout fica bloqueado."}</p>
             <p className="muted">
-              {planHasFeature(store.plan, "siteCheckout", platform)
+              {hasFeature(store.entitlements, ENTITLEMENT_FEATURES.SAVED_ORDERS)
                 ? "Finalize seu pedido aqui pelo site."
-                : "Finalize seu pedido pelo WhatsApp da loja."}
+                : hasFeature(store.entitlements, ENTITLEMENT_FEATURES.WHATSAPP_ORDERS)
+                  ? "Finalize seu pedido pelo WhatsApp da loja."
+                  : "Pedidos indisponiveis para o plano atual."}
             </p>
           </div>
           <Button variant="store" onClick={() => setCartOpen(true)} disabled={!cart.items.length}>
@@ -218,7 +223,6 @@ export function StorePage({ slug }) {
       <ProductModal
         product={selectedProduct}
         store={store}
-        platform={platform}
         open={Boolean(selectedProduct)}
         onClose={() => setSelectedProduct(null)}
         onAdd={addProductToCart}

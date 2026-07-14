@@ -5,20 +5,35 @@ import { Card } from "../components/ui/Card.jsx";
 import { PlanCard } from "../components/ui/PlanCard.jsx";
 import { Select } from "../components/ui/Input.jsx";
 import { usePediData } from "../hooks/usePediData.js";
-import { updateStore } from "../services/database.js";
+import { getAllStoresForMaster, getPlansForMaster, updateStore } from "../services/database.js";
 import { formatCurrency } from "../utils/formatCurrency.js";
 import { getActivePlans, getPlanName, getPlanPriceLabel, PLAN_KEYS } from "../utils/plans.js";
 
 export function MasterPlans({ activePath }) {
-  const { stores, platform } = usePediData();
-  const [storeId, setStoreId] = useState(stores[0]?.id || "");
+  const { platform: localPlatform } = usePediData();
+  const [stores, setStores] = useState([]);
+  const [remotePlans, setRemotePlans] = useState([]);
+  const [storeId, setStoreId] = useState("");
   const [plan, setPlan] = useState("pro");
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState("");
+  const platform = {
+    ...localPlatform,
+    plans: Object.fromEntries(remotePlans.map((item) => [item.key, item])),
+  };
   const activePlans = getActivePlans(platform).map((item) => ({
     ...item,
     price: item.priceLabel || `${formatCurrency(item.price)}/mês`,
   }));
+
+  useEffect(() => {
+    Promise.all([getAllStoresForMaster(), getPlansForMaster()])
+      .then(([loadedStores, loadedPlans]) => {
+        setStores(loadedStores);
+        setRemotePlans(loadedPlans);
+      })
+      .catch(() => setFeedback("NÃ£o foi possÃ­vel carregar os planos do Supabase."));
+  }, []);
 
   useEffect(() => {
     if (!storeId && stores[0]?.id) setStoreId(stores[0].id);
@@ -30,6 +45,7 @@ export function MasterPlans({ activePath }) {
     setFeedback("");
     try {
       await updateStore(storeId, { plan });
+      setStores(await getAllStoresForMaster());
       setFeedback("Plano atualizado com sucesso.");
     } catch {
       setFeedback("Não foi possível atualizar o plano da loja. Tente novamente.");
