@@ -1214,3 +1214,15 @@ Build:
 - `updateStorePublicProfile` valida logo/banner retornados pela RPC e consulta novamente quando necessário; divergência gera `STORE_IMAGES_NOT_PERSISTED`.
 - Falha ou ausência de confirmação remove os uploads novos por compensação e não executa a exclusão tardia das imagens anteriores.
 - RPC/migration 006 já continha `p_logo` e `p_banner_url`; nenhuma migration nova foi necessária. Teste autenticado de escrita permanece manual.
+
+### Sprint 2.2 - paginação das listagens - 2026-07-15
+
+- AdminOrders, AdminProducts, AdminCategories, AdminAdditionals, MasterOrders, MasterStores e MasterPlans usam paginação remota de 20 registros.
+- O contrato comum retorna `data`, `total`, `page`, `pageSize` e `totalPages`; consultas primárias usam `count: "exact"`, ordenação e `.range()`.
+- Filtros de pedidos agora são aplicados antes do count/range no Supabase. Alterações, exclusões e Atualizar preservam a página quando possível.
+- MasterPlans deixou de usar `usePediData`; planos, lojas e preço de implantação são remotos. As telas Master paginadas não possuem fallback local.
+- Listas auxiliares de categorias, produtos e lojas usadas em seletores também navegam por páginas, evitando carregar todos os registros.
+- Helpers legados sem paginação permanecem para fluxos fora da Sprint, como catálogo público e dashboards; não são usados pelas sete listagens.
+- Métricas de MasterStores são calculadas somente para as lojas da página atual, em lotes remotos com range.
+- Nenhuma migration ou alteração de banco foi necessária. Testes manuais com mais de 20 registros permanecem pendentes.
+- Smoke test remoto anônimo confirmou range/count exact em stores, plans, products, categories e additional_groups; testes autenticados e páginas acima de 1 dependem de massa manual.

@@ -1102,3 +1102,9 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - A migration 006 já define `update_store_public_profile(..., p_logo, p_banner_url)` e atualiza `stores.logo`/`stores.banner_url`.
 - A consulta remota confirmou que `logo_url` não é coluna de `stores`; o nome canônico existente é `logo`.
 - A correção foi exclusivamente no cliente/adapter para validar a resposta antes de sucesso; migrations 006 e 013 permanecem inalteradas.
+## Sprint 2.2 - paginação sem migration
+
+- Não houve alteração de schema, RLS, índices, RPCs ou migrations.
+- A paginação usa as ordenações e índices já existentes, `count: "exact"` e ranges inclusivos do PostgREST.
+- Antes de volumes muito altos, revisar `EXPLAIN` das ordenações por `store_id/sort_order/created_at` e considerar índices somente com evidência; nenhuma criação foi antecipada nesta etapa.
+- Agregação server-side para métricas de MasterStores permanece candidata futura, pois agregados REST retornam PGRST123 no projeto atual.

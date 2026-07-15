@@ -615,6 +615,12 @@ Legenda:
 - [ ] Repetir em sessão autenticada: logo isolada, banner isolado, ambos e falha simulada, conferindo `stores.logo` e `stores.banner_url`.
 - [x] Migrar dashboard/pedidos globais e metricas de lojas do master sem consulta por loja.
 - [ ] Validar dashboard/pedidos globais com master e pedidos de pelo menos duas lojas.
-- [ ] Paginar consultas globais do master antes de grande volume.
+- [x] Paginar consultas globais do master antes de grande volume.
 - [ ] Adicionar rate limit, limites de payload, paginacao e testes automatizados de RLS/RPC/E2E.
 - [ ] Remover identidade especifica da migration de bootstrap em uma estrategia segura e portavel.
+- [x] Criar contrato único de paginação remota com 20 registros, count exact e range.
+- [x] Paginar pedidos, produtos, categorias e adicionais no Admin.
+- [x] Paginar pedidos, lojas e planos no Master sem fallback local.
+- [x] Remover `usePediData` e snapshots locais do MasterPlans.
+- [ ] Validar manualmente página intermediária/última, filtros, CRUD e página vazia com massas acima de 20 registros.
+- [ ] Avaliar RPC agregada futura para métricas de lojas; agregações REST estão desabilitadas no projeto e hoje os totais da página são lidos em lotes.

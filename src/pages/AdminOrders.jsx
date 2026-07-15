@@ -4,10 +4,11 @@ import { Button } from "../components/ui/Button.jsx";
 import { Card } from "../components/ui/Card.jsx";
 import { EmptyState } from "../components/ui/EmptyState.jsx";
 import { Modal } from "../components/ui/Modal.jsx";
+import { PaginationControls } from "../components/ui/PaginationControls.jsx";
 import { StatusBadge } from "../components/ui/StatusBadge.jsx";
-import { getOrdersByStore, updateOrder } from "../services/database.js";
+import { DEFAULT_PAGE_SIZE, getOrdersByStorePaginated, updateOrder } from "../services/database.js";
 import { formatCurrency } from "../utils/formatCurrency.js";
-import { getOrderStatusActions, normalizeOrderStatusForFulfillment, ORDER_STATUS, PAYMENT_STATUS } from "../utils/orderStatus.js";
+import { getOrderStatusActions, ORDER_STATUS, PAYMENT_STATUS } from "../utils/orderStatus.js";
 import { ENTITLEMENT_FEATURES, hasFeature } from "../utils/plans.js";
 import { generateWhatsAppMessage } from "../utils/whatsappMessage.js";
 
@@ -18,16 +19,23 @@ export function AdminOrders({ activePath, store }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
-  const filteredOrders = filter === "todos"
-    ? orders
-    : orders.filter((order) => normalizeOrderStatusForFulfillment(order.orderStatus, order.fulfillment) === filter);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
+  const filteredOrders = orders;
   const selectedOrder = useMemo(() => orders.find((order) => order.id === selectedOrderId), [orders, selectedOrderId]);
 
-  async function loadOrders() {
+  async function loadOrders(targetPage = page) {
     setLoading(true);
     setError("");
     try {
-      setOrders(await getOrdersByStore(store.id));
+      const result = await getOrdersByStorePaginated(store.id, {
+        page: targetPage,
+        pageSize: DEFAULT_PAGE_SIZE,
+        status: filter,
+      });
+      setOrders(result.data);
+      setPagination({ total: result.total, totalPages: result.totalPages });
+      if (targetPage > result.totalPages) setPage(result.totalPages);
     } catch {
       setError("Não foi possível carregar os pedidos. Tente novamente.");
     } finally {
@@ -36,15 +44,15 @@ export function AdminOrders({ activePath, store }) {
   }
 
   useEffect(() => {
-    loadOrders();
-  }, [store.id]);
+    loadOrders(page);
+  }, [store.id, page, filter]);
 
   async function changeOrder(orderId, data) {
     if (pending) return;
     setPending(true);
     try {
       await updateOrder(orderId, data);
-      await loadOrders();
+      await loadOrders(page);
     } catch {
       setError("Não foi possível atualizar o pedido.");
     } finally {
@@ -63,11 +71,11 @@ export function AdminOrders({ activePath, store }) {
         <div className="panel-heading">
           <div><span className="eyebrow">Pedidos</span><h2>Pedidos da loja</h2></div>
           <div className="row-actions">
-            <select value={filter} onChange={(event) => setFilter(event.target.value)}>
+            <select value={filter} onChange={(event) => { setFilter(event.target.value); setPage(1); }}>
               <option value="todos">Todos os status</option>
               {Object.values(ORDER_STATUS).map((status) => <option key={status} value={status}>{status}</option>)}
             </select>
-            <Button variant="secondary" size="sm" disabled={loading || pending} onClick={loadOrders}>
+            <Button variant="secondary" size="sm" disabled={loading || pending} onClick={() => loadOrders(page)}>
               {loading ? "Atualizando..." : "Atualizar"}
             </Button>
           </div>
@@ -90,6 +98,7 @@ export function AdminOrders({ activePath, store }) {
             </table>
           </Card>
         ) : !loading && !error ? <EmptyState title="Nenhum pedido" description="Os pedidos finalizados no checkout aparecem aqui." /> : null}
+        {!error ? <PaginationControls page={page} totalPages={pagination.totalPages} total={pagination.total} loading={loading} onPageChange={setPage} /> : null}
       </section>
 
       <Modal open={Boolean(selectedOrder)} title={`Pedido #${selectedOrder?.number}`} onClose={() => setSelectedOrderId("")} size="lg">

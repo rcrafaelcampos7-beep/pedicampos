@@ -1607,6 +1607,25 @@ td {
   justify-content: flex-end;
 }
 
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.pagination-controls span {
+  color: var(--color-muted);
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.list-toolbar {
+  justify-content: flex-end;
+}
+
 @media (max-width: 760px) {
   .asset-settings-grid {
     grid-template-columns: 1fr;
@@ -1621,6 +1640,10 @@ td {
   .image-crop-stage-banner {
     height: min(54dvh, 440px);
     min-height: 260px;
+  }
+
+  .pagination-controls {
+    flex-wrap: wrap;
   }
 }
 

@@ -397,3 +397,8 @@ Uploads da galeria passam por recorte obrigatório no navegador. As saídas são
 ### Persistência de URLs da loja
 
 A coluna da logo é `public.stores.logo`; não existe `stores.logo_url`. Banner usa `public.stores.banner_url`. A RPC da migration 006 recebe `p_logo` e `p_banner_url`, retorna a linha atualizada e o frontend exige que os valores retornados coincidam com as URLs enviadas antes de mostrar sucesso ou excluir os objetos anteriores.
+### Paginação do frontend
+
+As listagens administrativas usam páginas de 20 registros. As consultas principais executam `.select(..., { count: "exact" })`, ordenação determinística e `.range(from, to)`, retornando dados e metadados na mesma requisição.
+
+Admin filtra sempre pelo `store_id` obtido da sessão; Master depende das policies de master e não usa fallback local. Nenhuma migration é necessária para a Sprint 2.2. Consultas auxiliares de detalhes usam apenas os IDs da página corrente, não conjuntos globais.

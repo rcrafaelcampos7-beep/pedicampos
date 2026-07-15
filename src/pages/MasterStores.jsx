@@ -5,12 +5,14 @@ import { Card } from "../components/ui/Card.jsx";
 import { Checkbox, Input, Select, Textarea } from "../components/ui/Input.jsx";
 import { Modal } from "../components/ui/Modal.jsx";
 import { Badge } from "../components/ui/Badge.jsx";
+import { PaginationControls } from "../components/ui/PaginationControls.jsx";
 import { Link } from "../routes/router.jsx";
 import {
   deactivateStore,
-  getAllOrdersForMaster,
-  getAllStoresForMaster,
-  getPlansForMaster,
+  DEFAULT_PAGE_SIZE,
+  getMasterStoreMetrics,
+  getPlansPaginated,
+  getStoresPaginated,
   updateStore,
 } from "../services/database.js";
 import { formatCurrency } from "../utils/formatCurrency.js";
@@ -19,7 +21,7 @@ import { uniqueSlug } from "../utils/slug.js";
 
 export function MasterStores({ activePath }) {
   const [stores, setStores] = useState([]);
-  const [orders, setOrders] = useState([]);
+  const [storeMetrics, setStoreMetrics] = useState({});
   const [platform, setPlatform] = useState({ plans: {} });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -28,23 +30,29 @@ export function MasterStores({ activePath }) {
   const [editingId, setEditingId] = useState("");
   const selectedStore = stores.find((store) => store.id === editingId);
   const [form, setForm] = useState(null);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
 
   useEffect(() => {
     setForm(selectedStore ? { ...selectedStore } : null);
   }, [selectedStore]);
 
-  async function loadStores() {
+  async function loadStores(targetPage = page) {
     setLoading(true);
     setError("");
     try {
-      const [remoteStores, remoteOrders, remotePlans] = await Promise.all([
-        getAllStoresForMaster(),
-        getAllOrdersForMaster(),
-        getPlansForMaster(),
+      const [storeResult, planResult] = await Promise.all([
+        getStoresPaginated({ page: targetPage, pageSize: DEFAULT_PAGE_SIZE }),
+        Object.keys(platform.plans).length
+          ? Promise.resolve(null)
+          : getPlansPaginated({ page: 1, pageSize: DEFAULT_PAGE_SIZE }),
       ]);
-      setStores(remoteStores);
-      setOrders(remoteOrders);
-      setPlatform({ plans: Object.fromEntries(remotePlans.map((plan) => [plan.key, plan])) });
+      const metrics = await getMasterStoreMetrics(storeResult.data.map((store) => store.id));
+      setStores(storeResult.data);
+      setStoreMetrics(metrics);
+      setPagination({ total: storeResult.total, totalPages: storeResult.totalPages });
+      if (targetPage > storeResult.totalPages) setPage(storeResult.totalPages);
+      if (planResult) setPlatform({ plans: Object.fromEntries(planResult.data.map((plan) => [plan.key, plan])) });
     } catch {
       setError("Não foi possível carregar as lojas. Tente novamente.");
     } finally {
@@ -53,8 +61,8 @@ export function MasterStores({ activePath }) {
   }
 
   useEffect(() => {
-    loadStores();
-  }, []);
+    loadStores(page);
+  }, [page]);
 
   async function toggleActive(store) {
     if (pendingStoreId) return;
@@ -63,7 +71,7 @@ export function MasterStores({ activePath }) {
     try {
       if (store.active) await deactivateStore(store.id);
       else await updateStore(store.id, { active: true });
-      await loadStores();
+      await loadStores(page);
     } catch {
       setError("Não foi possível alterar o status da loja. Tente novamente.");
     } finally {
@@ -83,7 +91,7 @@ export function MasterStores({ activePath }) {
         deliveryFee: Number(form.deliveryFee) || 0,
       });
       setEditingId("");
-      await loadStores();
+      await loadStores(page);
     } catch {
       setError("Não foi possível salvar a loja. Tente novamente.");
     } finally {
@@ -103,9 +111,14 @@ export function MasterStores({ activePath }) {
             <span className="eyebrow">Lojas</span>
             <h2>Todas as lojas cadastradas</h2>
           </div>
-          <Link className="btn btn-primary btn-md" to="/master/criar-loja">
-            Criar loja
-          </Link>
+          <div className="row-actions">
+            <Link className="btn btn-primary btn-md" to="/master/criar-loja">
+              Criar loja
+            </Link>
+            <Button variant="secondary" size="sm" disabled={loading || saving || Boolean(pendingStoreId)} onClick={() => loadStores(page)}>
+              {loading ? "Atualizando..." : "Atualizar"}
+            </Button>
+          </div>
         </div>
 
         {error ? <div className="form-error">{error}</div> : null}
@@ -114,8 +127,7 @@ export function MasterStores({ activePath }) {
           {loading ? <Card><p>Carregando lojas...</p></Card> : null}
           {!loading && !stores.length ? <Card><p>Nenhuma loja cadastrada.</p></Card> : null}
           {!loading && stores.map((store) => {
-            const storeOrders = orders.filter((order) => order.storeId === store.id);
-            const revenue = storeOrders.reduce((sum, order) => sum + order.total, 0);
+            const metrics = storeMetrics[store.id] || { orders: 0, revenue: 0 };
             return (
               <Card key={store.id} className="master-store-card">
                 <img src={store.banner} alt={store.name} />
@@ -127,8 +139,8 @@ export function MasterStores({ activePath }) {
                 </div>
                 <div className="store-card-metrics">
                   <span>{getPlanName(platform, store.plan)}</span>
-                  <strong>{storeOrders.length} pedidos</strong>
-                  <strong>{formatCurrency(revenue)}</strong>
+                  <strong>{metrics.orders} pedidos</strong>
+                  <strong>{formatCurrency(metrics.revenue)}</strong>
                 </div>
                 <div className="row-actions">
                   <Button variant="secondary" size="sm" onClick={() => setEditingId(store.id)}>
@@ -150,6 +162,7 @@ export function MasterStores({ activePath }) {
             );
           })}
         </div>
+        {!error ? <PaginationControls page={page} totalPages={pagination.totalPages} total={pagination.total} loading={loading} onPageChange={setPage} /> : null}
       </section>
 
       <Modal open={Boolean(form)} title={`Editar ${form?.name || "loja"}`} onClose={() => setEditingId("")} size="lg">

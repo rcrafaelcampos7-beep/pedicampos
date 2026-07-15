@@ -4,11 +4,13 @@ import { Button } from "../components/ui/Button.jsx";
 import { Card } from "../components/ui/Card.jsx";
 import { Badge } from "../components/ui/Badge.jsx";
 import { Checkbox, Input, Select, Textarea } from "../components/ui/Input.jsx";
+import { PaginationControls } from "../components/ui/PaginationControls.jsx";
 import {
   createAdditionalGroup,
+  DEFAULT_PAGE_SIZE,
   deleteAdditionalGroup,
-  getAdditionalGroupsByStore,
-  getProductsByStore,
+  getAdditionalGroupsByStorePaginated,
+  getProductsByStorePaginated,
   updateAdditionalGroup,
 } from "../services/database.js";
 import { formatCurrency } from "../utils/formatCurrency.js";
@@ -43,19 +45,33 @@ export function AdminAdditionals({ activePath, store }) {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [pendingGroupId, setPendingGroupId] = useState("");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
+  const [productPage, setProductPage] = useState(1);
+  const [productPagination, setProductPagination] = useState({ total: 0, totalPages: 1 });
+  const [productsLoaded, setProductsLoaded] = useState(false);
+  const [loadedProductPage, setLoadedProductPage] = useState(0);
   const additionalFormRef = useRef(null);
 
-  async function loadData() {
+  async function loadData(targetPage = page, options = {}) {
     setLoading(true);
     setError("");
 
     try {
-      const [nextGroups, nextProducts] = await Promise.all([
-        getAdditionalGroupsByStore(store.id),
-        getProductsByStore(store.id),
+      const [groupResult, productResult] = await Promise.all([
+        getAdditionalGroupsByStorePaginated(store.id, { page: targetPage, pageSize: DEFAULT_PAGE_SIZE }),
+        productsLoaded && loadedProductPage === productPage && !options.refreshReferences
+          ? Promise.resolve({ data: products, total: productPagination.total, totalPages: productPagination.totalPages })
+          : getProductsByStorePaginated(store.id, { page: productPage, pageSize: DEFAULT_PAGE_SIZE }),
       ]);
-      setGroups(nextGroups);
-      setProducts(nextProducts);
+      setGroups(groupResult.data);
+      setPagination({ total: groupResult.total, totalPages: groupResult.totalPages });
+      if (targetPage > groupResult.totalPages) setPage(groupResult.totalPages);
+      setProducts(productResult.data);
+      setProductsLoaded(true);
+      setLoadedProductPage(productPage);
+      setProductPagination({ total: productResult.total, totalPages: productResult.totalPages });
+      if (productPage > productResult.totalPages) setProductPage(productResult.totalPages);
     } catch {
       setError("Não foi possível carregar os adicionais. Tente novamente.");
     } finally {
@@ -65,8 +81,15 @@ export function AdminAdditionals({ activePath, store }) {
 
   useEffect(() => {
     resetForm();
-    loadData();
+    setPage(1);
+    setProductPage(1);
+    setProductsLoaded(false);
+    setLoadedProductPage(0);
   }, [store.id]);
+
+  useEffect(() => {
+    loadData(page);
+  }, [store.id, page, productPage]);
 
   function resetForm() {
     setEditingId("");
@@ -142,7 +165,7 @@ export function AdminAdditionals({ activePath, store }) {
       if (editingId) await updateAdditionalGroup(editingId, group);
       else await createAdditionalGroup(store.id, group);
       resetForm();
-      await loadData();
+      await loadData(page);
     } catch {
       setError("Não foi possível salvar o grupo. Confira produtos e opções e tente novamente.");
     } finally {
@@ -158,7 +181,7 @@ export function AdminAdditionals({ activePath, store }) {
     try {
       await deleteAdditionalGroup(groupId);
       if (editingId === groupId) resetForm();
-      await loadData();
+      await loadData(page);
     } catch {
       setError("Não foi possível excluir o grupo. Tente novamente.");
     } finally {
@@ -173,7 +196,7 @@ export function AdminAdditionals({ activePath, store }) {
 
     try {
       await updateAdditionalGroup(group.id, { storeId: store.id, active: !group.active });
-      await loadData();
+      await loadData(page);
     } catch {
       setError("Não foi possível alterar o status do grupo. Tente novamente.");
     } finally {
@@ -234,6 +257,13 @@ export function AdminAdditionals({ activePath, store }) {
                   onChange={(checked) => toggleProduct(product.id, checked)}
                 />
               )) : <p className="muted">Cadastre produtos antes de vincular este grupo.</p>}
+              <PaginationControls
+                page={productPage}
+                totalPages={productPagination.totalPages}
+                total={productPagination.total}
+                loading={loading}
+                onPageChange={setProductPage}
+              />
             </div>
 
             <div className="modal-actions">
@@ -244,6 +274,11 @@ export function AdminAdditionals({ activePath, store }) {
         </Card>
 
         <div className="admin-list">
+          <div className="row-actions list-toolbar">
+            <Button variant="secondary" size="sm" disabled={loading || saving || Boolean(pendingGroupId)} onClick={() => loadData(page, { refreshReferences: true })}>
+              {loading ? "Atualizando..." : "Atualizar"}
+            </Button>
+          </div>
           {loading ? <Card><p>Carregando adicionais...</p></Card> : null}
           {!loading && !groups.length ? <Card><p>Nenhum grupo de adicionais cadastrado.</p></Card> : null}
           {!loading && groups.map((group) => (
@@ -277,6 +312,7 @@ export function AdminAdditionals({ activePath, store }) {
               </div>
             </Card>
           ))}
+          {!error ? <PaginationControls page={page} totalPages={pagination.totalPages} total={pagination.total} loading={loading} onPageChange={setPage} /> : null}
         </div>
       </section>
     </AdminLayout>

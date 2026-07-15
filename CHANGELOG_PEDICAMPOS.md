@@ -1259,3 +1259,15 @@ Build:
 - Logs completos de payload, resposta e erro foram limitados ao ambiente DEV.
 - Compensação continua removendo uploads novos em falha; imagens antigas só são excluídas depois da confirmação.
 - Confirmado que `stores.logo_url` não existe no schema remoto; nenhuma migration foi criada.
+## 2026-07-15 - Sprint 2.2 paginação
+
+- Adicionado `PaginationControls` reutilizável com Anterior, Próxima, página, total de páginas e total de registros.
+- Adicionados helpers paginados para stores, orders, products, categories, additional_groups e plans.
+- Todas as consultas principais usam `count: "exact"` e `.range()`; tamanho padrão centralizado em `DEFAULT_PAGE_SIZE = 20`.
+- Filtros de pedidos Admin/Master passaram ao servidor e reiniciam somente a página do resultado filtrado.
+- Filtros de retirada preservam compatibilidade com pedidos antigos salvos como `out_for_delivery`/“Saiu para entrega”.
+- CRUD/status preserva a página atual; exclusão da última linha ajusta para a última página válida.
+- MasterStores deixou de carregar todos os pedidos globais; métricas são obtidas apenas para as lojas visíveis.
+- MasterPlans deixou de misturar dados do `usePediData` com Supabase.
+- Nenhuma migration, regra comercial ou layout geral foi alterado.
+- Smoke test remoto de leitura confirmou contagem e range nas cinco tabelas públicas testadas.

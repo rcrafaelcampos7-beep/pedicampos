@@ -1,4 +1,5 @@
 import { createEmptyStore } from "../data/mockStores.js";
+import { ORDER_STATUS } from "../utils/orderStatus.js";
 import { getDefaultEntitlementsForPlan, hasFeature, normalizeFeature } from "../utils/plans.js";
 import { uniqueSlug } from "../utils/slug.js";
 import { supabase } from "./supabaseClient.js";
@@ -35,6 +36,30 @@ const PAYMENT_METHOD_COLUMNS =
   "id, store_id, type, label, active, provider, provider_config, manual, online_enabled, created_at, updated_at";
 const PLAN_COLUMNS =
   "id, key, name, price, price_label, description, features, feature_flags, active, highlighted, badge, comparison_text, sort_order, created_at, updated_at";
+
+export const DEFAULT_PAGE_SIZE = 20;
+
+function normalizePagination(page = 1, pageSize = DEFAULT_PAGE_SIZE) {
+  const normalizedPage = Math.max(1, Math.trunc(Number(page)) || 1);
+  const normalizedPageSize = Math.min(100, Math.max(1, Math.trunc(Number(pageSize)) || DEFAULT_PAGE_SIZE));
+  const from = (normalizedPage - 1) * normalizedPageSize;
+  return { page: normalizedPage, pageSize: normalizedPageSize, from, to: from + normalizedPageSize - 1 };
+}
+
+function paginatedResult(data, count, pagination) {
+  const total = Math.max(0, Number(count) || 0);
+  return {
+    data: data || [],
+    total,
+    page: pagination.page,
+    pageSize: pagination.pageSize,
+    totalPages: Math.max(1, Math.ceil(total / pagination.pageSize)),
+  };
+}
+
+function requireSupabaseForPagination(operation) {
+  if (!supabase) throw new Error(`Supabase nao esta configurado para ${operation}.`);
+}
 
 function getLocalStores() {
   return getStorageDatabase().stores;
@@ -475,6 +500,19 @@ export async function getAllStoresForMaster() {
   return (data || []).map(storeFromSupabase);
 }
 
+export async function getStoresPaginated(options = {}) {
+  requireSupabaseForPagination("paginar lojas do master");
+  const pagination = normalizePagination(options.page, options.pageSize);
+  const { data, error, count } = await supabase
+    .from("stores")
+    .select(STORE_COLUMNS, { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(pagination.from, pagination.to);
+
+  if (error) throwDatabaseError("carregar lojas paginadas do master", error);
+  return paginatedResult((data || []).map(storeFromSupabase), count, pagination);
+}
+
 export async function getStoreBySlug(slug, options = {}) {
   const allowLocalFallback = options.allowLocalFallback !== false;
   if (!supabase) {
@@ -831,8 +869,32 @@ export async function getProductsByStore(storeId) {
   return (data || []).map(productFromSupabase);
 }
 
+export async function getProductsByStorePaginated(storeId, options = {}) {
+  requireSupabaseForPagination("paginar produtos");
+  const pagination = normalizePagination(options.page, options.pageSize);
+  const { data, error, count } = await supabase
+    .from("products")
+    .select(PRODUCT_COLUMNS, { count: "exact" })
+    .eq("store_id", storeId)
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false })
+    .range(pagination.from, pagination.to);
+
+  if (error) throwDatabaseError("carregar produtos paginados", error);
+  return paginatedResult((data || []).map(productFromSupabase), count, pagination);
+}
+
 export async function createProduct(storeId, data = {}) {
-  const products = await getProductsByStore(storeId);
+  let nextOrder = Number(data.order) || 0;
+  if (!nextOrder && supabase) {
+    const { count, error: countError } = await supabase
+      .from("products")
+      .select("id", { count: "exact", head: true })
+      .eq("store_id", storeId);
+    if (countError) throwDatabaseError("calcular a ordem do produto", countError);
+    nextOrder = (Number(count) || 0) + 1;
+  }
+  if (!nextOrder) nextOrder = (getLocalStoreById(storeId)?.products || []).length + 1;
   const product = {
     id: data.id || makeId("prod"),
     name: data.name || "",
@@ -841,7 +903,7 @@ export async function createProduct(storeId, data = {}) {
     categoryId: data.categoryId || "",
     image: data.image || getLocalStoreById(storeId)?.banner || "",
     active: data.active !== false,
-    order: Number(data.order) || products.length + 1,
+    order: nextOrder,
     ...data,
   };
 
@@ -935,13 +997,37 @@ export async function getCategoriesByStore(storeId) {
   return (data || []).map(categoryFromSupabase);
 }
 
+export async function getCategoriesByStorePaginated(storeId, options = {}) {
+  requireSupabaseForPagination("paginar categorias");
+  const pagination = normalizePagination(options.page, options.pageSize);
+  const { data, error, count } = await supabase
+    .from("categories")
+    .select(CATEGORY_COLUMNS, { count: "exact" })
+    .eq("store_id", storeId)
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true })
+    .range(pagination.from, pagination.to);
+
+  if (error) throwDatabaseError("carregar categorias paginadas", error);
+  return paginatedResult((data || []).map(categoryFromSupabase), count, pagination);
+}
+
 export async function createCategory(storeId, data = {}) {
-  const categories = await getCategoriesByStore(storeId);
+  let nextOrder = Number(data.order) || 0;
+  if (!nextOrder && supabase) {
+    const { count, error: countError } = await supabase
+      .from("categories")
+      .select("id", { count: "exact", head: true })
+      .eq("store_id", storeId);
+    if (countError) throwDatabaseError("calcular a ordem da categoria", countError);
+    nextOrder = (Number(count) || 0) + 1;
+  }
+  if (!nextOrder) nextOrder = (getLocalStoreById(storeId)?.categories || []).length + 1;
   const category = {
     id: data.id || makeId("cat"),
     name: data.name || "",
     active: data.active !== false,
-    order: Number(data.order) || categories.length + 1,
+    order: nextOrder,
     ...data,
   };
 
@@ -988,6 +1074,37 @@ export async function updateCategory(categoryId, data) {
   }));
 
   return getLocalStoreById(store.id)?.categories.find((category) => category.id === categoryId) || null;
+}
+
+export async function moveCategoryByStore(storeId, categoryId, direction) {
+  requireSupabaseForPagination("reordenar categoria");
+  const { data: current, error: currentError } = await supabase
+    .from("categories")
+    .select("id, sort_order")
+    .eq("store_id", storeId)
+    .eq("id", categoryId)
+    .maybeSingle();
+  if (currentError) throwDatabaseError("localizar categoria para reordenar", currentError);
+  if (!current) return null;
+
+  let neighborQuery = supabase
+    .from("categories")
+    .select("id, sort_order")
+    .eq("store_id", storeId);
+  neighborQuery = direction === "up"
+    ? neighborQuery.lt("sort_order", current.sort_order).order("sort_order", { ascending: false })
+    : neighborQuery.gt("sort_order", current.sort_order).order("sort_order", { ascending: true });
+  const { data: neighbor, error: neighborError } = await neighborQuery.limit(1).maybeSingle();
+  if (neighborError) throwDatabaseError("localizar categoria vizinha", neighborError);
+  if (!neighbor) return current.id;
+
+  const [currentUpdate, neighborUpdate] = await Promise.all([
+    supabase.from("categories").update({ sort_order: neighbor.sort_order }).eq("store_id", storeId).eq("id", current.id),
+    supabase.from("categories").update({ sort_order: current.sort_order }).eq("store_id", storeId).eq("id", neighbor.id),
+  ]);
+  const updateError = currentUpdate.error || neighborUpdate.error;
+  if (updateError) throwDatabaseError("reordenar categoria", updateError);
+  return current.id;
 }
 
 export async function deleteCategory(categoryId) {
@@ -1053,6 +1170,49 @@ export async function getAdditionalGroupsByStore(storeId) {
       productsByGroup.get(row.id) || []
     )
   );
+}
+
+export async function getAdditionalGroupsByStorePaginated(storeId, options = {}) {
+  requireSupabaseForPagination("paginar grupos de adicionais");
+  const pagination = normalizePagination(options.page, options.pageSize);
+  const groupsResult = await supabase
+    .from("additional_groups")
+    .select(ADDITIONAL_GROUP_COLUMNS, { count: "exact" })
+    .eq("store_id", storeId)
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true })
+    .range(pagination.from, pagination.to);
+
+  if (groupsResult.error) throwDatabaseError("carregar adicionais paginados", groupsResult.error);
+  const groupRows = groupsResult.data || [];
+  if (!groupRows.length) return paginatedResult([], groupsResult.count, pagination);
+
+  const groupIds = groupRows.map((group) => group.id);
+  const [optionsResult, linksResult] = await Promise.all([
+    supabase.from("additional_options").select(ADDITIONAL_OPTION_COLUMNS).eq("store_id", storeId).in("additional_group_id", groupIds).order("sort_order"),
+    supabase.from("additional_group_products").select("additional_group_id, product_id").eq("store_id", storeId).in("additional_group_id", groupIds),
+  ]);
+  const relatedError = optionsResult.error || linksResult.error;
+  if (relatedError) throwDatabaseError("carregar detalhes dos adicionais paginados", relatedError);
+
+  const optionsByGroup = new Map();
+  for (const row of optionsResult.data || []) {
+    const current = optionsByGroup.get(row.additional_group_id) || [];
+    current.push(additionalOptionFromSupabase(row));
+    optionsByGroup.set(row.additional_group_id, current);
+  }
+  const productsByGroup = new Map();
+  for (const row of linksResult.data || []) {
+    const current = productsByGroup.get(row.additional_group_id) || [];
+    current.push(row.product_id);
+    productsByGroup.set(row.additional_group_id, current);
+  }
+
+  return paginatedResult(groupRows.map((row) => additionalGroupFromSupabase(
+    row,
+    optionsByGroup.get(row.id) || [],
+    productsByGroup.get(row.id) || []
+  )), groupsResult.count, pagination);
 }
 
 async function saveAdditionalGroupToSupabase(storeId, groupId, group) {
@@ -1178,6 +1338,104 @@ export async function deleteAdditionalGroup(groupId) {
   }));
 
   return groupId;
+}
+
+function applyOrderListFilters(query, options = {}) {
+  let filteredQuery = query;
+  if (options.storeId && options.storeId !== "todos") filteredQuery = filteredQuery.eq("store_id", options.storeId);
+  if (options.status === ORDER_STATUS.READY_FOR_PICKUP) {
+    filteredQuery = filteredQuery
+      .in("order_status", [ORDER_STATUS.READY_FOR_PICKUP, ORDER_STATUS.OUT_FOR_DELIVERY, "out_for_delivery"])
+      .in("fulfillment", ["pickup", "retirada"]);
+  } else if (options.status === ORDER_STATUS.OUT_FOR_DELIVERY) {
+    filteredQuery = filteredQuery
+      .in("order_status", [ORDER_STATUS.OUT_FOR_DELIVERY, "out_for_delivery"])
+      .not("fulfillment", "in", '("pickup","retirada")');
+  } else if (options.status && options.status !== "todos") {
+    filteredQuery = filteredQuery.eq("order_status", options.status);
+  }
+  return filteredQuery;
+}
+
+async function hydratePaginatedOrders(orderRows, options = {}) {
+  if (!orderRows?.length) return [];
+  const orderIds = orderRows.map((order) => order.id);
+  const customerIds = [...new Set(orderRows.map((order) => order.customer_id).filter(Boolean))];
+  const storeIds = [...new Set(orderRows.map((order) => order.store_id).filter(Boolean))];
+  const [customersResult, itemsResult, storesResult] = await Promise.all([
+    customerIds.length
+      ? supabase.from("customers").select("id, name, phone, email").in("id", customerIds)
+      : Promise.resolve({ data: [], error: null }),
+    supabase.from("order_items").select("*").in("order_id", orderIds),
+    options.storeId
+      ? supabase.from("stores").select("id, slug, name").eq("id", options.storeId).maybeSingle()
+      : supabase.from("stores").select("id, slug, name").in("id", storeIds),
+  ]);
+  const relatedError = customersResult.error || itemsResult.error || storesResult.error;
+  if (relatedError) throwDatabaseError("carregar detalhes dos pedidos paginados", relatedError);
+
+  const itemRows = itemsResult.data || [];
+  const itemIds = itemRows.map((item) => item.id);
+  const additionalsResult = itemIds.length
+    ? await supabase.from("order_item_additionals").select("*").in("order_item_id", itemIds)
+    : { data: [], error: null };
+  if (additionalsResult.error) throwDatabaseError("carregar adicionais dos pedidos paginados", additionalsResult.error);
+
+  const customersById = new Map((customersResult.data || []).map((customer) => [customer.id, customer]));
+  const storeRows = options.storeId
+    ? (storesResult.data ? [storesResult.data] : [])
+    : (storesResult.data || []);
+  const storesById = new Map(storeRows.map((store) => [store.id, store]));
+  const additionalsByItem = new Map();
+  for (const additional of additionalsResult.data || []) {
+    const current = additionalsByItem.get(additional.order_item_id) || [];
+    current.push(additional);
+    additionalsByItem.set(additional.order_item_id, current);
+  }
+  const itemsByOrder = new Map();
+  for (const item of itemRows) {
+    const current = itemsByOrder.get(item.order_id) || [];
+    current.push({ ...item, order_item_additionals: additionalsByItem.get(item.id) || [] });
+    itemsByOrder.set(item.order_id, current);
+  }
+
+  return orderRows.map((order) => orderFromSupabase({
+    ...order,
+    customers: customersById.get(order.customer_id),
+    stores: storesById.get(order.store_id),
+    order_items: itemsByOrder.get(order.id) || [],
+  }));
+}
+
+export async function getOrdersByStorePaginated(storeId, options = {}) {
+  requireSupabaseForPagination("paginar pedidos da loja");
+  const pagination = normalizePagination(options.page, options.pageSize);
+  let query = supabase
+    .from("orders")
+    .select("*", { count: "exact" })
+    .eq("store_id", storeId);
+  query = applyOrderListFilters(query, { status: options.status });
+  const { data, error, count } = await query
+    .order("created_at", { ascending: false })
+    .range(pagination.from, pagination.to);
+
+  if (error) throwDatabaseError("carregar pedidos paginados da loja", error);
+  const orders = await hydratePaginatedOrders(data || [], { storeId });
+  return paginatedResult(orders, count, pagination);
+}
+
+export async function getMasterOrdersPaginated(options = {}) {
+  requireSupabaseForPagination("paginar pedidos globais");
+  const pagination = normalizePagination(options.page, options.pageSize);
+  let query = supabase.from("orders").select("*", { count: "exact" });
+  query = applyOrderListFilters(query, options);
+  const { data, error, count } = await query
+    .order("created_at", { ascending: false })
+    .range(pagination.from, pagination.to);
+
+  if (error) throwDatabaseError("carregar pedidos paginados do master", error);
+  const orders = await hydratePaginatedOrders(data || []);
+  return paginatedResult(orders, count, pagination);
 }
 
 export async function getOrdersByStore(storeId) {
@@ -1306,6 +1564,38 @@ export async function getAllOrdersForMaster() {
   }));
 }
 
+export async function getMasterStoreMetrics(storeIds = []) {
+  requireSupabaseForPagination("carregar metricas das lojas do master");
+  const ids = [...new Set(storeIds.filter(Boolean))];
+  if (!ids.length) return {};
+
+  const chunkSize = 500;
+  let offset = 0;
+  let total = 0;
+  const rows = [];
+  do {
+    const query = supabase
+      .from("orders")
+      .select("store_id, total", offset === 0 ? { count: "exact" } : undefined)
+      .in("store_id", ids)
+      .order("created_at", { ascending: false })
+      .range(offset, offset + chunkSize - 1);
+    const result = await query;
+    if (result.error) throwDatabaseError("carregar metricas das lojas do master", result.error);
+    if (offset === 0) total = Number(result.count) || 0;
+    rows.push(...(result.data || []));
+    offset += chunkSize;
+  } while (rows.length < total);
+
+  return rows.reduce((metrics, order) => {
+    const current = metrics[order.store_id] || { orders: 0, revenue: 0 };
+    current.orders += 1;
+    current.revenue += Number(order.total) || 0;
+    metrics[order.store_id] = current;
+    return metrics;
+  }, {});
+}
+
 export async function getPlansForMaster() {
   if (!supabase) throw new Error("Supabase nao esta configurado para o painel master.");
 
@@ -1316,6 +1606,30 @@ export async function getPlansForMaster() {
 
   if (error) throwDatabaseError("carregar os planos do master", error);
   return (data || []).map(planFromSupabase);
+}
+
+export async function getPlansPaginated(options = {}) {
+  requireSupabaseForPagination("paginar planos do master");
+  const pagination = normalizePagination(options.page, options.pageSize);
+  const { data, error, count } = await supabase
+    .from("plans")
+    .select(PLAN_COLUMNS, { count: "exact" })
+    .order("sort_order", { ascending: true })
+    .range(pagination.from, pagination.to);
+
+  if (error) throwDatabaseError("carregar planos paginados do master", error);
+  return paginatedResult((data || []).map(planFromSupabase), count, pagination);
+}
+
+export async function getPlatformSettingsForMaster() {
+  requireSupabaseForPagination("carregar configuracoes da plataforma");
+  const { data, error } = await supabase
+    .from("platform_settings")
+    .select("implementation_price")
+    .eq("key", "default")
+    .maybeSingle();
+  if (error) throwDatabaseError("carregar configuracoes da plataforma", error);
+  return { implementationPrice: Number(data?.implementation_price) || 0 };
 }
 
 export async function getMasterDashboardMetrics() {

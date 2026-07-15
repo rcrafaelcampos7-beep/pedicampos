@@ -4,11 +4,13 @@ import { Button } from "../components/ui/Button.jsx";
 import { Card } from "../components/ui/Card.jsx";
 import { Checkbox, Input, Select, Textarea } from "../components/ui/Input.jsx";
 import { ImageCropModal } from "../components/ui/ImageCropModal.jsx";
+import { PaginationControls } from "../components/ui/PaginationControls.jsx";
 import {
   createProduct,
+  DEFAULT_PAGE_SIZE,
   deleteProduct as deleteDatabaseProduct,
-  getCategoriesByStore,
-  getProductsByStore,
+  getCategoriesByStorePaginated,
+  getProductsByStorePaginated,
   updateProduct,
 } from "../services/database.js";
 import { formatCurrency } from "../utils/formatCurrency.js";
@@ -41,6 +43,12 @@ export function AdminProducts({ activePath, store }) {
   const [uploadingLabel, setUploadingLabel] = useState("");
   const [fileInputVersion, setFileInputVersion] = useState(0);
   const [cropRequest, setCropRequest] = useState(null);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
+  const [categoryPage, setCategoryPage] = useState(1);
+  const [categoryPagination, setCategoryPagination] = useState({ total: 0, totalPages: 1 });
+  const [categoriesLoaded, setCategoriesLoaded] = useState(false);
+  const [loadedCategoryPage, setLoadedCategoryPage] = useState(0);
   const productFormRef = useRef(null);
 
   useEffect(() => () => {
@@ -51,20 +59,28 @@ export function AdminProducts({ activePath, store }) {
     if (cropRequest?.sourceUrl) URL.revokeObjectURL(cropRequest.sourceUrl);
   }, [cropRequest?.sourceUrl]);
 
-  async function loadData() {
+  async function loadData(targetPage = page, options = {}) {
     setLoading(true);
     setError("");
 
     try {
-      const [nextProducts, nextCategories] = await Promise.all([
-        getProductsByStore(store.id),
-        getCategoriesByStore(store.id),
+      const [productResult, categoryResult] = await Promise.all([
+        getProductsByStorePaginated(store.id, { page: targetPage, pageSize: DEFAULT_PAGE_SIZE }),
+        categoriesLoaded && loadedCategoryPage === categoryPage && !options.refreshReferences
+          ? Promise.resolve({ data: categories, total: categoryPagination.total, totalPages: categoryPagination.totalPages })
+          : getCategoriesByStorePaginated(store.id, { page: categoryPage, pageSize: DEFAULT_PAGE_SIZE }),
       ]);
-      setProducts(nextProducts);
-      setCategories(nextCategories);
+      setProducts(productResult.data);
+      setPagination({ total: productResult.total, totalPages: productResult.totalPages });
+      if (targetPage > productResult.totalPages) setPage(productResult.totalPages);
+      setCategories(categoryResult.data);
+      setCategoriesLoaded(true);
+      setLoadedCategoryPage(categoryPage);
+      setCategoryPagination({ total: categoryResult.total, totalPages: categoryResult.totalPages });
+      if (categoryPage > categoryResult.totalPages) setCategoryPage(categoryResult.totalPages);
       setForm((current) => ({
         ...current,
-        categoryId: current.categoryId || nextCategories[0]?.id || "",
+        categoryId: current.categoryId || categoryResult.data[0]?.id || "",
         image: current.image || store.banner,
       }));
     } catch {
@@ -81,8 +97,15 @@ export function AdminProducts({ activePath, store }) {
     setFileInputVersion((current) => current + 1);
     setEditingId("");
     setForm({ ...emptyProduct, image: store.banner });
-    loadData();
+    setPage(1);
+    setCategoryPage(1);
+    setCategoriesLoaded(false);
+    setLoadedCategoryPage(0);
   }, [store.id]);
+
+  useEffect(() => {
+    loadData(page);
+  }, [store.id, page, categoryPage]);
 
   function updateForm(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -190,7 +213,7 @@ export function AdminProducts({ activePath, store }) {
             await updateProduct(created.id, { image: uploadedImage.publicUrl });
           } catch (imageError) {
             if (uploadedImage) await Promise.allSettled([deleteStoredImage(uploadedImage.publicUrl)]);
-            await loadData();
+            await loadData(page);
             setEditingId(created.id);
             setForm({ ...product, image: created.image });
             setError(`Produto salvo, mas a imagem nao foi enviada. ${imageError.message || "Tente novamente."}`);
@@ -200,7 +223,7 @@ export function AdminProducts({ activePath, store }) {
       }
 
       resetForm();
-      await loadData();
+      await loadData(page);
     } catch (saveError) {
       if (uploadedImage) await Promise.allSettled([deleteStoredImage(uploadedImage.publicUrl)]);
       setError(saveError.message || "Nao foi possivel salvar o produto. Confira a categoria e tente novamente.");
@@ -220,7 +243,7 @@ export function AdminProducts({ activePath, store }) {
       await deleteDatabaseProduct(productId);
       if (product?.image) await Promise.allSettled([deleteStoredImage(product.image)]);
       if (editingId === productId) resetForm();
-      await loadData();
+      await loadData(page);
     } catch {
       setError("Não foi possível excluir o produto. Tente novamente.");
     } finally {
@@ -235,7 +258,7 @@ export function AdminProducts({ activePath, store }) {
 
     try {
       await updateProduct(product.id, { active: !product.active });
-      await loadData();
+      await loadData(page);
     } catch {
       setError("Não foi possível alterar o status do produto. Tente novamente.");
     } finally {
@@ -273,6 +296,9 @@ export function AdminProducts({ activePath, store }) {
                 onChange={(event) => updateForm("categoryId", event.target.value)}
               >
                 <option value="">Sem categoria</option>
+                {form.categoryId && !categories.some((category) => category.id === form.categoryId) ? (
+                  <option value={form.categoryId}>Categoria atual</option>
+                ) : null}
                 {categories.map((category) => (
                   <option key={category.id} value={category.id}>
                     {category.name}
@@ -280,6 +306,13 @@ export function AdminProducts({ activePath, store }) {
                 ))}
               </Select>
             </div>
+            <PaginationControls
+              page={categoryPage}
+              totalPages={categoryPagination.totalPages}
+              total={categoryPagination.total}
+              loading={loading}
+              onPageChange={setCategoryPage}
+            />
             <Input
               label="Imagem ou banner URL"
               value={form.image}
@@ -307,6 +340,11 @@ export function AdminProducts({ activePath, store }) {
         </Card>
 
         <div className="admin-list">
+          <div className="row-actions list-toolbar">
+            <Button variant="secondary" size="sm" disabled={loading || saving || Boolean(pendingProductId)} onClick={() => loadData(page, { refreshReferences: true })}>
+              {loading ? "Atualizando..." : "Atualizar"}
+            </Button>
+          </div>
           {loading ? <Card><p>Carregando produtos...</p></Card> : null}
           {!loading && !products.length ? <Card><p>Nenhum produto cadastrado.</p></Card> : null}
           {!loading && products.map((product) => {
@@ -334,6 +372,7 @@ export function AdminProducts({ activePath, store }) {
               </Card>
             );
           })}
+          {!error ? <PaginationControls page={page} totalPages={pagination.totalPages} total={pagination.total} loading={loading} onPageChange={setPage} /> : null}
         </div>
       </section>
       <ImageCropModal request={cropRequest} onCancel={cancelCrop} onConfirm={confirmCrop} />

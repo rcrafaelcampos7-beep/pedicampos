@@ -1180,3 +1180,12 @@ O fluxo é arquivo original validado -> object URL temporária -> enquadramento 
 Após upload, `AdminSettings` chama `update_store_public_profile` com `p_logo` e `p_banner_url`. O adapter canônico mapeia a resposta para `store.logo` a partir de `stores.logo` e `store.banner` a partir de `stores.banner_url`; não existe `stores.logo_url`.
 
 O frontend só confirma sucesso quando a resposta, ou uma releitura estrita, contém exatamente as duas URLs esperadas. Em divergência, o File novo entra no fluxo compensatório de remoção e as URLs antigas permanecem referenciadas.
+### Paginação remota
+
+`database.js` expõe `DEFAULT_PAGE_SIZE = 20` e normaliza página/tamanho antes de calcular o intervalo inclusivo do PostgREST. Todo helper principal retorna `{ data, total, page, pageSize, totalPages }` a partir de uma única consulta com count exact e range.
+
+RLS continua sendo a fronteira de autorização. Helpers Admin recebem `store.id` da sessão resolvida pelo router e filtram `store_id`; helpers Master não aceitam fallback local e dependem de `is_master()`/policies existentes. Página e filtros são somente parâmetros de consulta e não ampliam acesso.
+
+Filtros de status são aplicados antes do count. Retirada trata `Pronto para retirada` e os valores legados `Saiu para entrega`/`out_for_delivery` em conjunto com `fulfillment`, sem misturar pedidos de entrega.
+
+Detalhes dependentes de pedidos e adicionais são buscados apenas para os IDs da página atual. Métricas de MasterStores percorrem em lotes de 500 somente pedidos associados às até 20 lojas visíveis, pois agregações REST estão desabilitadas e migrations foram proibidas nesta Sprint.
