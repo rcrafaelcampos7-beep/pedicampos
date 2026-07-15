@@ -38,7 +38,7 @@ export function CartDrawer({
               <div className="cart-items">
                 {cart.items.map((item) => (
                   <article key={item.cartId} className="cart-item">
-                    <img src={item.image} alt={item.name} />
+                    <img src={item.image} alt={item.name} loading="lazy" decoding="async" />
                     <div>
                       <strong>{item.name}</strong>
                       {(item.selectedAdditionals || item.addons || []).length ? (

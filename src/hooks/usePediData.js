@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { getDatabase, getStores, subscribeDatabase } from "../services/database.js";
-import { isSupabaseConfigured } from "../services/supabaseClient.js";
+import {
+  getDatabase,
+  subscribeDatabase,
+} from "../services/storage.js";
+
+const hasSupabaseEnvironment = Boolean(
+  import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY
+);
 
 export function usePediData() {
   const [database, setDatabase] = useState(() => getDatabase());
@@ -10,12 +16,13 @@ export function usePediData() {
     const unsubscribe = subscribeDatabase((localDatabase) => {
       setDatabase((current) => ({
         ...localDatabase,
-        stores: isSupabaseConfigured ? current.stores : localDatabase.stores,
+        stores: hasSupabaseEnvironment ? current.stores : localDatabase.stores,
       }));
     });
 
-    if (isSupabaseConfigured) {
-      getStores()
+    if (hasSupabaseEnvironment) {
+      import("../services/database.js")
+        .then(({ getStores }) => getStores())
         .then((stores) => {
           if (active) setDatabase((current) => ({ ...current, stores }));
         })

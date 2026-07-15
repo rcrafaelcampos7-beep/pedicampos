@@ -1243,3 +1243,22 @@ Build:
 - Criado seed opcional com mapa explícito dos 29 produtos para URLs WEBP no bucket `product-images`, sempre no path `{storeId}/{productId}/{arquivo}`.
 - URLs pendentes permanecem nulas no mapa; imagens manuais só podem ser substituídas com confirmação explícita no próprio mapa.
 - Diagnóstico identifica ausência, repetição, uso de logo/banner e path incorreto. Nada foi executado remotamente.
+
+### Sprint 2.3 - performance e bundle - 2026-07-15
+
+- As 18 páginas públicas/Admin/Master passaram de imports eager para `React.lazy`, com routers Admin/Master também carregados sob demanda e `Suspense` com fallback visível.
+- O chunk inicial caiu de 595,15 kB (168,03 kB gzip) para 198,01 kB (62,65 kB gzip); o maior chunk assíncrono ficou em 245,88 kB.
+- O aviso de chunk acima de 500 kB desapareceu sem aumentar `chunkSizeWarningLimit` e sem `manualChunks` artificial.
+- `react-easy-crop` ficou isolado em 29,69 kB e só entra nas páginas administrativas de edição de imagens.
+- Três PNGs próprios, que somavam 5.963,75 kB, foram redimensionados/convertidos para WebP e agora somam 256,98 kB.
+- Hero e banner principal permanecem eager para LCP; imagens abaixo da dobra/listagens usam lazy loading e decoding assíncrono.
+- `usePediData` preserva o snapshot inicial, mas adia o adapter Supabase/database para depois do primeiro render.
+- Nenhuma consulta duplicada foi removida: os fluxos independentes auditados já usam `Promise.all`; alterações especulativas foram evitadas.
+
+## Consolidação das lojas-demo (15/07/2026)
+
+- Migration 014 preparada para separar `active`, `is_demo` e `demo_featured`, com ordem/rótulo opcionais e escrita direta restrita ao master.
+- Neguinho do Açaí e Gordinho Burguer ganharam seeds manuais, idempotentes e isolados por slug; Brasa House não é alterada automaticamente.
+- Landing agora consulta somente demos ativas/destacadas no Supabase e não mistura mocks quando a resposta é vazia.
+- Os banners legados locais usam referências `asset:demo/...` resolvidas no frontend; os produtos não recebem o banner repetido e aguardam imagens específicas no Storage.
+- Mocks, pedidos fake e credenciais legadas permanecem somente para fallback até o checklist de validação ser concluído.

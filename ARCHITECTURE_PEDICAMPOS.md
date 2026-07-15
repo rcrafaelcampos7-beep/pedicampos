@@ -1205,3 +1205,25 @@ O seed estrutural do catálogo não define mais imagens. Produtos novos recebem 
 As imagens são associadas por um segundo seed opcional. O mapa resolve cada produto pelo UUID determinístico ou pelo nome dentro do tenant e aceita somente URL pública WEBP no path `product-images/{storeId}/{productId}/{arquivo}`. URL duplicada aborta a transação; imagem pré-existente diferente de logo/banner exige `replace_existing = true`.
 
 Essa separação mantém upload de arquivos fora do SQL, preserva RLS/Storage e limita a escrita posterior exclusivamente a `products.image_url`.
+
+### Carregamento por rota
+
+`App.jsx` mantém apenas resolução de path, fallback e os quatro entrypoints públicos lazy. `AdminRouter` e `MasterRouter` são chunks independentes: cada um executa seu guard de Auth e importa somente a página correspondente ao path autorizado. Assim, visitante público não baixa páginas administrativas e Admin não baixa páginas Master.
+
+Um `Suspense` global cobre imports dinâmicos; os routers mostram o mesmo fallback acessível enquanto resolvem a sessão. Navegação, redirects e objetos `store` autorizados não mudaram.
+
+`usePediData` usa `storage.js` para o snapshot síncrono compatível e importa `database.js` dinamicamente apenas quando existe configuração Supabase. A consulta remota continua atualizando stores, mas não bloqueia o primeiro render da landing.
+
+### Assets e dependências pesadas
+
+Assets estáticos próprios usam WebP dimensionado: hero 1400 px, banners mock 1440 px. A imagem principal usa prioridade alta; conteúdo abaixo da dobra e linhas administrativas usam lazy decoding. Imagens de lojistas no Storage não são processadas por esta Sprint.
+
+O split automático do Rollup foi suficiente: não foi configurado `manualChunks`, pois dividir vendor React mudaria arquivos sem reduzir bytes efetivamente necessários. `react-easy-crop` permanece no grafo compartilhado apenas entre AdminProducts e AdminSettings.
+
+## Lojas-demo
+
+`stores.active` controla disponibilidade; `is_demo` identifica um tenant demonstrativo; `demo_featured` controla exposição na Landing. A consulta pública exige os três valores verdadeiros e ordena por `demo_order`. Apenas master altera esses metadados por RLS; a RPC limitada de perfil da loja não os aceita.
+
+Seeds opcionais resolvem o tenant por slug e usam UUIDs determinísticos somente nos registros criados. Nomes existentes dentro da mesma loja são reutilizados para evitar duplicidade, e nenhuma relação Auth é criada. Banners locais temporários usam referências opacas resolvidas por `demoAssets.js`; o adapter preserva a referência original ao salvar, evitando gravar URLs Vite com hash.
+
+A Landing não consome mais o conjunto local para exemplos. Resposta remota vazia permanece vazia; erro remoto vira estado controlado. Os mocks continuam disponíveis apenas nas áreas de fallback ainda documentadas.

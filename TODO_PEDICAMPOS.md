@@ -639,3 +639,25 @@ Legenda:
 - [ ] Produzir/fornecer 29 arquivos WEBP coerentes e enviá-los aos paths individuais do bucket `product-images`.
 - [ ] Preencher as URLs públicas no mapa e executar o seed de imagens após conferência.
 - [ ] Executar o audit e confirmar 29 URLs únicas, sem logo/banner repetido e sem produto pendente.
+
+## Sprint 2.3 - performance - 2026-07-15
+
+- [x] Dividir as quatro rotas públicas e todas as páginas Admin/Master com `React.lazy`.
+- [x] Adicionar fallback global e durante verificação de Auth, sem tela branca.
+- [x] Isolar `react-easy-crop` nas páginas que realmente editam imagens.
+- [x] Converter os três PNGs estáticos grandes para WebP redimensionado.
+- [x] Aplicar lazy loading somente abaixo da dobra/listagens e preservar LCP do hero/banner.
+- [x] Adiar carregamento de `database.js` no `usePediData` até após o primeiro render.
+- [x] Eliminar o aviso de chunk acima de 500 kB sem mascarar o limite.
+- [ ] Fazer smoke test visual completo em desktop/mobile com sessões reais Admin e Master.
+- [ ] Medir Lighthouse/Web Vitals no deploy real e priorizar próximos gargalos por evidência.
+
+## Lojas-demo reais
+
+- [x] Preparar migration 014 e controles Master para demo/destaque/ordem/rótulo.
+- [x] Preparar seeds e auditorias de Neguinho do Açaí e Gordinho Burguer sem executar remotamente.
+- [x] Remover dependência de mocks da seção de demonstrações da Landing.
+- [ ] Executar migration 014, seeds e diagnósticos no Supabase, nessa ordem.
+- [ ] Criar usuários Auth/Admin manualmente e validar isolamento por loja.
+- [ ] Migrar os dois banners e imagens específicas dos 18 produtos para Storage.
+- [ ] Remover mocks somente após concluir o checklist em `supabase/DEMO_STORES.md`.

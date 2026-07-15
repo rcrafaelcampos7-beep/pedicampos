@@ -2,6 +2,7 @@ import { createEmptyStore } from "../data/mockStores.js";
 import { ORDER_STATUS } from "../utils/orderStatus.js";
 import { getDefaultEntitlementsForPlan, hasFeature, normalizeFeature } from "../utils/plans.js";
 import { uniqueSlug } from "../utils/slug.js";
+import { preserveDemoAssetReference, resolveDemoAssetReference } from "../utils/demoAssets.js";
 import { supabase } from "./supabaseClient.js";
 import {
   createOrder as createStorageOrder,
@@ -22,7 +23,7 @@ function makeId(prefix) {
 }
 
 const STORE_COLUMNS =
-  "id, plan_key, name, slug, segment, active, open, primary_color, whatsapp, logo, banner_url, created_at, updated_at";
+  "id, plan_key, name, slug, segment, active, open, primary_color, whatsapp, logo, banner_url, is_demo, demo_featured, demo_order, demo_label, created_at, updated_at";
 const CATEGORY_COLUMNS = "id, store_id, name, active, sort_order, created_at, updated_at";
 const PRODUCT_COLUMNS =
   "id, store_id, category_id, name, description, price, image_url, active, sort_order, created_at, updated_at";
@@ -82,8 +83,14 @@ export function storeFromSupabase(row) {
     open: row.open !== false,
     primaryColor: row.primary_color || "#16a34a",
     whatsapp: row.whatsapp || "",
-    logo: row.logo || "",
-    banner: row.banner_url || "",
+    logo: resolveDemoAssetReference(row.logo),
+    logoReference: row.logo || "",
+    banner: resolveDemoAssetReference(row.banner_url),
+    bannerReference: row.banner_url || "",
+    isDemo: Boolean(row.is_demo),
+    demoFeatured: Boolean(row.demo_featured),
+    demoOrder: row.demo_order == null ? null : Number(row.demo_order),
+    demoLabel: row.demo_label || "",
     categories: [],
     products: [],
     additionalGroups: [],
@@ -102,8 +109,12 @@ export function storeToSupabase(store = {}) {
     open: store.open,
     primary_color: store.primaryColor,
     whatsapp: store.whatsapp,
-    logo: store.logo,
-    banner_url: store.banner,
+    logo: preserveDemoAssetReference(store.logoReference, store.logo),
+    banner_url: preserveDemoAssetReference(store.bannerReference, store.banner),
+    is_demo: store.isDemo,
+    demo_featured: store.demoFeatured,
+    demo_order: store.demoOrder === "" ? null : store.demoOrder,
+    demo_label: store.demoLabel === "" ? null : store.demoLabel,
   };
 
   return Object.fromEntries(Object.entries(mapped).filter(([, value]) => value !== undefined));
@@ -498,6 +509,26 @@ export async function getAllStoresForMaster() {
 
   if (error) throwDatabaseError("carregar todas as lojas do master", error);
   return (data || []).map(storeFromSupabase);
+}
+
+export async function getFeaturedDemoStores() {
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("stores")
+    .select(`${STORE_COLUMNS}, store_settings(extra)`)
+    .eq("active", true)
+    .eq("is_demo", true)
+    .eq("demo_featured", true)
+    .order("demo_order", { ascending: true, nullsFirst: false })
+    .order("name", { ascending: true });
+
+  if (error) throwDatabaseError("carregar lojas de demonstracao", error);
+  return (data || []).map((row) => {
+    const store = storeFromSupabase(row);
+    const settings = Array.isArray(row.store_settings) ? row.store_settings[0] : row.store_settings;
+    return { ...store, fallbackInitials: settings?.extra?.fallbackInitials || "" };
+  });
 }
 
 export async function getStoresPaginated(options = {}) {

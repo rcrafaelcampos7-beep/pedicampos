@@ -1124,3 +1124,19 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - Cada URL é validada contra o `store_id` e `product_id` resolvidos; duplicidades ou paths incorretos abortam toda a transação.
 - Execute `supabase/diagnostics/lojateste_demo_product_images_audit.sql` antes e depois para localizar repetições e pendências.
 - Não houve alteração de migration, bucket, policy, schema ou dado remoto.
+
+## Sprint 2.3 - somente frontend
+
+- Code splitting, WebP e carregamento de imagens não exigem migration, RPC, policy, índice ou alteração de Storage.
+- Nenhuma imagem enviada por lojistas foi modificada; apenas três assets versionados em `src/assets` foram otimizados.
+- O adapter Supabase continua igual e apenas passou a ser solicitado sob demanda conforme a rota/efeito.
+- Não existe passo manual no SQL Editor para esta Sprint.
+
+## Migration 014 e seeds demo
+
+1. Executar `014_demo_stores.sql` antes do frontend novo.
+2. Executar opcionalmente `neguinhodoacai_demo.sql` e `gordinhoburguer_demo.sql`.
+3. Rodar os diagnósticos individuais e `demo_stores_audit.sql`.
+4. Configurar destaque/ordem pelo Master e criar Auth/store_users manualmente.
+
+A migration adiciona somente metadados demo, constraints e índice parcial. Não marca Brasa House automaticamente. Os seeds iniciam as duas lojas como demo, mas não destacadas; não criam usuários nem sobrescrevem imagem existente. Upload dos banners locais e das imagens específicas de produtos continua pendente.

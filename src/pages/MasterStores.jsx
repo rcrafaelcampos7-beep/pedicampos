@@ -89,6 +89,7 @@ export function MasterStores({ activePath }) {
         ...form,
         slug: uniqueSlug(form.slug, stores, form.id),
         deliveryFee: Number(form.deliveryFee) || 0,
+        demoOrder: form.demoOrder === "" ? null : Number(form.demoOrder),
       });
       setEditingId("");
       await loadStores(page);
@@ -130,9 +131,13 @@ export function MasterStores({ activePath }) {
             const metrics = storeMetrics[store.id] || { orders: 0, revenue: 0 };
             return (
               <Card key={store.id} className="master-store-card">
-                <img src={store.banner} alt={store.name} />
+                <img src={store.banner} alt={store.name} loading="lazy" decoding="async" />
                 <div>
-                  <Badge tone={store.active ? "success" : "danger"}>{store.active ? "Ativa" : "Inativa"}</Badge>
+                  <div className="row-actions">
+                    <Badge tone={store.active ? "success" : "danger"}>{store.active ? "Ativa" : "Inativa"}</Badge>
+                    {store.isDemo ? <Badge tone="warning">Demo</Badge> : null}
+                    {store.demoFeatured ? <Badge tone="success">Destacada</Badge> : null}
+                  </div>
                   <h3>{store.name}</h3>
                   <p>/{store.slug}</p>
                   <span>{store.segment}</span>
@@ -192,11 +197,23 @@ export function MasterStores({ activePath }) {
                 onChange={(event) => updateForm("deliveryFee", event.target.value)}
               />
               <Input label="Tempo médio" value={form.deliveryTime} onChange={(event) => updateForm("deliveryTime", event.target.value)} />
+              <Input label="Ordem na landing" type="number" min="0" value={form.demoOrder ?? ""} onChange={(event) => updateForm("demoOrder", event.target.value)} />
+              <Input label="Rótulo da demonstração" value={form.demoLabel || ""} maxLength="80" onChange={(event) => updateForm("demoLabel", event.target.value)} />
             </div>
             <Textarea label="Endereço" value={form.address} onChange={(event) => updateForm("address", event.target.value)} />
             <div className="settings-switches">
               <Checkbox label="Ativa" checked={form.active} onChange={(checked) => updateForm("active", checked)} />
               <Checkbox label="Aberta" checked={form.open} onChange={(checked) => updateForm("open", checked)} />
+              <Checkbox
+                label="Loja de demonstração"
+                checked={Boolean(form.isDemo)}
+                onChange={(checked) => setForm((current) => ({ ...current, isDemo: checked, demoFeatured: checked ? current.demoFeatured : false }))}
+              />
+              <Checkbox
+                label="Destacar na landing"
+                checked={Boolean(form.demoFeatured)}
+                onChange={(checked) => setForm((current) => ({ ...current, isDemo: checked ? true : current.isDemo, demoFeatured: checked }))}
+              />
             </div>
             <Button type="submit" variant="primary" disabled={saving}>
               {saving ? "Salvando..." : "Salvar loja"}

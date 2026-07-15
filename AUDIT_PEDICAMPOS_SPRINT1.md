@@ -10,7 +10,7 @@ Escopo: arquitetura React, autenticacao, adapters, Supabase/RLS, banco, desempen
 - As entidades operacionais migradas usam adapters Supabase-first. Nesta auditoria, o fallback foi corrigido para nao mascarar erros de RLS, FK, schema ou validacao.
 - Ha um bloqueador critico antes de producao: as policies do schema ainda autorizam `INSERT` anonimo direto nas quatro tabelas de pedidos, permitindo contornar a RPC validada.
 - O painel master ainda mistura lojas remotas com pedidos/configuracoes comerciais locais em algumas telas.
-- Nao existem testes automatizados, lint, paginacao nem divisao de bundle por rota.
+- Testes automatizados e lint ainda não existem; paginação e divisão de bundle por rota foram implementadas nas Sprints seguintes.
 
 ## Correcoes automaticas aplicadas
 
@@ -104,12 +104,15 @@ Escopo: arquitetura React, autenticacao, adapters, Supabase/RLS, banco, desempen
 - Impacto: consultas repetidas e snapshots independentes.
 - Correcao sugerida: provider unico ou hooks especificos por dominio; retirar `orders/platform` do facade legado gradualmente.
 
-### M2 - bundle monolitico e assets pesados
+### M2 - bundle monolitico e assets pesados - resolvido na Sprint 2.3
 
 - Arquivos: `src/App.jsx`, `vite.config.js`, `src/assets/*.png`.
 - Problema: todas as rotas sao importadas de forma eager; tres PNGs possuem aproximadamente 1,5 MB, 2,0 MB e 2,4 MB.
 - Impacto: download e parse iniciais desnecessarios, sobretudo em rede movel.
 - Correcao sugerida: `React.lazy` por area/rota e conversao responsiva para WebP/AVIF com dimensoes adequadas.
+- Correção aplicada: 18 páginas e routers Admin/Master usam lazy loading; chunk inicial caiu de 595,15 kB para 198,01 kB e o aviso de 500 kB desapareceu.
+- Assets corrigidos: três PNGs (5.963,75 kB) foram substituídos por WebP dimensionados (256,98 kB), preservando prioridade das imagens de LCP.
+- Dependência isolada: `react-easy-crop` ficou em chunk assíncrono de 29,69 kB, usado apenas nas telas de imagem.
 
 ### M3 - constraints de dominio incompletas
 
@@ -256,3 +259,11 @@ O projeto nao deve ser considerado pronto para producao antes de aplicar/validar
 - Schema remoto auditado em leitura pública: logo usa `stores.logo`; tentativa de `stores.logo_url` retorna 42703. Banner usa `stores.banner_url`.
 - Erros Supabase completos ficam disponíveis apenas em DEV e falhas preservam a compensação de uploads.
 - Nenhuma migration, policy ou bucket foi alterado; teste de escrita autenticada permanece manual.
+
+## Follow-up: lojas-demo
+
+- A Landing usava `usePediData` e preferia o mock `neguinhodoacai`; agora exemplos vêm de consulta Supabase estrita por `active/is_demo/demo_featured`.
+- A auditoria encontrou credenciais fake e dois pedidos mockados; ambos permanecem até validação, sem serem copiados para Auth ou para os seeds.
+- Os 18 produtos dos dois mocks repetiam o banner da loja. Como não existem imagens específicas, os seeds não propagam essa referência e preservam qualquer `image_url` já existente.
+- Escrita dos novos metadados permanece master-only; anon e Admin de loja não podem se promover a demo/destaque.
+- Pendências manuais: executar migration/seeds, testar RLS e isolamento, criar Admins, migrar imagens ao Storage e só então remover mocks.

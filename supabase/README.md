@@ -420,3 +420,15 @@ O catálogo não reutiliza mais logo ou banner em produtos. Novos registros fica
 Para completar as imagens, envie cada WEBP ao path `product-images/{storeId}/{productId}/{arquivo-unico}.webp`, copie a URL pública e preencha a linha correspondente em `seeds/lojateste_demo_product_images.sql`. O mapa contém `replace_existing`, que deve continuar `false` salvo quando a substituição de uma imagem manual tiver sido confirmada.
 
 Execute primeiro `diagnostics/lojateste_demo_product_images_audit.sql`, depois o seed de imagens preenchido e então repita o audit. O seed rejeita URL duplicada, produto ausente, bucket/path incorreto e sobrescrita manual não confirmada. Ele atualiza somente `products.image_url`.
+
+### Sprint 2.3 - impacto no Supabase
+
+A divisão de bundle e a otimização dos assets locais não alteram schema, RLS, migrations, RPCs, buckets ou paths do Storage. `database.js` e o client Supabase são carregados sob demanda pelas rotas/efeitos que precisam deles; seus contratos e regras de fallback permanecem iguais.
+
+Não execute SQL para esta Sprint. Imagens de lojas e produtos enviadas aos buckets continuam inalteradas.
+
+### Lojas-demo reais
+
+Consulte `DEMO_STORES.md` para ordem de execução e validação. A migration `014_demo_stores.sql` deve preceder os seeds opcionais. Os scripts não foram executados remotamente, não criam Auth/store_users e não modificam automaticamente a Brasa House.
+
+Os diagnósticos são somente leitura. Os cleanups removem apenas IDs determinísticos de catálogo, mantêm tenant/configuração/usuários e abortam se um produto do seed ganhou imagem manual. O inventário de imagens explica as referências locais temporárias e a migração futura ao Storage.

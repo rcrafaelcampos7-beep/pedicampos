@@ -1,4 +1,5 @@
-import heroImage from "../assets/pedicampos-hero.png";
+import heroImage from "../assets/pedicampos-hero.webp";
+import { useEffect, useState } from "react";
 import { Card } from "../components/ui/Card.jsx";
 import { PlanCard } from "../components/ui/PlanCard.jsx";
 import { usePediData } from "../hooks/usePediData.js";
@@ -8,7 +9,10 @@ import { getActivePlans } from "../utils/plans.js";
 
 export function LandingPage() {
   const { stores, platform } = usePediData();
-  const demoStore = stores.find((store) => store.slug === "neguinhodoacai") || stores[0];
+  const [demoStores, setDemoStores] = useState([]);
+  const [demoLoading, setDemoLoading] = useState(true);
+  const [demoError, setDemoError] = useState("");
+  const demoStore = demoStores[0] || null;
   const activeStores = stores.filter((store) => store.active);
   const sections = platform.sections || {};
   const whatsappUrl = `https://wa.me/${platform.whatsapp}`;
@@ -17,6 +21,22 @@ export function LandingPage() {
     ...plan,
     price: plan.priceLabel || `${formatCurrency(plan.price)}/mês`,
   }));
+
+  useEffect(() => {
+    let active = true;
+    import("../services/database.js")
+      .then(({ getFeaturedDemoStores }) => getFeaturedDemoStores())
+      .then((result) => {
+        if (active) setDemoStores(result);
+      })
+      .catch(() => {
+        if (active) setDemoError("As lojas de demonstração estão temporariamente indisponíveis.");
+      })
+      .finally(() => {
+        if (active) setDemoLoading(false);
+      });
+    return () => { active = false; };
+  }, []);
 
   return (
     <div
@@ -40,9 +60,7 @@ export function LandingPage() {
           <a href="#contato">Contato</a>
         </nav>
         <div className="nav-actions">
-          <Link className="btn btn-secondary btn-md" to={`/${demoStore?.slug || "neguinhodoacai"}`}>
-            Ver loja exemplo
-          </Link>
+          {demoStore ? <Link className="btn btn-secondary btn-md" to={`/${demoStore.slug}`}>Ver loja exemplo</Link> : null}
           <a className="btn btn-primary btn-md" href={whatsappUrl} target="_blank" rel="noreferrer">
             Falar no WhatsApp
           </a>
@@ -57,9 +75,11 @@ export function LandingPage() {
               <h1>{platform.heroTitle || platform.slogan}</h1>
               <p>{platform.heroSubtitle || platform.subtitle}</p>
               <div className="hero-actions">
-                <Link className="btn btn-primary btn-lg" to={`/${demoStore?.slug || "neguinhodoacai"}`}>
-                  {platform.heroPrimaryButton}
-                </Link>
+                {demoStore ? (
+                  <Link className="btn btn-primary btn-lg" to={`/${demoStore.slug}`}>{platform.heroPrimaryButton}</Link>
+                ) : (
+                  <a className="btn btn-primary btn-lg" href="#planos">Conhecer os planos</a>
+                )}
                 <a className="btn btn-secondary btn-lg" href="#planos">
                   {platform.heroSecondaryButton}
                 </a>
@@ -80,7 +100,14 @@ export function LandingPage() {
               </div>
             </div>
             <div className="landing-hero-image">
-              <img src={heroImage} alt={`${platform.name} em celular com pedidos online`} />
+              <img
+                src={heroImage}
+                alt={`${platform.name} em celular com pedidos online`}
+                width="1400"
+                height="735"
+                decoding="async"
+                fetchPriority="high"
+              />
             </div>
           </div>
         </section>
@@ -131,28 +158,33 @@ export function LandingPage() {
           </section>
         ) : null}
 
-        {sections.demo !== false ? (
+        {sections.demo !== false && (demoLoading || demoError || demoStores.length) ? (
           <section className="section demo-section" id="demonstracao">
             <div>
-              <span className="eyebrow">Loja exemplo</span>
-              <h2>{demoStore?.name || "Loja exemplo"}</h2>
+              <span className="eyebrow">Lojas de demonstração</span>
+              <h2>Conheça experiências reais da PediCampos</h2>
               <p>
                 Veja como uma vitrine da PediCampos apresenta produtos, categorias, adicionais e pedidos
                 para o cliente final.
               </p>
             </div>
-            {demoStore ? (
-              <Card className="demo-card">
-                <img src={demoStore.banner} alt={demoStore.name} />
-                <div>
-                  <strong>{demoStore.name}</strong>
-                  <span>{demoStore.segment}</span>
-                  <Link className="btn btn-primary btn-md" to={`/${demoStore.slug}`}>
-                    Acessar loja exemplo
-                  </Link>
-                </div>
-              </Card>
-            ) : null}
+            <div className="demo-store-grid">
+              {demoLoading ? <Card><p>Carregando lojas de demonstração...</p></Card> : null}
+              {!demoLoading && demoError ? <Card><p>{demoError}</p></Card> : null}
+              {!demoLoading && !demoError ? demoStores.map((store) => (
+                <Card className="demo-card" key={store.id}>
+                  {store.banner ? <img src={store.banner} alt={store.name} loading="lazy" decoding="async" /> : null}
+                  <div>
+                    {store.logo && /^https?:\/\//i.test(store.logo) ? (
+                      <img className="demo-store-logo" src={store.logo} alt="" loading="lazy" decoding="async" />
+                    ) : <span className="demo-store-initials">{store.fallbackInitials || store.name.split(/\s+/).map((part) => part[0]).join("").slice(0, 2)}</span>}
+                    <strong>{store.name}</strong>
+                    <span>{store.demoLabel || store.segment}</span>
+                    <Link className="btn btn-primary btn-md" to={`/${store.slug}`}>Acessar loja exemplo</Link>
+                  </div>
+                </Card>
+              )) : null}
+            </div>
           </section>
         ) : null}
 

@@ -351,7 +351,7 @@ export function AdminProducts({ activePath, store }) {
             const category = categories.find((item) => item.id === product.categoryId);
             return (
               <Card key={product.id} className="admin-product-row">
-                <img src={product.image || store.banner} alt={product.name} />
+                <img src={product.image || store.banner} alt={product.name} loading="lazy" decoding="async" />
                 <div>
                   <strong>{product.name}</strong>
                   <span>{category?.name || "Sem categoria"}</span>

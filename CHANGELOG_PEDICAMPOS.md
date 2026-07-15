@@ -1287,3 +1287,23 @@ Build:
 - Adicionado `lojateste_demo_product_images.sql` com mapa explícito, validação do path `product-images/{storeId}/{productId}` e proteção contra sobrescrita manual.
 - Adicionado audit por produto com categoria, URL, unicidade, compartilhamentos, pendências e validação do bucket/path.
 - Nenhuma imagem foi gerada, pesquisada, enviada ou atualizada remotamente.
+
+## 2026-07-15 - Sprint 2.3 performance e code splitting
+
+- Todas as páginas passaram a chunks por rota; Admin e Master possuem routers lazy independentes e mantêm os guards existentes.
+- Adicionado fallback de carregamento acessível para imports e verificação de sessão.
+- Chunk inicial reduzido de 595,15 kB para 198,01 kB; nenhum chunk final ultrapassa 500 kB.
+- `react-easy-crop` foi isolado em chunk de 29,69 kB, solicitado apenas por AdminProducts/AdminSettings.
+- Hero e dois banners mock foram convertidos de PNG para WebP, reduzindo 5.963,75 kB para 256,98 kB.
+- Adicionados `loading="lazy"` e `decoding="async"` em imagens não críticas; imagens principais preservam carregamento prioritário.
+- `usePediData` deixou de importar o adapter Supabase de forma eager, mantendo a atualização remota assíncrona.
+- Nenhuma dependência foi removida, pois todas as dependências declaradas possuem uso comprovado.
+
+## 15/07/2026 - Consolidação das lojas-demo
+
+- Criada migration 014 com metadados de demo independentes do status ativo, constraints, índice de Landing e escrita master-only.
+- Criados seeds idempotentes para Neguinho do Açaí e Gordinho Burguer, sem Auth, senhas, uploads ou alteração da Brasa House.
+- MasterStores passou a editar e exibir demo, destaque, ordem e rótulo.
+- Landing passou a carregar demos remotas ordenadas, sem fallback para mocks em resposta vazia.
+- Adicionado adaptador para banners locais legados e inventário que registra a ausência de imagens específicas de produtos.
+- Adicionados diagnósticos, cleanups conservadores, template Admin e checklist de remoção futura dos mocks.

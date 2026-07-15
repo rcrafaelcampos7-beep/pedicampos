@@ -1,5 +1,5 @@
-import acaiBanner from "../assets/neguinho-banner.png";
-import burgerBanner from "../assets/gordinho-banner.png";
+import acaiBanner from "../assets/neguinho-banner.webp";
+import burgerBanner from "../assets/gordinho-banner.webp";
 
 const acaiAdditionalGroups = [
   {

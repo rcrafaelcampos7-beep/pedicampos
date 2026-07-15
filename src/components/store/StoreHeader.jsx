@@ -23,12 +23,12 @@ export function StoreHeader({ store }) {
 
   return (
     <header className="store-hero" style={{ "--store-color": store.primaryColor }}>
-      <img src={store.banner} alt={`Banner ${store.name}`} />
+      <img src={store.banner} alt={`Banner ${store.name}`} decoding="async" fetchPriority="high" />
       <div className="store-hero-overlay" />
       <div className="store-hero-content">
         <div className="store-logo">
           {logoUrl && !logoFailed ? (
-            <img src={logoUrl} alt={`Logo ${store.name}`} onError={() => setLogoFailed(true)} />
+            <img src={logoUrl} alt={`Logo ${store.name}`} decoding="async" onError={() => setLogoFailed(true)} />
           ) : (
             <span aria-label={`Iniciais ${fallbackInitials}`}>{fallbackInitials}</span>
           )}
