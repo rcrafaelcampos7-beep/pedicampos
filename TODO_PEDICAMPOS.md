@@ -624,3 +624,18 @@ Legenda:
 - [x] Remover `usePediData` e snapshots locais do MasterPlans.
 - [ ] Validar manualmente página intermediária/última, filtros, CRUD e página vazia com massas acima de 20 registros.
 - [ ] Avaliar RPC agregada futura para métricas de lojas; agregações REST estão desabilitadas no projeto e hoje os totais da página são lidos em lotes.
+
+## Loja-demo Brasa House Burger - 2026-07-15
+
+- [x] Criar seed idempotente separado das migrations para o slug `lojateste`.
+- [x] Preparar 6 categorias, 29 produtos, 5 grupos, 20 opções e 56 vínculos coerentes.
+- [x] Preparar 22 pedidos fictícios distribuídos por status, entrega/retirada e últimos dias.
+- [x] Criar audit visível e cleanup seletivo por marcador/UUID/store_id.
+- [ ] Executar `lojateste_demo_catalog.sql` manualmente no Supabase e revisar o resultado do audit.
+- [ ] Validar no navegador catálogo, adicionais grátis/pagos, checkout, Admin, dashboard, filtros e paginação.
+- [ ] Executar o cleanup somente se a massa de demonstração precisar ser removida.
+- [x] Remover logo/banner como fallback de imagem no seed de catálogo.
+- [x] Criar mapa seguro e audit para imagens específicas dos 29 produtos-demo.
+- [ ] Produzir/fornecer 29 arquivos WEBP coerentes e enviá-los aos paths individuais do bucket `product-images`.
+- [ ] Preencher as URLs públicas no mapa e executar o seed de imagens após conferência.
+- [ ] Executar o audit e confirmar 29 URLs únicas, sem logo/banner repetido e sem produto pendente.

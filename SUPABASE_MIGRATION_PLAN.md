@@ -1108,3 +1108,19 @@ Quando `VITE_DATA_SOURCE=supabase`:
 - A paginação usa as ordenações e índices já existentes, `count: "exact"` e ranges inclusivos do PostgREST.
 - Antes de volumes muito altos, revisar `EXPLAIN` das ordenações por `store_id/sort_order/created_at` e considerar índices somente com evidência; nenhuma criação foi antecipada nesta etapa.
 - Agregação server-side para métricas de MasterStores permanece candidata futura, pois agregados REST retornam PGRST123 no projeto atual.
+
+## Seed manual da loja-demo - sem migration
+
+- `supabase/seeds/lojateste_demo_catalog.sql` não integra o rollout obrigatório de produção e deve ser executado manualmente somente no projeto que hospeda a loja `lojateste`.
+- O script não altera schema, RLS, grants, policies, RPCs ou regras de plano; apenas insere/atualiza massa isolada pelo `store_id` resolvido por slug.
+- Execute depois o audit `supabase/diagnostics/lojateste_demo_catalog_audit.sql` e confira 6 categorias, 29 produtos, 5 grupos, 20 opções, 56 vínculos e 22 pedidos-demo, considerando que registros manuais homônimos podem ser reutilizados.
+- Para remoção, use `supabase/diagnostics/lojateste_demo_catalog_cleanup.sql`; ele apaga somente IDs determinísticos e pedidos com os marcadores do seed.
+- O seed não foi executado remotamente durante sua criação.
+
+### Mapa de imagens da loja-demo - sem migration
+
+- `supabase/seeds/lojateste_demo_product_images.sql` é opcional e deve ser executado somente depois do upload dos arquivos finais.
+- O mapa começa com URLs nulas: ele pode apenas limpar cópias legadas exatamente iguais à logo/banner, deixando esses produtos pendentes; imagens manuais permanecem intocadas.
+- Cada URL é validada contra o `store_id` e `product_id` resolvidos; duplicidades ou paths incorretos abortam toda a transação.
+- Execute `supabase/diagnostics/lojateste_demo_product_images_audit.sql` antes e depois para localizar repetições e pendências.
+- Não houve alteração de migration, bucket, policy, schema ou dado remoto.

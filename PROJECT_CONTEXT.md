@@ -1226,3 +1226,20 @@ Build:
 - Métricas de MasterStores são calculadas somente para as lojas da página atual, em lotes remotos com range.
 - Nenhuma migration ou alteração de banco foi necessária. Testes manuais com mais de 20 registros permanecem pendentes.
 - Smoke test remoto anônimo confirmou range/count exact em stores, plans, products, categories e additional_groups; testes autenticados e páginas acima de 1 dependem de massa manual.
+
+### Loja-demo Brasa House Burger - 2026-07-15
+
+- Criado um seed manual, fora da sequência de migrations, para transformar exclusivamente o slug `lojateste` em uma demonstração comercial da Brasa House Burger.
+- O script resolve o `store_id` pelo slug, preserva logo/banner, plano, Auth, `store_users` e todas as demais lojas.
+- Massa máxima controlada: 6 categorias, 29 produtos, 5 grupos, 20 opções, 56 vínculos, 22 clientes fictícios, 22 pedidos, 22 itens e 33 snapshots de adicionais.
+- UUIDs determinísticos e verificação de nomes evitam duplicação; registros manuais com o mesmo nome e outro ID são preservados e reutilizados.
+- Pedidos usam `source = demo_seed` e `metadata.demoSeed = lojateste_demo_v1`; o cleanup combina esses marcadores, UUIDs estáveis e `store_id`.
+- Audit e cleanup acompanham o seed. Nenhum script foi executado no Supabase nesta etapa; validação funcional continua manual.
+
+### Imagens específicas da loja-demo - 2026-07-15
+
+- Corrigida a origem das imagens repetidas: o seed de catálogo usava `coalesce(stores.banner_url, stores.logo)` em todos os produtos novos.
+- Reexecuções do catálogo agora inserem `image_url = null` quando o produto é novo e nunca alteram a imagem de um produto existente.
+- Criado seed opcional com mapa explícito dos 29 produtos para URLs WEBP no bucket `product-images`, sempre no path `{storeId}/{productId}/{arquivo}`.
+- URLs pendentes permanecem nulas no mapa; imagens manuais só podem ser substituídas com confirmação explícita no próprio mapa.
+- Diagnóstico identifica ausência, repetição, uso de logo/banner e path incorreto. Nada foi executado remotamente.

@@ -1189,3 +1189,19 @@ RLS continua sendo a fronteira de autorização. Helpers Admin recebem `store.id
 Filtros de status são aplicados antes do count. Retirada trata `Pronto para retirada` e os valores legados `Saiu para entrega`/`out_for_delivery` em conjunto com `fulfillment`, sem misturar pedidos de entrega.
 
 Detalhes dependentes de pedidos e adicionais são buscados apenas para os IDs da página atual. Métricas de MasterStores percorrem em lotes de 500 somente pedidos associados às até 20 lojas visíveis, pois agregações REST estão desabilitadas e migrations foram proibidas nesta Sprint.
+
+### Seeds manuais de demonstração
+
+Dados comerciais de demonstração ficam em `supabase/seeds`, fora da sequência obrigatória de migrations. O seed da Brasa House Burger localiza o tenant por `stores.slug = lojateste` e aplica `store_id` em cada entidade dependente; nenhum UUID de tenant é fixado.
+
+As entidades controladas recebem UUIDs determinísticos derivados do namespace `lojateste_demo_v1`. Pedidos recebem ainda `source = demo_seed` e `metadata.demoSeed`, permitindo auditoria e cleanup sem consultar ou remover dados de outras lojas. Colisões de nomes com registros manuais de ID diferente são preservadas e reutilizadas em vez de sobrescritas.
+
+O cleanup remove primeiro pedidos e seus snapshots por cascade, depois vínculos e catálogo pelos IDs determinísticos. Perfil da loja e valores aplicados a linhas pré-existentes não são revertidos por adivinhação.
+
+### Imagens do catálogo de demonstração
+
+O seed estrutural do catálogo não define mais imagens. Produtos novos recebem `image_url = null` e o bloco de conflito não inclui essa coluna, portanto uma reexecução nunca restaura logo/banner nem sobrescreve imagem manual.
+
+As imagens são associadas por um segundo seed opcional. O mapa resolve cada produto pelo UUID determinístico ou pelo nome dentro do tenant e aceita somente URL pública WEBP no path `product-images/{storeId}/{productId}/{arquivo}`. URL duplicada aborta a transação; imagem pré-existente diferente de logo/banner exige `replace_existing = true`.
+
+Essa separação mantém upload de arquivos fora do SQL, preserva RLS/Storage e limita a escrita posterior exclusivamente a `products.image_url`.

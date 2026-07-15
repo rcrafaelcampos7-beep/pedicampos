@@ -402,3 +402,21 @@ A coluna da logo é `public.stores.logo`; não existe `stores.logo_url`. Banner 
 As listagens administrativas usam páginas de 20 registros. As consultas principais executam `.select(..., { count: "exact" })`, ordenação determinística e `.range(from, to)`, retornando dados e metadados na mesma requisição.
 
 Admin filtra sempre pelo `store_id` obtido da sessão; Master depende das policies de master e não usa fallback local. Nenhuma migration é necessária para a Sprint 2.2. Consultas auxiliares de detalhes usam apenas os IDs da página corrente, não conjuntos globais.
+
+### Loja-demo Brasa House Burger
+
+O arquivo `seeds/lojateste_demo_catalog.sql` é um seed opcional e não deve ser adicionado à sequência de migrations. No SQL Editor do projeto correto, execute o arquivo completo; ele aborta se o slug `lojateste` não existir e nunca exige um UUID de loja hardcoded.
+
+Depois execute `diagnostics/lojateste_demo_catalog_audit.sql`. O resultado mostra a loja, totais de categorias/produtos/grupos/opções/vínculos/pedidos-demo, produtos por categoria e pedidos por status.
+
+O conjunto esperado em uma loja sem colisões é: 6 categorias, 29 produtos, 5 grupos, 20 opções, 56 vínculos, 22 clientes fictícios, 22 pedidos, 22 itens e 33 adicionais de item. Registros manuais homônimos são preservados, portanto alguns podem ser reutilizados em vez de criados.
+
+Para remover a massa controlada, execute `diagnostics/lojateste_demo_catalog_cleanup.sql`. Ele limita todas as operações ao tenant resolvido por slug, aos UUIDs determinísticos do namespace `lojateste_demo_v1` e, para pedidos, também a `source = demo_seed` e `metadata.demoSeed`. O nome/perfil comercial e valores aplicados a registros de configuração pré-existentes não são revertidos automaticamente.
+
+#### Imagens específicas dos produtos-demo
+
+O catálogo não reutiliza mais logo ou banner em produtos. Novos registros ficam com `image_url` nula e reexecuções preservam qualquer URL já existente. Ao executar o mapa, uma cópia legada exatamente igual à logo/banner pode ser limpa para `null`; nenhuma imagem manual é limpa.
+
+Para completar as imagens, envie cada WEBP ao path `product-images/{storeId}/{productId}/{arquivo-unico}.webp`, copie a URL pública e preencha a linha correspondente em `seeds/lojateste_demo_product_images.sql`. O mapa contém `replace_existing`, que deve continuar `false` salvo quando a substituição de uma imagem manual tiver sido confirmada.
+
+Execute primeiro `diagnostics/lojateste_demo_product_images_audit.sql`, depois o seed de imagens preenchido e então repita o audit. O seed rejeita URL duplicada, produto ausente, bucket/path incorreto e sobrescrita manual não confirmada. Ele atualiza somente `products.image_url`.

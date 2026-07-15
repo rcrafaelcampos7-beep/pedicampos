@@ -1271,3 +1271,19 @@ Build:
 - MasterPlans deixou de misturar dados do `usePediData` com Supabase.
 - Nenhuma migration, regra comercial ou layout geral foi alterado.
 - Smoke test remoto de leitura confirmou contagem e range nas cinco tabelas públicas testadas.
+
+## 2026-07-15 - seed da loja-demo Brasa House Burger
+
+- Adicionado `supabase/seeds/lojateste_demo_catalog.sql`, propositalmente fora das migrations obrigatórias.
+- O seed resolve `lojateste` por slug e prepara perfil comercial, 6 categorias, 29 produtos, 5 grupos, 20 opções e 56 vínculos.
+- Incluídos 22 pedidos-demo com clientes fictícios, snapshots consistentes, entrega/retirada, valores e status realistas.
+- Reexecução usa UUIDs determinísticos, upserts limitados aos registros controlados e proteção contra colisões com nomes manuais.
+- Adicionados audit somente leitura e cleanup seletivo. Nenhuma migration, policy, RLS, frontend ou dado remoto foi alterado/executado.
+
+## 2026-07-15 - infraestrutura de imagens dos produtos-demo
+
+- Removido do seed de catálogo o fallback que copiava banner/logo para `products.image_url`.
+- Reexecuções agora preservam integralmente imagens existentes e deixam novos produtos sem imagem até existir uma URL específica.
+- Adicionado `lojateste_demo_product_images.sql` com mapa explícito, validação do path `product-images/{storeId}/{productId}` e proteção contra sobrescrita manual.
+- Adicionado audit por produto com categoria, URL, unicidade, compartilhamentos, pendências e validação do bucket/path.
+- Nenhuma imagem foi gerada, pesquisada, enviada ou atualizada remotamente.
