@@ -1307,3 +1307,12 @@ Build:
 - Landing passou a carregar demos remotas ordenadas, sem fallback para mocks em resposta vazia.
 - Adicionado adaptador para banners locais legados e inventário que registra a ausência de imagens específicas de produtos.
 - Adicionados diagnósticos, cleanups conservadores, template Admin e checklist de remoção futura dos mocks.
+
+## 15/07/2026 - Sprint 2.4: testes automatizados e CI
+
+- Adicionados Vitest, jsdom, React Testing Library, jest-dom, user-event e cobertura V8.
+- Criados 11 arquivos com 71 casos para utils, carrinho, componentes, AdminOrders, CheckoutPage, StorePage, MasterStores e facade Supabase.
+- Configurados scripts `test`, `test:run`, `test:coverage` e `validate`; lint não foi simulado sem ESLint real.
+- Criado workflow GitHub Actions para PRs e pushes em `main`, com Node 22, cache npm, testes e build.
+- Cobertura inicial: 35,11% statements, 26,57% branches, 34,54% functions e 38,34% lines; sem threshold arbitrário no primeiro ciclo.
+- Adicionado `TESTING.md` com isolamento, comandos e estratégia futura de integração Supabase.

@@ -661,3 +661,13 @@ Legenda:
 - [ ] Criar usuários Auth/Admin manualmente e validar isolamento por loja.
 - [ ] Migrar os dois banners e imagens específicas dos 18 produtos para Storage.
 - [ ] Remover mocks somente após concluir o checklist em `supabase/DEMO_STORES.md`.
+
+## Sprint 2.4 - testes automatizados
+
+- [x] Configurar Vitest, jsdom, Testing Library, user-event e cobertura V8.
+- [x] Cobrir regras puras, carrinho, componentes e páginas críticas com 71 casos isolados.
+- [x] Criar mock controlado do Supabase e validar que RLS/schema não caem no fallback.
+- [x] Criar CI para pull request e push em `main`, sem deploy ou secrets.
+- [ ] Adicionar ESLint em etapa própria com configuração validada.
+- [ ] Criar integração descartável com Supabase CLI/projeto de testes para comprovar RLS, RPCs e Storage reais.
+- [ ] Expandir cobertura de Auth, routers, dashboards e CRUD administrativo restante.

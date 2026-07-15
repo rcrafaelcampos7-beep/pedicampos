@@ -1262,3 +1262,11 @@ Build:
 - Landing agora consulta somente demos ativas/destacadas no Supabase e não mistura mocks quando a resposta é vazia.
 - Os banners legados locais usam referências `asset:demo/...` resolvidas no frontend; os produtos não recebem o banner repetido e aguardam imagens específicas no Storage.
 - Mocks, pedidos fake e credenciais legadas permanecem somente para fallback até o checklist de validação ser concluído.
+
+## Sprint 2.4 - testes e CI (15/07/2026)
+
+- Stack: Vitest 4, jsdom, React Testing Library, jest-dom, user-event e cobertura V8.
+- 71 casos em 11 arquivos cobrem status delivery/pickup, entitlements, moeda, WhatsApp, carrinho, componentes e quatro páginas críticas.
+- `database.js` é exercitado com client Supabase mockado: RLS/schema não geram fallback; somente falha real de rede permite fallback técnico.
+- GitHub Actions executa `npm ci`, testes e build em PRs e pushes para `main`, sem secrets nem acesso ao Supabase real.
+- Integração real de RLS/RPC/Storage continua pendente em Supabase local ou projeto exclusivo de testes.

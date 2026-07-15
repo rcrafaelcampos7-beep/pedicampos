@@ -1140,3 +1140,7 @@ Quando `VITE_DATA_SOURCE=supabase`:
 4. Configurar destaque/ordem pelo Master e criar Auth/store_users manualmente.
 
 A migration adiciona somente metadados demo, constraints e índice parcial. Não marca Brasa House automaticamente. Os seeds iniciam as duas lojas como demo, mas não destacadas; não criam usuários nem sobrescrevem imagem existente. Upload dos banners locais e das imagens específicas de produtos continua pendente.
+
+## Sprint 2.4 - integração de testes pendente
+
+Nenhuma migration, policy, RPC ou dado remoto foi alterado. Os testes atuais usam mocks e não devem ser considerados prova de RLS real. A etapa futura deve aplicar todas as migrations em Supabase CLI local ou projeto exclusivo de testes, criar identidades fictícias anon/Admin A/Admin B/master e destruir os dados ao final. Produção e `service_role` frontend ficam fora dessa estratégia.

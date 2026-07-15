@@ -267,3 +267,11 @@ O projeto nao deve ser considerado pronto para producao antes de aplicar/validar
 - Os 18 produtos dos dois mocks repetiam o banner da loja. Como não existem imagens específicas, os seeds não propagam essa referência e preservam qualquer `image_url` já existente.
 - Escrita dos novos metadados permanece master-only; anon e Admin de loja não podem se promover a demo/destaque.
 - Pendências manuais: executar migration/seeds, testar RLS e isolamento, criar Admins, migrar imagens ao Storage e só então remover mocks.
+
+## Follow-up: testes automatizados
+
+- A ausência de suíte/CI foi parcialmente resolvida com 71 testes em 11 arquivos e workflow sem secrets.
+- Regras críticas puras e quatro páginas possuem cobertura útil; utils atingiram 83,16% de statements e `useCart`, 86,95%.
+- Cobertura global inicial é 35,11% de statements e não bloqueia o CI por percentual nesta primeira etapa.
+- RLS, grants, RPCs e Storage continuam sem teste de integração real; mocks validam contrato e fallback, não a instalação remota.
+- Auth, routers, dashboards e CRUDs administrativos restantes continuam como expansão prioritária.

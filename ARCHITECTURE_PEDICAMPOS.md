@@ -1227,3 +1227,9 @@ O split automático do Rollup foi suficiente: não foi configurado `manualChunks
 Seeds opcionais resolvem o tenant por slug e usam UUIDs determinísticos somente nos registros criados. Nomes existentes dentro da mesma loja são reutilizados para evitar duplicidade, e nenhuma relação Auth é criada. Banners locais temporários usam referências opacas resolvidas por `demoAssets.js`; o adapter preserva a referência original ao salvar, evitando gravar URLs Vite com hash.
 
 A Landing não consome mais o conjunto local para exemplos. Resposta remota vazia permanece vazia; erro remoto vira estado controlado. Os mocks continuam disponíveis apenas nas áreas de fallback ainda documentadas.
+
+## Arquitetura de testes
+
+Vitest usa o mesmo pipeline Vite/React em ambiente jsdom. `src/test/setup.js` centraliza jest-dom, cleanup e limpeza de storages. Testes de página mockam contratos do adapter, não detalhes internos do Supabase; testes de `database.js` substituem `supabaseClient` e `storage.js` por doubles controlados.
+
+Essa camada garante regressões frontend e fronteiras de fallback, mas não comprova policies instaladas. RLS, grants, funções SECURITY DEFINER, triggers e Storage exigem uma futura suíte de integração em banco descartável. O CI não recebe chaves Supabase nem `service_role`.

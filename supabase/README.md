@@ -432,3 +432,7 @@ Não execute SQL para esta Sprint. Imagens de lojas e produtos enviadas aos buck
 Consulte `DEMO_STORES.md` para ordem de execução e validação. A migration `014_demo_stores.sql` deve preceder os seeds opcionais. Os scripts não foram executados remotamente, não criam Auth/store_users e não modificam automaticamente a Brasa House.
 
 Os diagnósticos são somente leitura. Os cleanups removem apenas IDs determinísticos de catálogo, mantêm tenant/configuração/usuários e abortam se um produto do seed ganhou imagem manual. O inventário de imagens explica as referências locais temporárias e a migração futura ao Storage.
+
+### Testes automatizados
+
+A Sprint 2.4 não executa Supabase real. `database.test.js` usa um client mockado para verificar contratos, fonte remota vazia, isolamento do `storeId` e diferenciação entre falha de rede e erros RLS/schema. Consulte `../TESTING.md` para a seção “Testes de integração Supabase pendentes”. Nenhuma chave ou secret é necessário no CI.
