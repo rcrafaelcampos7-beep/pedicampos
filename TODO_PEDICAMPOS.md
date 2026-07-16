@@ -671,3 +671,14 @@ Legenda:
 - [ ] Adicionar ESLint em etapa própria com configuração validada.
 - [ ] Criar integração descartável com Supabase CLI/projeto de testes para comprovar RLS, RPCs e Storage reais.
 - [ ] Expandir cobertura de Auth, routers, dashboards e CRUD administrativo restante.
+
+## Sprint 2.5 - implantação manual
+
+- [x] Preparar migration 015, Edge Function, rate limit, logger e testes locais.
+- [ ] Executar migration 015 em janela coordenada com o deploy da Edge/frontend.
+- [ ] Configurar `ORDER_RATE_LIMIT_SALT` e `ORDER_ALLOWED_ORIGINS` como secrets server-side.
+- [ ] Publicar `create-order --no-verify-jwt` e validar 429/Retry-After no domínio.
+- [ ] Monitorar falsos positivos em CGNAT/VPN antes de ajustar limites.
+- [ ] Avaliar Sentry ou provedor equivalente com scrub de PII via adapter do logger.
+- [ ] Adicionar limpeza agendada opcional se a remoção oportunística não bastar em baixo tráfego.
+- [x] Corrigir `src` vazio em produtos sem imagem e separar eventos informativos de erros no logger.

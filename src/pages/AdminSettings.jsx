@@ -19,6 +19,7 @@ import {
 } from "../services/storageImages.js";
 import { ENTITLEMENT_FEATURES, hasFeature } from "../utils/plans.js";
 import { slugify } from "../utils/slug.js";
+import { logError, logInfo } from "../services/logger.js";
 
 function isImageUrl(value) {
   const candidate = String(value || "").trim();
@@ -191,13 +192,7 @@ export function AdminSettings({ activePath, store }) {
         nextBanner = uploaded.publicUrl;
       }
 
-      if (import.meta.env.DEV) {
-        console.info("[PediCampos] Imagens prontas para persistencia.", {
-          storeId: store.id,
-          newLogoUrl: nextLogo,
-          newBannerUrl: nextBanner,
-        });
-      }
+      logInfo({ area: "settings", operation: "images_uploaded", storeId: store.id });
 
       setUploadingLabel("Salvando configuracoes...");
       await Promise.all([
@@ -226,21 +221,9 @@ export function AdminSettings({ activePath, store }) {
         logo: nextLogo,
         banner: nextBanner,
       };
-      if (import.meta.env.DEV) {
-        console.info("[PediCampos] Payload visual enviado ao banco.", {
-          storeId: store.id,
-          logo: profilePayload.logo,
-          banner: profilePayload.banner,
-        });
-      }
+      logInfo({ area: "settings", operation: "save_profile", storeId: store.id });
       const savedProfile = await updateStorePublicProfile(store.id, profilePayload);
-      if (import.meta.env.DEV) {
-        console.info("[PediCampos] Perfil visual retornado pelo banco.", {
-          storeId: savedProfile.id,
-          logo: savedProfile.logo,
-          banner: savedProfile.banner,
-        });
-      }
+      logInfo({ area: "settings", operation: "profile_confirmed", storeId: savedProfile.id });
 
       setForm((current) => ({ ...current, logo: nextLogo, banner: nextBanner }));
       setSavedImageUrls({ logo: nextLogo, banner: nextBanner });
@@ -256,15 +239,7 @@ export function AdminSettings({ activePath, store }) {
       setSuccess("Configuracoes salvas com sucesso.");
     } catch (saveError) {
       await Promise.allSettled(uploadedImages.map((image) => deleteStoredImage(image.publicUrl)));
-      if (import.meta.env.DEV) {
-        const databaseError = saveError.cause || saveError;
-        console.error("[PediCampos] Falha ao salvar configuracoes da loja.", {
-          code: databaseError.code,
-          message: databaseError.message,
-          details: databaseError.details,
-          hint: databaseError.hint,
-        });
-      }
+      logError({ area: "settings", operation: "save", code: saveError?.code, storeId: store.id }, saveError);
       setError(saveError.message || "Nao foi possivel salvar todas as configuracoes. Tente novamente.");
     } finally {
       setUploadingLabel("");

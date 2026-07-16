@@ -6,7 +6,9 @@ export function ProductCard({ product, category, onOpen }) {
   return (
     <article className={`product-card ${!product.active ? "product-disabled" : ""}`.trim()}>
       <button className="product-image-button" type="button" onClick={() => onOpen(product)}>
-        <img src={product.image} alt={product.name} loading="lazy" decoding="async" />
+        {typeof product.image === "string" && product.image.trim() ? (
+          <img src={product.image} alt={product.name} loading="lazy" decoding="async" />
+        ) : null}
       </button>
       <div className="product-card-body">
         <div>

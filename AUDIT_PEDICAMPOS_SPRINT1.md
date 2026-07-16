@@ -275,3 +275,12 @@ O projeto nao deve ser considerado pronto para producao antes de aplicar/validar
 - Cobertura global inicial é 35,11% de statements e não bloqueia o CI por percentual nesta primeira etapa.
 - RLS, grants, RPCs e Storage continuam sem teste de integração real; mocks validam contrato e fallback, não a instalação remota.
 - Auth, routers, dashboards e CRUDs administrativos restantes continuam como expansão prioritária.
+
+## Follow-up: proteção contra abuso
+
+- A falta de rate limit ganhou implementação preparada na Edge com storage privado e limites 10/min, 30/10min e 5 falhas por loja/chave.
+- Migration 015 fecha o bypass por EXECUTE direto; ela ainda precisa ser aplicada e validada manualmente.
+- Logs frontend foram centralizados e sanitizados; produção não imprime payload, telefone, endereço, Pix, token ou mensagem interna.
+- IP puro não é persistido. Risco residual: clientes atrás de VPN/CGNAT podem compartilhar identidade e exigem monitoramento de 429.
+- Sentry continua opcional e não configurado; logger possui adapter para integração futura.
+- O teste local posterior corrigiu dois avisos de baixo risco: `img src=""` em produtos sem imagem e eventos informativos classificados como `UNKNOWN_ERROR`.

@@ -436,3 +436,11 @@ Os diagnósticos são somente leitura. Os cleanups removem apenas IDs determiní
 ### Testes automatizados
 
 A Sprint 2.4 não executa Supabase real. `database.test.js` usa um client mockado para verificar contratos, fonte remota vazia, isolamento do `storeId` e diferenciação entre falha de rede e erros RLS/schema. Consulte `../TESTING.md` para a seção “Testes de integração Supabase pendentes”. Nenhuma chave ou secret é necessário no CI.
+
+### Migration 015 e Edge create-order
+
+Consulte `functions/create-order/README.md`. A migration cria armazenamento privado de tentativas e torna a Edge a única porta HTTP pública de pedidos. Execute migration e deploy de forma coordenada; nada foi aplicado remotamente nesta preparação.
+
+Secrets `ORDER_RATE_LIMIT_SALT` e `ORDER_ALLOWED_ORIGINS` existem apenas no ambiente Edge. `SUPABASE_SERVICE_ROLE_KEY` nunca deve ser copiada para `.env.local` do frontend ou variável `VITE_`. Use `015_order_rate_limit_audit.sql` para conferir grants, índices e ausência de policies públicas.
+
+Os ajustes locais de `src` vazio e eventos `logInfo` de 16/07/2026 não alteram banco, RPC, Edge Function ou migration 015.

@@ -4,6 +4,7 @@ import { getDefaultEntitlementsForPlan, hasFeature, normalizeFeature } from "../
 import { uniqueSlug } from "../utils/slug.js";
 import { preserveDemoAssetReference, resolveDemoAssetReference } from "../utils/demoAssets.js";
 import { supabase } from "./supabaseClient.js";
+import { logError, logInfo, logWarn } from "./logger.js";
 import {
   createOrder as createStorageOrder,
   getDatabase as getStorageDatabase,
@@ -436,7 +437,7 @@ export function orderToSupabase(order = {}) {
 }
 
 function warnAndUseLocal(operation, error) {
-  console.warn(`[PediCampos] Supabase falhou em ${operation}; usando fallback local.`, error);
+  logWarn({ area: "database", operation, code: "LOCAL_FALLBACK" }, error);
 }
 
 function isConnectionError(error) {
@@ -694,24 +695,11 @@ export async function updateStorePublicProfile(storeId, data) {
       p_logo: data.logo || "",
       p_banner_url: data.banner || "",
     };
-    if (import.meta.env.DEV) {
-      console.info("[PediCampos] Atualizando identidade visual da loja.", {
-        storeId,
-        logo: rpcPayload.p_logo,
-        banner: rpcPayload.p_banner_url,
-      });
-    }
+    logInfo({ area: "database", operation: "update_store_profile", storeId });
 
     const { data: updated, error } = await supabase.rpc("update_store_public_profile", rpcPayload);
 
-    if (error && import.meta.env.DEV) {
-      console.error("[PediCampos] update_store_public_profile falhou.", {
-        code: error.code,
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-      });
-    }
+    if (error) logError({ area: "database", operation: "update_store_profile", code: error.code, storeId }, error);
 
     if (!error) {
       const returnedRow = Array.isArray(updated) ? updated[0] : updated;
@@ -725,14 +713,7 @@ export async function updateStorePublicProfile(storeId, data) {
         : await supabase.from("stores").select(STORE_COLUMNS).eq("id", storeId).single();
 
       if (confirmationError) {
-        if (import.meta.env.DEV) {
-          console.error("[PediCampos] Falha ao confirmar identidade visual salva.", {
-            code: confirmationError.code,
-            message: confirmationError.message,
-            details: confirmationError.details,
-            hint: confirmationError.hint,
-          });
-        }
+        logError({ area: "database", operation: "confirm_store_profile", code: confirmationError.code, storeId }, confirmationError);
         throwDatabaseError("confirmar a identidade visual da loja", confirmationError);
       }
 
@@ -748,19 +729,11 @@ export async function updateStorePublicProfile(storeId, data) {
           expectedBanner: rpcPayload.p_banner_url,
           returnedBanner: confirmedStore?.banner || "",
         };
-        if (import.meta.env.DEV) {
-          console.error("[PediCampos] Identidade visual nao persistida.", confirmationFailure.details);
-        }
+        logError({ area: "database", operation: "confirm_store_profile", code: confirmationFailure.code, storeId }, confirmationFailure);
         throw confirmationFailure;
       }
 
-      if (import.meta.env.DEV) {
-        console.info("[PediCampos] Identidade visual confirmada no banco.", {
-          storeId: confirmedStore.id,
-          logo: confirmedStore.logo,
-          banner: confirmedStore.banner,
-        });
-      }
+      logInfo({ area: "database", operation: "store_profile_confirmed", storeId: confirmedStore.id });
       return confirmedStore;
     }
 
@@ -1730,7 +1703,7 @@ export async function createOrder(storeId, data = {}) {
       error.code = "ORDER_IDEMPOTENCY_KEY_REQUIRED";
       throw error;
     }
-    const { data: created, error } = await supabase.rpc("create_public_order", {
+    const requestPayload = {
       p_store_id: storeId,
       p_idempotency_key: payload.idempotencyKey,
       p_customer: payload.customer,
@@ -1739,7 +1712,11 @@ export async function createOrder(storeId, data = {}) {
       p_notes: payload.notes,
       p_payment_method: payload.paymentMethod,
       p_items: payload.items,
-    });
+    };
+    const directDevelopmentRpc = import.meta.env.DEV && import.meta.env.VITE_USE_DIRECT_ORDER_RPC === "true";
+    const { data: created, error } = directDevelopmentRpc
+      ? await supabase.rpc("create_public_order", requestPayload)
+      : await supabase.functions.invoke("create-order", { body: requestPayload });
 
     if (!error) {
       return {
@@ -1750,25 +1727,25 @@ export async function createOrder(storeId, data = {}) {
         storeId,
       };
     }
-    if (import.meta.env.DEV) {
-      console.error("[PediCampos] create_public_order falhou.", {
-        code: error.code,
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        request: {
-          storeId,
-          fulfillment: payload.fulfillment,
-          paymentMethod: payload.paymentMethod,
-          items: payload.items.map((item) => ({
-            productId: item.productId,
-            quantity: item.quantity,
-            optionIds: item.selectedAdditionals.map((additional) => additional.optionId),
-          })),
-        },
-      });
+    let responseBody = null;
+    const status = error?.context?.status;
+    try {
+      responseBody = error?.context ? await error.context.clone().json() : null;
+    } catch {
+      responseBody = null;
     }
-    useLocalForConnectionFailure("criar o pedido", error);
+    const requestError = new Error(
+      status === 429
+        ? "Muitas tentativas em pouco tempo. Aguarde alguns instantes e tente novamente."
+        : "Não foi possível criar o pedido."
+    );
+    requestError.code = status === 429 ? "RATE_LIMITED" : responseBody?.code || error?.code || "EDGE_ORDER_ERROR";
+    requestError.status = status;
+    requestError.retryAfter = Number(responseBody?.retryAfter || error?.context?.headers?.get?.("retry-after")) || 0;
+    requestError.requestId = responseBody?.requestId || error?.context?.headers?.get?.("x-request-id") || "";
+    requestError.cause = error;
+    logError({ area: "database", operation: "create_order", code: requestError.code, storeId, requestId: requestError.requestId }, error);
+    throw requestError;
   }
 
   const store = getLocalStoreById(storeId);

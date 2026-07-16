@@ -1144,3 +1144,14 @@ A migration adiciona somente metadados demo, constraints e índice parcial. Não
 ## Sprint 2.4 - integração de testes pendente
 
 Nenhuma migration, policy, RPC ou dado remoto foi alterado. Os testes atuais usam mocks e não devem ser considerados prova de RLS real. A etapa futura deve aplicar todas as migrations em Supabase CLI local ou projeto exclusivo de testes, criar identidades fictícias anon/Admin A/Admin B/master e destruir os dados ao final. Produção e `service_role` frontend ficam fora dessa estratégia.
+
+## Migration 015 - implantação coordenada
+
+1. Configurar secrets da Edge e publicar `create-order` em teste.
+2. Executar `015_order_rate_limit.sql`, que fecha a execução direta da RPC.
+3. Publicar frontend que chama a Edge imediatamente após a migration.
+4. Rodar `015_order_rate_limit_audit.sql` e testes de domínio.
+
+Não aplicar a migration isoladamente antes da Edge/frontend: o checkout antigo perderá acesso direto. Em emergência, o rollback documentado restaura temporariamente o grant sem remover idempotência ou RLS.
+
+O ajuste de imagens vazias e classificação dos logs de 16/07/2026 é exclusivamente frontend; não exige nova migration nem altera a 015.

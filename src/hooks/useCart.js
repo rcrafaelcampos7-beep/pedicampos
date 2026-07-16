@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { logInfo } from "../services/logger.js";
 
 function cartKey(storeId) {
   return `pedicampos.cart.${storeId}`;
@@ -31,9 +32,7 @@ export function useCart(storeId) {
   useEffect(() => {
     if (storeId && cartState.storeId === storeId) {
       window.localStorage.setItem(cartKey(storeId), JSON.stringify({ storeId, items }));
-      if (import.meta.env.DEV) {
-        console.info("[PediCampos] Carrinho persistido.", { storeId, itemCount: items.length });
-      }
+      logInfo({ area: "cart", operation: "persist", storeId });
     }
   }, [cartState.storeId, items, storeId]);
 
@@ -44,9 +43,7 @@ export function useCart(storeId) {
   }, [items]);
 
   function addItem(item) {
-    if (import.meta.env.DEV) {
-      console.info("[PediCampos] Produto adicionado ao carrinho.", { storeId, productId: item.productId });
-    }
+    logInfo({ area: "cart", operation: "add_item", storeId });
     setCartState((current) => ({
       storeId,
       mismatched: false,

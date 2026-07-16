@@ -1270,3 +1270,16 @@ Build:
 - `database.js` é exercitado com client Supabase mockado: RLS/schema não geram fallback; somente falha real de rede permite fallback técnico.
 - GitHub Actions executa `npm ci`, testes e build em PRs e pushes para `main`, sem secrets nem acesso ao Supabase real.
 - Integração real de RLS/RPC/Storage continua pendente em Supabase local ou projeto exclusivo de testes.
+
+## Sprint 2.5 - abuso e observabilidade (15/07/2026)
+
+- A porta pública proposta passa a ser a Edge Function `create-order`; migration 015 revoga execução direta anon/authenticated da RPC para evitar bypass.
+- Rate limit server-side: 10 tentativas/IP/minuto, 30/IP/10 minutos e 5 falhas loja/chave/5 minutos, preservando idempotência.
+- IP é normalizado no Edge e persistido somente como SHA-256 com salt secreto; payload e PII não entram nos registros/logs.
+- Logger central substitui `console` no frontend, detalha somente em DEV e usa allowlist de metadados em produção.
+- Sentry não foi integrado; `setObservabilityAdapter` deixa um ponto explícito para integração futura sem obrigar conta.
+
+### Ajustes do teste local (16/07/2026)
+
+- Produtos sem imagem deixaram de gerar `<img src="">` no carrinho, card e modal; fallbacks neutros preservam o layout e o catálogo demo sem imagem.
+- Eventos `logInfo` agora contêm somente contexto seguro, ambiente e timestamp, sem `UNKNOWN_ERROR` ou mensagem vazia; em produção continuam silenciosos.

@@ -60,3 +60,9 @@ git diff --check
 ```
 
 `validate` executa testes e build. `git diff --check` permanece separado para funcionar também fora de um worktree Git. O CI em `.github/workflows/ci.yml` roda em pull requests e pushes para `main`, sem Supabase real, secrets ou deploy. Consulte `TESTING.md` para cobertura, isolamento e integrações pendentes.
+
+## Rate limit de pedidos
+
+A Sprint 2.5 prepara `supabase/functions/create-order` como porta pública, com migration 015 e logger sanitizado. Veja o README da função para secrets, deploy, testes e rollback. A implantação precisa ser coordenada porque a migration revoga o acesso anônimo direto à RPC. Nenhuma alteração remota foi executada automaticamente.
+
+Produtos sem imagem são renderizados sem `src` vazio, e eventos informativos do logger permanecem seguros em desenvolvimento e silenciosos em produção.

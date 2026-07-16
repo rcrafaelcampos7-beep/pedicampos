@@ -944,11 +944,19 @@ td {
   grid-template-columns: 0.95fr 1.05fr;
 }
 
-.product-modal > img {
+.product-modal > img,
+.product-modal-image-placeholder {
   width: 100%;
   height: 100%;
   min-height: 420px;
+}
+
+.product-modal > img {
   object-fit: cover;
+}
+
+.product-modal-image-placeholder {
+  background: #e2e8f0;
 }
 
 .product-modal-content,
@@ -1945,7 +1953,8 @@ td {
     flex: 1 1 auto;
   }
 
-  .product-modal > img {
+  .product-modal > img,
+  .product-modal-image-placeholder {
     min-height: 260px;
     max-height: 300px;
   }
@@ -2227,7 +2236,8 @@ td {
     padding: 14px;
   }
 
-  .product-modal > img {
+  .product-modal > img,
+  .product-modal-image-placeholder {
     min-height: 200px;
     max-height: 230px;
   }

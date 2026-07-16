@@ -79,6 +79,14 @@ describe("CheckoutPage", () => {
     expect(await screen.findByText(/N.o foi poss.vel criar o pedido/)).toBeInTheDocument();
     expect(cartMock.current.clearCart).not.toHaveBeenCalled();
   });
+  it("mostra mensagem amigavel para HTTP 429", async () => {
+    db.createOrder.mockRejectedValue(Object.assign(new Error("rate"), { code: "RATE_LIMITED", status: 429, retryAfter: 30 }));
+    await loadCheckout();
+    await fillCustomer();
+    await userEvent.click(screen.getByRole("button", { name: "Retirada" }));
+    await userEvent.click(screen.getByRole("button", { name: "Finalizar pedido" }));
+    expect(await screen.findByText("Muitas tentativas em pouco tempo. Aguarde alguns instantes e tente novamente.")).toBeInTheDocument();
+  });
   it("preserva idempotency key no retry e navega no sucesso", async () => {
     db.createOrder.mockRejectedValueOnce(new Error("network retry")).mockResolvedValueOnce({ publicToken: "token-publico" });
     await loadCheckout();

@@ -7,6 +7,7 @@ import { Input, Select, Textarea } from "../components/ui/Input.jsx";
 import { useCart } from "../hooks/useCart.js";
 import { Link, navigate } from "../routes/router.jsx";
 import { createOrder, getPaymentMethodsByStore, getStoreBySlug, getStoreEntitlements, getStoreSettings } from "../services/database.js";
+import { logError, logInfo } from "../services/logger.js";
 import { formatCurrency } from "../utils/formatCurrency.js";
 import { ORDER_STATUS, PAYMENT_STATUS } from "../utils/orderStatus.js";
 import { ENTITLEMENT_FEATURES, hasFeature } from "../utils/plans.js";
@@ -232,14 +233,7 @@ export function CheckoutPage({ slug }) {
   }, [cart.mismatched]);
 
   useEffect(() => {
-    if (store && import.meta.env.DEV) {
-      console.info("[PediCampos] Checkout leu o carrinho.", {
-        slug,
-        resolvedStoreId: store.id,
-        cartStoreId: cart.storeId,
-        itemCount: cart.items.length,
-      });
-    }
+    if (store) logInfo({ area: "checkout", operation: "cart_loaded", storeId: store.id });
   }, [cart.items.length, cart.storeId, slug, store]);
 
   function updateForm(field, value) {
@@ -388,29 +382,16 @@ export function CheckoutPage({ slug }) {
         setError("A loja do carrinho mudou. Adicione os produtos novamente antes de finalizar.");
         return;
       }
-      if (import.meta.env.DEV) {
-        console.info("[PediCampos] Loja validada antes de create_public_order.", {
-          slug,
-          resolvedStoreId: resolvedStore.id,
-          cartStoreId: cart.storeId,
-          pStoreId: resolvedStore.id,
-        });
-      }
+      logInfo({ area: "checkout", operation: "store_validated", storeId: resolvedStore.id });
       const createdOrder = await createOrder(resolvedStore.id, { ...order, storeId: resolvedStore.id });
       clearOrderAttempt(store.id, idempotencyKey);
       cart.clearCart();
       navigate(`/${store.slug}/pedido/${createdOrder.publicToken || createdOrder.id}`);
     } catch (requestError) {
-      if (import.meta.env.DEV) {
-        const source = requestError?.cause || requestError;
-        console.error("[PediCampos] Falha ao finalizar o checkout.", {
-          code: source?.code,
-          message: source?.message,
-          details: source?.details,
-          hint: source?.hint,
-        });
-      }
-      setError("Não foi possível criar o pedido. Confira os itens e tente novamente.");
+      logError({ area: "checkout", operation: "create_order", code: requestError?.code, storeId: store.id, requestId: requestError?.requestId }, requestError);
+      setError(requestError?.code === "RATE_LIMITED"
+        ? "Muitas tentativas em pouco tempo. Aguarde alguns instantes e tente novamente."
+        : "Não foi possível criar o pedido. Confira os itens e tente novamente.");
     } finally {
       setSubmitting(false);
     }

@@ -1316,3 +1316,19 @@ Build:
 - Criado workflow GitHub Actions para PRs e pushes em `main`, com Node 22, cache npm, testes e build.
 - Cobertura inicial: 35,11% statements, 26,57% branches, 34,54% functions e 38,34% lines; sem threshold arbitrário no primeiro ciclo.
 - Adicionado `TESTING.md` com isolamento, comandos e estratégia futura de integração Supabase.
+
+## 15/07/2026 - Sprint 2.5: rate limit e observabilidade
+
+- Criada migration 015 com tabela privada efêmera, funções service-role-only, índices, expiração e revogação do EXECUTE público direto da RPC.
+- Criada Edge Function `create-order` com CORS restrito, POST/OPTIONS, body de 256 KiB, validação estrutural, requestId e 429 com Retry-After.
+- `database.createOrder` passou a usar `supabase.functions.invoke`, preservando chave idempotente e sem fallback em erro Edge/RLS.
+- Checkout ganhou mensagem específica e amigável para rate limit.
+- Criado logger central sanitizado; logs diretos do frontend foram substituídos e URLs/payloads deixaram de ser registrados.
+- Adicionados 15 testes de Edge, logger, 429 e facade, totalizando 86 casos.
+- Cobertura global passou para 38,08% statements e 41,52% lines; core Edge ficou em 90% de statements.
+
+## 16/07/2026 - Correções do teste local da Sprint 2.5
+
+- Impedido `src` vazio no `CartDrawer`, `ProductCard` e `ProductModal`; produtos sem imagem usam ausência controlada ou placeholder neutro.
+- `logInfo` deixou de passar por `sanitizeError`, eliminando `UNKNOWN_ERROR` e mensagens vazias de eventos rotineiros.
+- Mantidos logs informativos seguros somente em desenvolvimento e warnings/erros sanitizados em produção.

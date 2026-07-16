@@ -19,6 +19,7 @@ import {
   getStoreSettings,
 } from "../services/database.js";
 import { ENTITLEMENT_FEATURES, hasFeature } from "../utils/plans.js";
+import { logInfo } from "../services/logger.js";
 
 export function StorePage({ slug }) {
   const [store, setStore] = useState(null);
@@ -111,13 +112,7 @@ export function StorePage({ slug }) {
   }, [activeCategory, store]);
 
   function addProductToCart(item) {
-    if (import.meta.env.DEV) {
-      console.info("[PediCampos] StorePage adicionando produto.", {
-        slug,
-        storeId: store.id,
-        productId: item.productId,
-      });
-    }
+    logInfo({ area: "store", operation: "add_product", storeId: store.id });
     cart.addItem(item);
   }
 

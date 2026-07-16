@@ -126,7 +126,11 @@ export function ProductModal({ product, store, open, onClose, onAdd }) {
     <Modal open={open && Boolean(product)} onClose={onClose} title={product?.name} size="lg">
       {product ? (
         <div className="product-modal">
-          <img src={product.image} alt={product.name} decoding="async" />
+          {typeof product.image === "string" && product.image.trim() ? (
+            <img src={product.image} alt={product.name} decoding="async" />
+          ) : (
+            <div className="product-modal-image-placeholder" aria-hidden="true" />
+          )}
           <div className="product-modal-content">
             <p>{product.description}</p>
             <strong className="modal-price">{formatCurrency(product.price)}</strong>

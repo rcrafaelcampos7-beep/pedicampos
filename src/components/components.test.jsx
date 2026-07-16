@@ -14,6 +14,7 @@ vi.mock("../services/storageImages.js", () => ({
 }));
 
 import { PlanGuard } from "./admin/PlanGuard.jsx";
+import { CartDrawer } from "./store/CartDrawer.jsx";
 import { OrderTimeline } from "./store/OrderTimeline.jsx";
 import { ProductCard } from "./store/ProductCard.jsx";
 import { ImageCropModal } from "./ui/ImageCropModal.jsx";
@@ -67,6 +68,25 @@ describe("componentes criticos", () => {
     render(<ProductCard product={{ name: "Produto", description: "", price: 10, active: false, image: "" }} onOpen={vi.fn()} />);
     expect(screen.getByText(/Indispon/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Adicionar" })).not.toBeInTheDocument();
+    expect(document.querySelector('img[src=""]')).not.toBeInTheDocument();
+  });
+  it("CartDrawer nao renderiza src vazio para produto sem imagem", () => {
+    render(
+      <CartDrawer
+        open
+        onClose={vi.fn()}
+        store={{ slug: "demo", deliveryFee: 0 }}
+        cart={{
+          items: [{ cartId: "item-1", name: "Sem imagem", image: "", quantity: 1, total: 10 }],
+          totals: { quantity: 1, subtotal: 10 },
+        }}
+        onUpdateQuantity={vi.fn()}
+        onRemove={vi.fn()}
+        onClear={vi.fn()}
+      />,
+    );
+    expect(screen.getByText("Sem imagem")).toBeInTheDocument();
+    expect(document.querySelector('img[src=""]')).not.toBeInTheDocument();
   });
   it("ImageCropModal cancela sem processar", async () => {
     const onCancel = vi.fn();

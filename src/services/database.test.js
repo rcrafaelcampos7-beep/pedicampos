@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const state = vi.hoisted(() => ({ storeResult: { data: null, error: null }, rpcResult: { data: null, error: null } }));
+const state = vi.hoisted(() => ({ storeResult: { data: null, error: null }, rpcResult: { data: null, error: null }, functionResult: { data: null, error: null } }));
 const storage = vi.hoisted(() => ({
   createOrder: vi.fn(), getDatabase: vi.fn(() => ({ stores: [{ id: "local", slug: "local-store" }], orders: [], platform: {} })),
   migrateLegacyStoresForSupabase: vi.fn(), mutateDatabase: vi.fn(), subscribeDatabase: vi.fn(),
@@ -15,6 +15,7 @@ const client = vi.hoisted(() => ({
     select: vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle: vi.fn(async () => state.storeResult) })) })),
   })),
   rpc: vi.fn(async () => state.rpcResult),
+  functions: { invoke: vi.fn(async () => state.functionResult) },
 }));
 
 vi.mock("./supabaseClient.js", () => ({ supabase: client }));
@@ -26,6 +27,7 @@ describe("database Supabase-first", () => {
   beforeEach(() => {
     state.storeResult = { data: null, error: null };
     state.rpcResult = { data: null, error: null };
+    state.functionResult = { data: null, error: null };
     orderQuery.eq.mockClear();
   });
   it("resposta remota vazia nao recebe mock", async () => {
@@ -45,12 +47,22 @@ describe("database Supabase-first", () => {
     await expect(getStoreBySlug("local-store")).resolves.toMatchObject({ id: "local" });
   });
   it("erro RPC/RLS nunca cria pedido local", async () => {
-    state.rpcResult = { data: null, error: { code: "42501", message: "permission denied" } };
+    state.functionResult = { data: null, error: { code: "42501", message: "permission denied" } };
     await expect(createOrder("store-authorized", {
       idempotencyKey: "00000000-0000-4000-8000-000000000001", customer: {}, fulfillment: "pickup",
       paymentMethodKey: "pix", items: [],
     })).rejects.toMatchObject({ code: "42501" });
     expect(storage.createOrder).not.toHaveBeenCalled();
+  });
+  it("propaga HTTP 429 com metadados seguros", async () => {
+    const response = new Response(JSON.stringify({ code: "RATE_LIMITED", retryAfter: 30, requestId: "request-test" }), {
+      status: 429, headers: { "content-type": "application/json", "retry-after": "30" },
+    });
+    state.functionResult = { data: null, error: { context: response } };
+    await expect(createOrder("store-authorized", {
+      idempotencyKey: "00000000-0000-4000-8000-000000000001", customer: {}, fulfillment: "pickup",
+      paymentMethodKey: "pix", items: [],
+    })).rejects.toMatchObject({ code: "RATE_LIMITED", status: 429, retryAfter: 30, requestId: "request-test" });
   });
   it("Admin filtra pela loja autorizada e Master usa consulta global distinta", async () => {
     await getOrdersByStorePaginated("store-authorized", { page: 1 });

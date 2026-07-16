@@ -1233,3 +1233,13 @@ A Landing não consome mais o conjunto local para exemplos. Resposta remota vazi
 Vitest usa o mesmo pipeline Vite/React em ambiente jsdom. `src/test/setup.js` centraliza jest-dom, cleanup e limpeza de storages. Testes de página mockam contratos do adapter, não detalhes internos do Supabase; testes de `database.js` substituem `supabaseClient` e `storage.js` por doubles controlados.
 
 Essa camada garante regressões frontend e fronteiras de fallback, mas não comprova policies instaladas. RLS, grants, funções SECURITY DEFINER, triggers e Storage exigem uma futura suíte de integração em banco descartável. O CI não recebe chaves Supabase nem `service_role`.
+
+## Fronteira pública e rate limit
+
+O fluxo coordenado após migration 015 é `Checkout → Edge create-order → consume_order_rate_limit → create_public_order`. A RPC conserva validação comercial, cálculo e atomicidade. `anon` e `authenticated` deixam de executar a RPC diretamente; somente o client server-side da Edge possui o grant necessário.
+
+A tabela de tentativas não possui policy pública e armazena apenas hashes SHA-256 com salt, storeId, estado e timestamps expirando em 15 minutos. Advisory lock serializa contagem por identidade/loja. A Edge confia no IP encaminhado pelo gateway Supabase, restringe origem e nunca registra body.
+
+`logger.js` centraliza eventos com allowlist. Em produção, info é silencioso e warn/error omitem mensagem/details; um adapter externo opcional poderá encaminhar eventos já sanitizados.
+
+Eventos informativos usam sanitização própria e não recebem campos artificiais de erro; `sanitizeError` fica restrito a warnings e erros. Componentes públicos não instanciam `<img>` quando a URL do produto está vazia e não criam URLs fictícias para fallback.
