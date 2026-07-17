@@ -284,3 +284,17 @@ O projeto nao deve ser considerado pronto para producao antes de aplicar/validar
 - IP puro não é persistido. Risco residual: clientes atrás de VPN/CGNAT podem compartilhar identidade e exigem monitoramento de 429.
 - Sentry continua opcional e não configurado; logger possui adapter para integração futura.
 - O teste local posterior corrigiu dois avisos de baixo risco: `img src=""` em produtos sem imagem e eventos informativos classificados como `UNKNOWN_ERROR`.
+
+## Auditoria complementar pré-UX — 17/07/2026
+
+- Os bloqueadores críticos anteriormente tratados continuam preservados nos arquivos: escrita anônima direta fechada pela 009 e criação pública mediada pela Edge após a 015.
+- Foram ampliados testes de Auth, Storage, pedidos, dashboards e componentes críticos, totalizando 120 testes em 20 arquivos.
+- Não houve validação remota nesta rodada; grants, RLS, Edge, secrets e rate limit continuam como gate manual de produção.
+- O projeto não possui `npm run lint`; criar essa configuração é pendência de qualidade antes da aprovação definitiva.
+- Evidências, riscos e checklist completos estão em `AUDIT_PEDICAMPOS_PRE_UX_2026-07-17.md`.
+
+### Continuação do gate pré-UX
+
+- Lint configurado e aprovado com zero erros; 12 warnings de dependências de loaders permanecem visíveis e documentados.
+- Diagnóstico Supabase consolidado e somente leitura preparado, sem execução remota.
+- Status: aprovado para validação remota; nova UX aguarda as evidências do ambiente instalado.

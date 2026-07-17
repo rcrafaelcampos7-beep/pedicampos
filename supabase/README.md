@@ -444,3 +444,9 @@ Consulte `functions/create-order/README.md`. A migration cria armazenamento priv
 Secrets `ORDER_RATE_LIMIT_SALT` e `ORDER_ALLOWED_ORIGINS` existem apenas no ambiente Edge. `SUPABASE_SERVICE_ROLE_KEY` nunca deve ser copiada para `.env.local` do frontend ou variável `VITE_`. Use `015_order_rate_limit_audit.sql` para conferir grants, índices e ausência de policies públicas.
 
 Os ajustes locais de `src` vazio e eventos `logInfo` de 16/07/2026 não alteram banco, RPC, Edge Function ou migration 015.
+
+### Gate pré-UX de 17/07/2026
+
+A auditoria local não criou nem executou migrations. Antes de produção, rode os diagnósticos das migrations 009, 011, 012, 013 e 015 em ambiente controlado, confirme RLS/grants de anon/authenticated, publique a Edge com seus secrets e valide criação, acompanhamento, rate limit e isolamento entre duas lojas. A suíte local possui 120 testes, mas não substitui testes reais do PostgreSQL/Supabase.
+
+Use `diagnostics/pre_ux_remote_validation.sql` para a leitura consolidada de objetos, funções, owners, security mode, search path, grants, RLS, buckets, triggers e índices. Siga `../SUPABASE_PRE_UX_VALIDATION.md`; o diagnóstico não lê pedidos/clientes e não modifica o projeto.

@@ -23,7 +23,9 @@ export function StoreHeader({ store }) {
 
   return (
     <header className="store-hero" style={{ "--store-color": store.primaryColor }}>
-      <img src={store.banner} alt={`Banner ${store.name}`} decoding="async" fetchPriority="high" />
+      {typeof store.banner === "string" && store.banner.trim() ? (
+        <img src={store.banner} alt={`Banner ${store.name}`} decoding="async" fetchPriority="high" />
+      ) : null}
       <div className="store-hero-overlay" />
       <div className="store-hero-content">
         <div className="store-logo">

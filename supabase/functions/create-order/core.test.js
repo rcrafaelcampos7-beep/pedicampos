@@ -1,12 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createOrderHandler, MAX_BODY_BYTES } from "./core.ts";
+import {
+  createOrderHandler,
+  createOriginChecker,
+  MAX_BODY_BYTES,
+  normalizeClientIp,
+  sha256Hex,
+} from "./core.ts";
 
 const origin = "https://pedicampos.com.br";
 const payload = {
   p_store_id: "00000000-0000-4000-8000-000000000001",
   p_idempotency_key: "00000000-0000-4000-8000-000000000002",
   p_customer: { name: "Teste" }, p_fulfillment: "pickup", p_address: null,
-  p_notes: "", p_payment_method: "pix", p_items: [],
+  p_notes: "", p_payment_method: "pix", p_items: [{
+    productId: "00000000-0000-4000-8000-000000000003", quantity: 1, selectedAdditionals: [],
+  }],
 };
 
 function request(body = payload, options = {}) {
@@ -34,6 +42,7 @@ describe("create-order Edge core", () => {
   it("permite chamada valida", async () => {
     const response = await createOrderHandler(deps)(request());
     expect(response.status).toBe(200);
+    expect(response.headers.get("access-control-allow-origin")).toBe(origin);
     expect(await response.json()).toMatchObject({ id: "order-1" });
     expect(deps.completeAttempt).toHaveBeenCalledWith("attempt-1", true);
   });
@@ -60,6 +69,42 @@ describe("create-order Edge core", () => {
     const response = await createOrderHandler(deps)(request(payload, { origin: "https://evil.example" }));
     expect(response.status).toBe(403);
     expect(response.headers.get("access-control-allow-origin")).toBeNull();
+  });
+  it("bloqueia ausencia do header Origin", async () => {
+    const missingOrigin = request();
+    missingOrigin.headers.delete("origin");
+    const response = await createOrderHandler(deps)(missingOrigin);
+    expect(response.status).toBe(403);
+    expect(deps.identify).not.toHaveBeenCalled();
+  });
+  it("aplica a politica real de localhost somente quando habilitada", () => {
+    expect(createOriginChecker([origin], false)("http://127.0.0.1:5174")).toBe(false);
+    const developmentPolicy = createOriginChecker([origin], true);
+    expect(developmentPolicy("http://127.0.0.1:5174")).toBe(true);
+    expect(developmentPolicy("http://localhost:5174")).toBe(true);
+    expect(developmentPolicy("https://evil.example")).toBe(false);
+  });
+  it("rejeita loja ausente, carrinho vazio e quantidade invalida", async () => {
+    const handler = createOrderHandler(deps);
+    expect((await handler(request({ ...payload, p_store_id: "" }))).status).toBe(400);
+    expect((await handler(request({ ...payload, p_items: [] }))).status).toBe(400);
+    expect((await handler(request({ ...payload, p_items: [{ ...payload.p_items[0], quantity: 0 }] }))).status).toBe(400);
+    expect(deps.checkRateLimit).not.toHaveBeenCalled();
+  });
+  it("rejeita JSON e idempotency key invalidos antes do rate limit", async () => {
+    const handler = createOrderHandler(deps);
+    expect((await handler(request("{"))).status).toBe(400);
+    expect((await handler(request({ ...payload, p_idempotency_key: "repetir" }))).status).toBe(400);
+    expect(deps.identify).not.toHaveBeenCalled();
+  });
+  it("normaliza IPv4 com porta sem truncar IPv6 e gera hash opaco", async () => {
+    const ipv4 = request(payload, { headers: { "x-forwarded-for": "203.0.113.10:4321, 10.0.0.1" } });
+    const ipv6 = request(payload, { headers: { "x-forwarded-for": "2001:db8::1234" } });
+    expect(normalizeClientIp(ipv4)).toBe("203.0.113.10");
+    expect(normalizeClientIp(ipv6)).toBe("2001:db8::1234");
+    const hash = await sha256Hex(`salt:${normalizeClientIp(ipv6)}`);
+    expect(hash).toMatch(/^[a-f0-9]{64}$/);
+    expect(hash).not.toContain("2001:db8");
   });
   it("rejeita metodo invalido", async () => {
     const response = await createOrderHandler(deps)(request(null, { method: "GET" }));

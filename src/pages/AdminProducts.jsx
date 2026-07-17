@@ -81,7 +81,7 @@ export function AdminProducts({ activePath, store }) {
       setForm((current) => ({
         ...current,
         categoryId: current.categoryId || categoryResult.data[0]?.id || "",
-        image: current.image || store.banner,
+        image: current.image || "",
       }));
     } catch {
       setError("Não foi possível carregar os produtos. Tente novamente.");
@@ -96,7 +96,7 @@ export function AdminProducts({ activePath, store }) {
     setCropRequest(null);
     setFileInputVersion((current) => current + 1);
     setEditingId("");
-    setForm({ ...emptyProduct, image: store.banner });
+    setForm(emptyProduct);
     setPage(1);
     setCategoryPage(1);
     setCategoriesLoaded(false);
@@ -139,7 +139,7 @@ export function AdminProducts({ activePath, store }) {
     setForm({
       ...emptyProduct,
       categoryId: categories[0]?.id || "",
-      image: store.banner,
+      image: "",
     });
   }
 
@@ -184,7 +184,7 @@ export function AdminProducts({ activePath, store }) {
     const product = {
       ...form,
       price: Number(form.price) || 0,
-      image: form.image || store.banner,
+      image: String(form.image || "").trim(),
     };
 
     let uploadedImage = null;
@@ -351,7 +351,9 @@ export function AdminProducts({ activePath, store }) {
             const category = categories.find((item) => item.id === product.categoryId);
             return (
               <Card key={product.id} className="admin-product-row">
-                <img src={product.image || store.banner} alt={product.name} loading="lazy" decoding="async" />
+                {typeof product.image === "string" && product.image.trim() ? (
+                  <img src={product.image} alt={product.name} loading="lazy" decoding="async" />
+                ) : null}
                 <div>
                   <strong>{product.name}</strong>
                   <span>{category?.name || "Sem categoria"}</span>

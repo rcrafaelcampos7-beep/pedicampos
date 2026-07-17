@@ -1727,7 +1727,7 @@ export async function createOrder(storeId, data = {}) {
         storeId,
       };
     }
-    let responseBody = null;
+    let responseBody;
     const status = error?.context?.status;
     try {
       responseBody = error?.context ? await error.context.clone().json() : null;

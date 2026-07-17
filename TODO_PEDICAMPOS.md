@@ -682,3 +682,11 @@ Legenda:
 - [ ] Avaliar Sentry ou provedor equivalente com scrub de PII via adapter do logger.
 - [ ] Adicionar limpeza agendada opcional se a remoção oportunística não bastar em baixo tráfego.
 - [x] Corrigir `src` vazio em produtos sem imagem e separar eventos informativos de erros no logger.
+- [x] Concluir auditoria técnica pré-UX com 120 testes, build e verificações estáticas locais.
+- [x] Adicionar ESLint flat e integrar lint ao comando `validate`, sem alterar comportamento do produto.
+- [ ] Validar em ambiente Supabase descartável os grants/RLS, a Edge `create-order`, rate limit e isolamento Loja A x Loja B.
+- [x] Preparar SQL somente leitura e checklist para a validação remota pré-UX.
+- [x] Executar o resumo remoto e confirmar `PRE_UX_REMOTE_GATE = PASS` sem aplicar migrations ou alterar funções.
+- [ ] Analisar os 12 warnings `react-hooks/exhaustive-deps` em uma refatoração pequena e testada dos loaders legados.
+- [ ] Executar o checklist manual de localhost e domínio documentado em `AUDIT_PEDICAMPOS_PRE_UX_2026-07-17.md`.
+- [ ] Remover gradualmente `usePediData`, mocks e configurações Master locais somente após substituir seus consumidores remanescentes.

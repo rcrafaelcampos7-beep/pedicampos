@@ -131,7 +131,9 @@ export function MasterStores({ activePath }) {
             const metrics = storeMetrics[store.id] || { orders: 0, revenue: 0 };
             return (
               <Card key={store.id} className="master-store-card">
-                <img src={store.banner} alt={store.name} loading="lazy" decoding="async" />
+                {typeof store.banner === "string" && store.banner.trim() ? (
+                  <img src={store.banner} alt={store.name} loading="lazy" decoding="async" />
+                ) : null}
                 <div>
                   <div className="row-actions">
                     <Badge tone={store.active ? "success" : "danger"}>{store.active ? "Ativa" : "Inativa"}</Badge>

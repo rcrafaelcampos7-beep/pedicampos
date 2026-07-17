@@ -21,7 +21,7 @@ const client = vi.hoisted(() => ({
 vi.mock("./supabaseClient.js", () => ({ supabase: client }));
 vi.mock("./storage.js", () => storage);
 
-import { createOrder, getMasterOrdersPaginated, getOrdersByStorePaginated, getStoreBySlug } from "./database.js";
+import { createOrder, getMasterOrdersPaginated, getOrderById, getOrdersByStorePaginated, getStoreBySlug } from "./database.js";
 
 describe("database Supabase-first", () => {
   beforeEach(() => {
@@ -63,6 +63,25 @@ describe("database Supabase-first", () => {
       idempotencyKey: "00000000-0000-4000-8000-000000000001", customer: {}, fulfillment: "pickup",
       paymentMethodKey: "pix", items: [],
     })).rejects.toMatchObject({ code: "RATE_LIMITED", status: 429, retryAfter: 30, requestId: "request-test" });
+  });
+  it("envia payload normalizado para a Edge Function", async () => {
+    state.functionResult = { data: { id: "order-1", publicToken: "public-token", number: "100" }, error: null };
+    await createOrder("store-authorized", {
+      idempotencyKey: "00000000-0000-4000-8000-000000000001",
+      customer: { name: "Cliente", phone: "000" }, fulfillment: "delivery",
+      address: { street: "Rua", number: "1" }, paymentMethodKey: "pix",
+      items: [{ productId: "product-1", quantity: 2, selectedAdditionals: [{ groupId: "group-1", optionId: "option-1" }] }],
+    });
+    expect(client.functions.invoke).toHaveBeenCalledWith("create-order", { body: expect.objectContaining({
+      p_store_id: "store-authorized",
+      p_idempotency_key: "00000000-0000-4000-8000-000000000001",
+      p_items: [expect.objectContaining({ productId: "product-1", quantity: 2, selectedAdditionals: [{ groupId: "group-1", optionId: "option-1" }] })],
+    }) });
+  });
+  it("acompanhamento publico consulta token e slug pela RPC", async () => {
+    state.rpcResult = { data: null, error: null };
+    await expect(getOrderById("public-token", "loja-a")).resolves.toBeNull();
+    expect(client.rpc).toHaveBeenCalledWith("get_public_order", { p_token: "public-token", p_store_slug: "loja-a" });
   });
   it("Admin filtra pela loja autorizada e Master usa consulta global distinta", async () => {
     await getOrdersByStorePaginated("store-authorized", { page: 1 });

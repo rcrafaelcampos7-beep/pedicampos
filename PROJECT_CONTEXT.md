@@ -1283,3 +1283,25 @@ Build:
 
 - Produtos sem imagem deixaram de gerar `<img src="">` no carrinho, card e modal; fallbacks neutros preservam o layout e o catálogo demo sem imagem.
 - Eventos `logInfo` agora contêm somente contexto seguro, ambiente e timestamp, sem `UNKNOWN_ERROR` ou mensagem vazia; em produção continuam silenciosos.
+
+### Auditoria técnica pré-UX (17/07/2026)
+
+- A arquitetura Supabase-first, autenticação Master/Admin, checkout idempotente, acompanhamento público e proteção Edge foram revisados antes da próxima etapa de UX.
+- Correções seguras impediram herança de banner/logo em produtos, preservaram produtos sem categoria ativa, corrigiram o slug automático de criação de loja e reforçaram validação/normalização na Edge.
+- A suíte passou para 120 testes em 20 arquivos; build, `node --check` e `git diff --check` passaram. O projeto ainda não possui script de lint.
+- Nenhuma migration, alteração remota, commit ou push foi executado. A liberação para produção segue condicionada à validação real de RLS/Edge e à configuração de lint.
+- Relatório completo: `AUDIT_PEDICAMPOS_PRE_UX_2026-07-17.md`.
+
+### Gates técnicos pré-UX (17/07/2026)
+
+- ESLint flat configurado com zero erros; 12 warnings de dependências de efeitos legados permanecem documentados, sem mascaramento.
+- Diagnóstico remoto somente leitura preparado em `supabase/diagnostics/pre_ux_remote_validation.sql`.
+- Checklist manual preparado em `SUPABASE_PRE_UX_VALIDATION.md`; nenhuma consulta remota, migration ou publicação foi executada.
+- Projeto aprovado para a etapa de validação remota, ainda não para implementação da nova UX.
+
+### Gate remoto pre-UX concluido (17/07/2026)
+
+- `supabase/diagnostics/pre_ux_remote_summary.sql` retornou `PRE_UX_REMOTE_GATE = PASS` no projeto Supabase.
+- As seis funcoes criticas foram confirmadas por assinatura com `function_inventory.sql`; o resumo passou a resolver funcoes por `to_regprocedure` e OID para evitar falsos negativos textuais.
+- Os diagnosticos foram somente leitura e nao alteraram schema, funcoes, policies, dados, Edge ou Storage.
+- O checkpoint tecnico libera o planejamento da UX/UI V2 sem mudar regras de negocio. Validacoes funcionais de dominio e isolamento continuam obrigatorias antes de producao.

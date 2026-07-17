@@ -54,6 +54,20 @@ describe("CheckoutPage", () => {
     expect(screen.getByText("Informe seu nome.")).toBeInTheDocument();
     expect(db.createOrder).not.toHaveBeenCalled();
   });
+  it("valida telefone, endereco e pedido minimo", async () => {
+    db.getStoreSettings.mockResolvedValue({ deliveryEnabled: true, pickupEnabled: true, deliveryFee: 5, minimumOrderValue: 20, address: "Rua Teste" });
+    await loadCheckout();
+    await userEvent.type(screen.getByLabelText("Nome"), "Cliente");
+    await userEvent.click(screen.getByRole("button", { name: "Finalizar pedido" }));
+    expect(screen.getByText("Informe seu telefone.")).toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText(/Telefone/), "000000000");
+    await userEvent.click(screen.getByRole("button", { name: "Finalizar pedido" }));
+    expect(screen.getByText(/Informe endere.o, bairro e n.mero/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Retirada" }));
+    await userEvent.click(screen.getByRole("button", { name: "Finalizar pedido" }));
+    expect(screen.getByText(/pedido m.nimo/)).toBeInTheDocument();
+    expect(db.createOrder).not.toHaveBeenCalled();
+  });
   it("envia pedido delivery com endereco", async () => {
     await loadCheckout();
     await fillCustomer();
@@ -98,6 +112,20 @@ describe("CheckoutPage", () => {
     await waitFor(() => expect(db.createOrder).toHaveBeenCalledTimes(2));
     expect(db.createOrder.mock.calls[0][1].idempotencyKey).toBe(db.createOrder.mock.calls[1][1].idempotencyKey);
     expect(router.navigate).toHaveBeenCalledWith("/loja-demo/pedido/token-publico");
+    expect(cartMock.current.clearCart).toHaveBeenCalledTimes(1);
+  });
+  it("nao exibe URL da logo como texto no cabecalho", async () => {
+    currentStore.logo = "https://cdn.example/logo.webp";
+    currentStore.fallbackInitials = "LD";
+    await loadCheckout();
+    expect(screen.getByLabelText("Iniciais LD")).toHaveTextContent("LD");
+    expect(screen.queryByText(currentStore.logo)).not.toBeInTheDocument();
+  });
+  it("informa loja inativa e nao habilita checkout", async () => {
+    currentStore.active = false;
+    render(<CheckoutPage slug="loja-demo" />);
+    expect(await screen.findByText(/temporariamente indispon.vel/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Finalizar pedido" })).not.toBeInTheDocument();
   });
   it("inclui adicionais no pedido enviado por WhatsApp", async () => {
     cartMock.current.items[0].selectedAdditionals = [{ groupName: "Molhos", optionName: "Barbecue", price: 0 }];

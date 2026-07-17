@@ -32,7 +32,7 @@ export function AdminRouter({ path }) {
       try {
         authorization = await getAuthorizedStoreForUser(user);
       } catch {
-        authorization = null;
+        // Authorization failures intentionally resolve to the login screen.
       }
 
       if (active) setAuthState({ loading: false, store: authorization?.store || null });

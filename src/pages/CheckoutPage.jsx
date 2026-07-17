@@ -119,6 +119,18 @@ function getStorePixKey(store) {
   );
 }
 
+function getStoreInitials(store) {
+  const configured = String(store?.fallbackInitials || "").trim();
+  if (configured) return configured.slice(0, 4).toUpperCase();
+  return String(store?.name || "Loja")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
 export function CheckoutPage({ slug }) {
   const [store, setStore] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -443,7 +455,9 @@ export function CheckoutPage({ slug }) {
     <div className="checkout-page" style={{ "--store-color": store.primaryColor }}>
       <header className="checkout-header">
         <Link to={`/${store.slug}`} className="logo-link">
-          <span className="brand-mark">{store.logo}</span>
+          <span className="brand-mark" aria-label={`Iniciais ${getStoreInitials(store)}`}>
+            {getStoreInitials(store)}
+          </span>
           <strong>{store.name}</strong>
         </Link>
         <Button variant="secondary" onClick={() => setCartOpen(true)}>

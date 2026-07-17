@@ -32,6 +32,12 @@ describe("MasterStores", () => {
     expect(screen.getAllByText("Demo").length).toBeGreaterThan(0);
     expect(screen.getByText("Destacada")).toBeInTheDocument();
   });
+  it("nao renderiza src vazio para loja sem banner", async () => {
+    db.getStoresPaginated.mockResolvedValue({ data: [{ ...store, banner: "" }], total: 1, totalPages: 1 });
+    render(<MasterStores activePath="/master/lojas" />);
+    expect(await screen.findByText("Loja Remota")).toBeInTheDocument();
+    expect(document.querySelector('img[src=""]')).not.toBeInTheDocument();
+  });
   it("mostra erro sem misturar mocks", async () => {
     db.getStoresPaginated.mockRejectedValue(new Error("schema"));
     render(<MasterStores activePath="/master/lojas" />);

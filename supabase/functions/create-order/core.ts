@@ -30,8 +30,41 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-
 function hasMinimumShape(payload: any) {
   return payload && UUID.test(payload.p_store_id || "") && UUID.test(payload.p_idempotency_key || "")
     && payload.p_customer && typeof payload.p_customer === "object"
-    && Array.isArray(payload.p_items) && typeof payload.p_fulfillment === "string"
+    && Array.isArray(payload.p_items) && payload.p_items.length > 0
+    && payload.p_items.every((item: any) => item && UUID.test(item.productId || "")
+      && Number.isInteger(item.quantity) && item.quantity > 0
+      && (item.selectedAdditionals === undefined || Array.isArray(item.selectedAdditionals)))
+    && typeof payload.p_fulfillment === "string"
     && typeof payload.p_payment_method === "string";
+}
+
+export function createOriginChecker(configuredOrigins: string[], allowLocalhost = false) {
+  const allowed = new Set(configuredOrigins.map((value) => value.trim()).filter(Boolean));
+  return (origin: string) => {
+    if (allowed.has(origin)) return true;
+    if (!allowLocalhost) return false;
+    try {
+      const url = new URL(origin);
+      return ["localhost", "127.0.0.1"].includes(url.hostname) && ["http:", "https:"].includes(url.protocol);
+    } catch {
+      return false;
+    }
+  };
+}
+
+export function normalizeClientIp(request: Request) {
+  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  const raw = String(forwarded || request.headers.get("cf-connecting-ip") || request.headers.get("x-real-ip") || "unknown")
+    .trim().toLowerCase();
+  const bracketedIpv6 = raw.match(/^\[([^\]]+)\](?::\d+)?$/);
+  if (bracketedIpv6) return bracketedIpv6[1].slice(0, 128);
+  if (/^(?:\d{1,3}\.){3}\d{1,3}:\d+$/.test(raw)) return raw.replace(/:\d+$/, "").slice(0, 128);
+  return raw.slice(0, 128);
+}
+
+export async function sha256Hex(value: string) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 export function createOrderHandler(deps: Dependencies) {

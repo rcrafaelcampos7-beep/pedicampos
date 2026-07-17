@@ -17,6 +17,7 @@ import { PlanGuard } from "./admin/PlanGuard.jsx";
 import { CartDrawer } from "./store/CartDrawer.jsx";
 import { OrderTimeline } from "./store/OrderTimeline.jsx";
 import { ProductCard } from "./store/ProductCard.jsx";
+import { ProductModal } from "./store/ProductModal.jsx";
 import { ImageCropModal } from "./ui/ImageCropModal.jsx";
 import { PaginationControls } from "./ui/PaginationControls.jsx";
 import { StatusBadge } from "./ui/StatusBadge.jsx";
@@ -70,7 +71,9 @@ describe("componentes criticos", () => {
     expect(screen.queryByRole("button", { name: "Adicionar" })).not.toBeInTheDocument();
     expect(document.querySelector('img[src=""]')).not.toBeInTheDocument();
   });
-  it("CartDrawer nao renderiza src vazio para produto sem imagem", () => {
+  it("CartDrawer nao renderiza src vazio e encaminha edicao/remocao", async () => {
+    const onUpdateQuantity = vi.fn();
+    const onRemove = vi.fn();
     render(
       <CartDrawer
         open
@@ -80,13 +83,78 @@ describe("componentes criticos", () => {
           items: [{ cartId: "item-1", name: "Sem imagem", image: "", quantity: 1, total: 10 }],
           totals: { quantity: 1, subtotal: 10 },
         }}
-        onUpdateQuantity={vi.fn()}
-        onRemove={vi.fn()}
+        onUpdateQuantity={onUpdateQuantity}
+        onRemove={onRemove}
         onClear={vi.fn()}
       />,
     );
     expect(screen.getByText("Sem imagem")).toBeInTheDocument();
     expect(document.querySelector('img[src=""]')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "+" }));
+    await userEvent.click(screen.getByRole("button", { name: "Remover" }));
+    expect(onUpdateQuantity).toHaveBeenCalledWith("item-1", 2);
+    expect(onRemove).toHaveBeenCalledWith("item-1");
+  });
+  it("ProductModal valida obrigatorio e minimo antes de adicionar", async () => {
+    const onAdd = vi.fn();
+    const product = { id: "p1", name: "Burger", description: "", price: 10, image: "", active: true };
+    const store = {
+      entitlements: { features: [ENTITLEMENT_FEATURES.SAVED_ORDERS] },
+      additionalGroups: [{
+        id: "g1", name: "Molhos", active: true, required: true, min: 2, max: 2,
+        selectionType: "multiple", productIds: ["p1"],
+        options: [{ id: "o1", name: "Um", price: 0, active: true }, { id: "o2", name: "Dois", price: 2, active: true }],
+      }],
+    };
+    render(<ProductModal product={product} store={store} open onClose={vi.fn()} onAdd={onAdd} />);
+    await userEvent.click(screen.getAllByRole("checkbox")[0]);
+    await userEvent.click(screen.getByRole("button", { name: /Adicionar ao carrinho/ }));
+    expect(screen.getByText(/obrigat.rio: Molhos/)).toBeInTheDocument();
+    expect(onAdd).not.toHaveBeenCalled();
+  });
+  it("ProductModal calcula adicional gratis, pago, quantidade e observacao", async () => {
+    const onAdd = vi.fn();
+    const product = { id: "p1", name: "Burger", description: "", price: 10, image: "", active: true };
+    const store = {
+      entitlements: { features: [ENTITLEMENT_FEATURES.SAVED_ORDERS] },
+      additionalGroups: [{
+        id: "g1", name: "Extras", active: true, required: false, min: 0, max: 2,
+        selectionType: "multiple", productIds: ["p1"],
+        options: [{ id: "free", name: "Grátis", price: 0, active: true }, { id: "paid", name: "Bacon", price: 5, active: true }],
+      }],
+    };
+    render(<ProductModal product={product} store={store} open onClose={vi.fn()} onAdd={onAdd} />);
+    const options = screen.getAllByRole("checkbox");
+    await userEvent.click(options[0]);
+    await userEvent.click(options[1]);
+    await userEvent.click(screen.getAllByRole("button", { name: "+" })[0]);
+    await userEvent.type(screen.getByLabelText("Observação"), "sem cebola");
+    await userEvent.click(screen.getByRole("button", { name: /Adicionar ao carrinho/ }));
+    expect(onAdd).toHaveBeenCalledWith(expect.objectContaining({
+      quantity: 2, note: "sem cebola", total: 30,
+      selectedAdditionals: expect.arrayContaining([
+        expect.objectContaining({ optionId: "free", price: 0 }),
+        expect.objectContaining({ optionId: "paid", price: 5 }),
+      ]),
+    }));
+  });
+  it("ProductModal impede selecao acima do maximo", async () => {
+    const product = { id: "p1", name: "Burger", description: "", price: 10, image: "", active: true };
+    const store = {
+      entitlements: { features: [ENTITLEMENT_FEATURES.SAVED_ORDERS] },
+      additionalGroups: [{
+        id: "g1", name: "Extra", active: true, required: false, min: 0, max: 1,
+        selectionType: "multiple", productIds: ["p1"],
+        options: [{ id: "o1", name: "Um", price: 0, active: true }, { id: "o2", name: "Dois", price: 0, active: true }],
+      }],
+    };
+    render(<ProductModal product={product} store={store} open onClose={vi.fn()} onAdd={vi.fn()} />);
+    const options = screen.getAllByRole("checkbox");
+    await userEvent.click(options[0]);
+    await userEvent.click(options[1]);
+    expect(screen.getByText(/no m.ximo 1 op..es em Extra/)).toBeInTheDocument();
+    expect(options[0]).toBeChecked();
+    expect(options[1]).not.toBeChecked();
   });
   it("ImageCropModal cancela sem processar", async () => {
     const onCancel = vi.fn();

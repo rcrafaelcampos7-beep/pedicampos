@@ -1155,3 +1155,9 @@ Nenhuma migration, policy, RPC ou dado remoto foi alterado. Os testes atuais usa
 Não aplicar a migration isoladamente antes da Edge/frontend: o checkout antigo perderá acesso direto. Em emergência, o rollback documentado restaura temporariamente o grant sem remover idempotência ou RLS.
 
 O ajuste de imagens vazias e classificação dos logs de 16/07/2026 é exclusivamente frontend; não exige nova migration nem altera a 015.
+
+## Auditoria pré-UX (17/07/2026)
+
+Nenhuma migration nova foi criada ou aplicada. A leitura dos arquivos confirmou que a migration 009 bloqueia escrita anônima direta nas tabelas de pedidos e a 015 remove a execução pública direta de `create_public_order`, mas a instalação efetiva deve ser comprovada manualmente no Supabase antes de produção. Também devem ser validados os grants, policies, isolamento entre lojas, secrets/origens da Edge e respostas 429. O relatório completo está em `AUDIT_PEDICAMPOS_PRE_UX_2026-07-17.md`.
+
+O arquivo `supabase/diagnostics/pre_ux_remote_validation.sql` consolida a verificação somente leitura do estado final esperado das migrations 009–015. Ele não aplica correções; resultados divergentes devem ser analisados antes de qualquer migration ou deploy.

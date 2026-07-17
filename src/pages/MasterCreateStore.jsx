@@ -13,6 +13,7 @@ export function MasterCreateStore({ activePath }) {
   const { platform } = usePediData();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [form, setForm] = useState({
     name: "",
     slug: "",
@@ -27,10 +28,11 @@ export function MasterCreateStore({ activePath }) {
   });
 
   function updateForm(field, value) {
+    if (field === "slug") setSlugManuallyEdited(true);
     setForm((current) => ({
       ...current,
       [field]: value,
-      ...(field === "name" && !current.slug ? { slug: slugify(value) } : {}),
+      ...(field === "name" && !slugManuallyEdited ? { slug: slugify(value) } : {}),
     }));
   }
 
@@ -50,8 +52,8 @@ export function MasterCreateStore({ activePath }) {
       whatsapp: form.whatsapp || "559999000000",
       address: form.address || "Endereço da loja",
       primaryColor: form.primaryColor,
-      logo: form.logo || form.name.slice(0, 2).toUpperCase(),
-      banner: form.banner || stores[0]?.banner || "",
+      logo: String(form.logo || "").trim(),
+      banner: String(form.banner || "").trim(),
       plan: form.plan,
       active: form.active,
       categories: [],

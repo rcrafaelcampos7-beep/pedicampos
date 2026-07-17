@@ -1332,3 +1332,25 @@ Build:
 - Impedido `src` vazio no `CartDrawer`, `ProductCard` e `ProductModal`; produtos sem imagem usam ausência controlada ou placeholder neutro.
 - `logInfo` deixou de passar por `sanitizeError`, eliminando `UNKNOWN_ERROR` e mensagens vazias de eventos rotineiros.
 - Mantidos logs informativos seguros somente em desenvolvimento e warnings/erros sanitizados em produção.
+
+## 17/07/2026 - Auditoria técnica pré-UX
+
+- Auditados arquitetura, autenticação, RLS/grants locais, checkout, pedidos, dashboards, legado, bundle e UX técnica, sem alterar banco ou ambiente remoto.
+- Reforçada a validação pura da Edge para carrinho e IDs, a normalização de IP e a cobertura de CORS/idempotência.
+- Corrigidos slug automático da criação de loja, imagens vazias/herdadas, conflito visual de logo no checkout e filtro de catálogo por categoria ativa.
+- Adicionados testes de Auth, Storage, dashboards, checkout, acompanhamento, produtos, criação Master e segurança dos mocks.
+- Validação final: 120 testes em 20 arquivos, build aprovado, `node --check` aprovado e `git diff --check` aprovado; lint segue pendente por ausência do script.
+
+## 17/07/2026 - Gates técnicos pré-UX
+
+- Configurado ESLint flat para React/Vite, React Hooks, React Refresh, Vitest e arquivos Node, ignorando TypeScript/Deno e artefatos gerados.
+- Adicionados scripts `lint` e `lint:fix`; `validate` agora inclui lint antes de testes e build.
+- Criado diagnóstico Supabase somente leitura para migrations 009–015, tabelas, funções, grants, RLS, Storage, triggers e índices.
+- Criado checklist de validação manual do ambiente remoto, sem executar migration ou deploy.
+- Lint passou com zero erros e 12 warnings documentados; os 120 testes e o build permaneceram aprovados.
+
+## 17/07/2026 - Gate remoto pré-UX aprovado
+
+- O resumo consolidado retornou `PRE_UX_REMOTE_GATE = PASS` no Supabase.
+- O inventário confirmou as assinaturas críticas e eliminou falsos negativos ao trocar comparação textual por resolução com `to_regprocedure` e OID.
+- Os diagnósticos permaneceram somente leitura; nenhuma função, migration, policy, Edge Function ou dado foi alterado.

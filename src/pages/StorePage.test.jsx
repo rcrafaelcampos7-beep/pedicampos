@@ -39,6 +39,12 @@ describe("StorePage", () => {
     expect(await screen.findByText(/Loja n.o encontrada/)).toBeInTheDocument();
     expect(db.getProductsByStore).not.toHaveBeenCalled();
   });
+  it("bloqueia loja inativa retornada em contexto autorizado", async () => {
+    db.getStoreBySlug.mockResolvedValue({ ...store, active: false });
+    render(<StorePage slug="loja-demo" />);
+    expect(await screen.findByText(/temporariamente indispon.vel/)).toBeInTheDocument();
+    expect(screen.queryByText(/Nenhum produto dispon/)).not.toBeInTheDocument();
+  });
   it("mantem catalogo remoto vazio", async () => {
     render(<StorePage slug="loja-demo" />);
     expect(await screen.findByText(/Nenhum produto dispon/)).toBeInTheDocument();
@@ -49,6 +55,16 @@ describe("StorePage", () => {
     render(<StorePage slug="loja-demo" />);
     expect(await screen.findByText("Produto remoto")).toBeInTheDocument();
     expect(db.getStoreBySlug).toHaveBeenCalledWith("loja-demo", { allowLocalFallback: false });
+  });
+  it("oculta produto de categoria inativa mas preserva produto sem categoria", async () => {
+    db.getCategoriesByStore.mockResolvedValue([{ id: "cat-inativa", name: "Inativa", active: false }]);
+    db.getProductsByStore.mockResolvedValue([
+      { id: "p1", categoryId: "cat-inativa", name: "Produto oculto", description: "", price: 10, image: "", active: true },
+      { id: "p2", categoryId: null, name: "Produto sem categoria", description: "", price: 10, image: "", active: true },
+    ]);
+    render(<StorePage slug="loja-demo" />);
+    expect(await screen.findByText("Produto sem categoria")).toBeInTheDocument();
+    expect(screen.queryByText("Produto oculto")).not.toBeInTheDocument();
   });
   it("usa iniciais quando a logo falha", async () => {
     render(<StorePage slug="loja-demo" />);

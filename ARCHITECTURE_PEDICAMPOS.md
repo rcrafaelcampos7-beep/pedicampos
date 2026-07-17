@@ -1243,3 +1243,11 @@ A tabela de tentativas não possui policy pública e armazena apenas hashes SHA-
 `logger.js` centraliza eventos com allowlist. Em produção, info é silencioso e warn/error omitem mensagem/details; um adapter externo opcional poderá encaminhar eventos já sanitizados.
 
 Eventos informativos usam sanitização própria e não recebem campos artificiais de erro; `sanitizeError` fica restrito a warnings e erros. Componentes públicos não instanciam `<img>` quando a URL do produto está vazia e não criam URLs fictícias para fallback.
+
+## Auditoria pré-UX de 17/07/2026
+
+Os fluxos já migrados permanecem Supabase-first: loja pública resolve o slug remotamente; Admin deriva a loja de `store_users`; Master consulta o escopo global protegido por `is_master()`; checkout usa Edge e a RPC transacional; acompanhamento usa token público e slug. Carrinho e idempotência continuam em armazenamento local de escopo técnico, sem serem fonte de verdade para a loja.
+
+O legado `storage.js`/mocks/`usePediData` ainda atende fallbacks e consumidores não migrados, especialmente Landing e configurações de plataforma Master. Ele não deve ser removido sem uma etapa própria. A liberação de produção exige conferir no ambiente instalado que migrations 009 e 015 efetivamente fecharam os grants públicos e que a Edge é a única entrada de criação de pedidos.
+
+O gate estático usa ESLint flat em JavaScript/JSX com ambientes separados para browser, Vitest e Node. Arquivos TypeScript/Deno da Edge não são submetidos ao parser JavaScript; seu core continua validado pelos testes Node e pelo bundle esbuild. A validação remota é guiada por um SQL somente leitura e não faz parte do build local.

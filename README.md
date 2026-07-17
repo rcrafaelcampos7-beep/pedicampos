@@ -66,3 +66,9 @@ git diff --check
 A Sprint 2.5 prepara `supabase/functions/create-order` como porta pública, com migration 015 e logger sanitizado. Veja o README da função para secrets, deploy, testes e rollback. A implantação precisa ser coordenada porque a migration revoga o acesso anônimo direto à RPC. Nenhuma alteração remota foi executada automaticamente.
 
 Produtos sem imagem são renderizados sem `src` vazio, e eventos informativos do logger permanecem seguros em desenvolvimento e silenciosos em produção.
+
+## Auditoria técnica pré-UX
+
+Em 17/07/2026 foi concluída uma auditoria local de arquitetura, segurança, performance, legado e cobertura. A validação terminou com 120 testes e build aprovado, sem migration, alteração remota, commit ou push. O relatório e o checklist de produção estão em `AUDIT_PEDICAMPOS_PRE_UX_2026-07-17.md`; ainda são obrigatórios lint configurado e testes reais de RLS/Edge antes da liberação.
+
+O lint já está configurado e integrado a `npm run validate`. Para o gate remoto, execute manualmente `supabase/diagnostics/pre_ux_remote_validation.sql` seguindo `SUPABASE_PRE_UX_VALIDATION.md`; nenhuma migration ou função é publicada por esse procedimento.

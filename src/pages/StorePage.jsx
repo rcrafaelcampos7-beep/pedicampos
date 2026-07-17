@@ -56,7 +56,10 @@ export function StorePage({ slug }) {
           getStoreEntitlements(result.id),
         ]);
         const categories = remoteCategories.filter((category) => category.active);
-        const products = remoteProducts.filter((product) => product.active);
+        const activeCategoryIds = new Set(categories.map((category) => category.id));
+        const products = remoteProducts.filter((product) =>
+          product.active && (!product.categoryId || activeCategoryIds.has(product.categoryId))
+        );
         const activeProductIds = new Set(products.map((product) => product.id));
         const additionalGroups = remoteAdditionalGroups
           .filter((group) => group.active)
