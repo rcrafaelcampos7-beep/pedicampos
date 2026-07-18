@@ -1,10 +1,11 @@
 export function CategoryTabs({ categories, activeCategory, onSelect }) {
   return (
-    <div className="category-tabs">
+    <nav className="category-tabs" aria-label="Categorias de produtos">
       <button
         type="button"
         className={!activeCategory ? "active" : ""}
         onClick={() => onSelect("")}
+        aria-pressed={!activeCategory}
       >
         Todos
       </button>
@@ -17,10 +18,11 @@ export function CategoryTabs({ categories, activeCategory, onSelect }) {
             type="button"
             className={activeCategory === category.id ? "active" : ""}
             onClick={() => onSelect(category.id)}
+            aria-pressed={activeCategory === category.id}
           >
             {category.name}
           </button>
         ))}
-    </div>
+    </nav>
   );
 }

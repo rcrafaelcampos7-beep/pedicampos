@@ -22,44 +22,56 @@ export function StoreHeader({ store }) {
   }, [logoUrl]);
 
   return (
-    <header className="store-hero" style={{ "--store-color": store.primaryColor }}>
-      {typeof store.banner === "string" && store.banner.trim() ? (
-        <img src={store.banner} alt={`Banner ${store.name}`} decoding="async" fetchPriority="high" />
-      ) : null}
-      <div className="store-hero-overlay" />
-      <div className="store-hero-content">
-        <div className="store-logo">
-          {logoUrl && !logoFailed ? (
-            <img src={logoUrl} alt={`Logo ${store.name}`} decoding="async" onError={() => setLogoFailed(true)} />
-          ) : (
-            <span aria-label={`Iniciais ${fallbackInitials}`}>{fallbackInitials}</span>
-          )}
-        </div>
-        <div className="store-hero-copy">
-          <Badge tone={store.open ? "success" : "danger"}>
-            {store.open ? "Aberto agora" : "Fechado"}
-          </Badge>
-          <h1>{store.name}</h1>
-          <p>{store.segment}</p>
-          <div className="store-meta">
-            <span>{store.deliveryTime}</span>
-            <span>{formatCurrency(store.deliveryFee)} entrega</span>
-            <span>{store.address}</span>
-          </div>
-        </div>
-        <div className="store-hero-actions">
-          <a className="btn btn-light btn-md" href={whatsappLink} target="_blank" rel="noreferrer">
+    <header className="store-showcase" style={{ "--store-color": store.primaryColor }}>
+      <div className="store-banner-stage">
+        {typeof store.banner === "string" && store.banner.trim() ? (
+          <img src={store.banner} alt={`Banner ${store.name}`} decoding="async" fetchPriority="high" />
+        ) : <div className="store-banner-placeholder" aria-hidden="true" />}
+        <div className="store-banner-overlay" />
+        <div className="store-banner-toolbar">
+          <span className="store-banner-brand">{store.name}</span>
+          <a href={whatsappLink} target="_blank" rel="noreferrer" aria-label={`WhatsApp de ${store.name}`}>
             WhatsApp
           </a>
-          <Button
-            variant="light"
-            onClick={() => navigator.share?.({ title: store.name, url: window.location.href })}
-          >
-            Compartilhar
-          </Button>
-          <Link className="btn btn-store btn-md" to={`/${store.slug}/checkout`}>
-            Checkout
-          </Link>
+        </div>
+      </div>
+
+      <div className="store-profile-shell">
+        <div className="store-profile-panel">
+          <div className="store-logo">
+            {logoUrl && !logoFailed ? (
+              <img src={logoUrl} alt={`Logo ${store.name}`} decoding="async" onError={() => setLogoFailed(true)} />
+            ) : (
+              <span aria-label={`Iniciais ${fallbackInitials}`}>{fallbackInitials}</span>
+            )}
+          </div>
+
+          <div className="store-profile-copy">
+            <Badge tone={store.open ? "success" : "danger"} className="store-open-badge">
+              <span className="store-status-dot" aria-hidden="true" />
+              {store.open ? "Aberto agora" : "Fechado"}
+            </Badge>
+            <h1>{store.name}</h1>
+            <p>{store.segment}</p>
+          </div>
+
+          <div className="store-meta" aria-label="Informações da loja">
+            <span><small>Tempo</small><strong>{store.deliveryTime}</strong></span>
+            <span><small>Entrega</small><strong>{formatCurrency(store.deliveryFee)}</strong></span>
+            <span><small>Endereço</small><strong>{store.address}</strong></span>
+          </div>
+
+          <div className="store-profile-actions">
+            <Button
+              variant="secondary"
+              onClick={() => navigator.share?.({ title: store.name, url: window.location.href })}
+            >
+              Compartilhar
+            </Button>
+            <Link className="btn btn-store btn-md" to={`/${store.slug}/checkout`}>
+              Checkout
+            </Link>
+          </div>
         </div>
       </div>
     </header>

@@ -690,3 +690,16 @@ Legenda:
 - [ ] Analisar os 12 warnings `react-hooks/exhaustive-deps` em uma refatoração pequena e testada dos loaders legados.
 - [ ] Executar o checklist manual de localhost e domínio documentado em `AUDIT_PEDICAMPOS_PRE_UX_2026-07-17.md`.
 - [ ] Remover gradualmente `usePediData`, mocks e configurações Master locais somente após substituir seus consumidores remanescentes.
+
+## UX/UI V2 — marco visual aprovado (18/07/2026)
+
+- [x] Consolidar a fundação do Design System V2 e os estados compartilhados de UI.
+- [x] Implementar a composição visual da Loja Pública V2 sem alterar funcionalidades ou backend.
+- [x] Reformular integralmente a Landing Page institucional.
+- [x] Obter aprovação visual da Landing Page V2 pelo usuário.
+- [x] Definir a Landing Page V2 como referência visual obrigatória para as próximas páginas.
+- [x] Validar lint com zero erros, 126 testes, build de produção e `git diff --check`.
+- [ ] Aplicar o padrão premium aprovado ao modal de produto e ao carrinho, preservando toda a lógica atual.
+- [ ] Aplicar o padrão ao checkout e ao acompanhamento de pedido.
+- [ ] Aplicar o padrão ao painel da loja e depois ao painel master.
+- [ ] Executar validação visual e funcional específica em 320, 360, 390, 430, 768, 1024, 1280 e 1440 px a cada página migrada.

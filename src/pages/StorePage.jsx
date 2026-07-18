@@ -21,6 +21,13 @@ import {
 import { ENTITLEMENT_FEATURES, hasFeature } from "../utils/plans.js";
 import { logInfo } from "../services/logger.js";
 
+function normalizeSearch(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLocaleLowerCase("pt-BR");
+}
+
 export function StorePage({ slug }) {
   const [store, setStore] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -30,6 +37,7 @@ export function StorePage({ slug }) {
   const [activeCategory, setActiveCategory] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [cartOpen, setCartOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -111,8 +119,17 @@ export function StorePage({ slug }) {
 
   const products = useMemo(() => {
     if (!store) return [];
-    return (store.products || []).filter((product) => !activeCategory || product.categoryId === activeCategory);
-  }, [activeCategory, store]);
+    const normalizedQuery = normalizeSearch(searchQuery.trim());
+    return (store.products || []).filter((product) => {
+      const inCategory = !activeCategory || product.categoryId === activeCategory;
+      const searchableText = normalizeSearch(`${product.name || ""} ${product.description || ""}`);
+      return inCategory && (!normalizedQuery || searchableText.includes(normalizedQuery));
+    });
+  }, [activeCategory, searchQuery, store]);
+
+  const activeCategoryName = activeCategory
+    ? categoriesById[activeCategory]?.name || "Produtos"
+    : "Todos os produtos";
 
   function addProductToCart(item) {
     logInfo({ area: "store", operation: "add_product", storeId: store.id });
@@ -121,11 +138,18 @@ export function StorePage({ slug }) {
 
   if (loading) {
     return (
-      <main className="not-found">
-        <Card>
-          <h1>Carregando loja...</h1>
-          <p>Aguarde enquanto buscamos as informações.</p>
-        </Card>
+      <main className="store-skeleton" aria-label="Carregando loja..." aria-busy="true">
+        <span className="sr-only">Carregando loja...</span>
+        <div className="store-skeleton-hero skeleton" />
+        <div className="store-skeleton-content">
+          <div className="store-skeleton-search skeleton" />
+          <div className="store-skeleton-tabs">
+            <span className="skeleton" /><span className="skeleton" /><span className="skeleton" />
+          </div>
+          <div className="store-skeleton-grid">
+            {[0, 1, 2, 3, 4, 5].map((item) => <div className="store-skeleton-card skeleton" key={item} />)}
+          </div>
+        </div>
       </main>
     );
   }
@@ -175,8 +199,9 @@ export function StorePage({ slug }) {
   return (
     <div className="store-page" style={{ "--store-color": store.primaryColor }}>
       <StoreHeader store={store} />
-      <main className="store-content">
-        <section className="store-status-card">
+      <main className="store-main">
+        <section className="store-order-callout" aria-label="Status de atendimento">
+          <span className={`store-order-indicator ${store.open ? "is-open" : "is-closed"}`} aria-hidden="true" />
           <div>
             <strong>{store.open ? "Loja aberta para pedidos" : "Loja fechada agora"}</strong>
             <p>{store.open ? store.openingHours : "O carrinho continua visível, mas o checkout fica bloqueado."}</p>
@@ -193,30 +218,75 @@ export function StorePage({ slug }) {
           </Button>
         </section>
 
-        <CategoryTabs
-          categories={store.categories}
-          activeCategory={activeCategory}
-          onSelect={setActiveCategory}
-        />
-
-        {products.length ? (
-          <section className="products-grid">
-            {products.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                category={categoriesById[product.categoryId]}
-                onOpen={(item) => setSelectedProduct(item)}
+        <section className="store-catalog-navigation" aria-label="Navegação do catálogo">
+          <div className="store-catalog-navigation-inner">
+            <label className="store-search">
+              <span className="store-search-icon" aria-hidden="true">⌕</span>
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Buscar produtos"
+                aria-label="Buscar produtos"
               />
-            ))}
-          </section>
-        ) : (
-          <EmptyState
-            title={activeCategory ? "Nenhum produto nesta categoria" : "Nenhum produto disponível no momento."}
-            description={activeCategory ? "Escolha outra categoria." : "A loja ainda está preparando o cardápio."}
-          />
-        )}
+              {searchQuery ? (
+                <button type="button" onClick={() => setSearchQuery("")} aria-label="Limpar busca">×</button>
+              ) : null}
+            </label>
+
+            <CategoryTabs
+              categories={store.categories}
+              activeCategory={activeCategory}
+              onSelect={setActiveCategory}
+            />
+          </div>
+        </section>
+
+        <section className="store-products-section" aria-labelledby="catalog-title">
+          <header className="store-products-heading">
+            <div>
+              <span>Cardápio</span>
+              <h2 id="catalog-title">{activeCategoryName}</h2>
+            </div>
+            <strong>{products.length} {products.length === 1 ? "produto" : "produtos"}</strong>
+          </header>
+
+          {products.length ? (
+            <div className="products-grid">
+              {products.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  category={categoriesById[product.categoryId]}
+                  onOpen={(item) => setSelectedProduct(item)}
+                />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              className="store-empty-state"
+              icon="⌕"
+              title={searchQuery ? "Nenhum produto encontrado" : activeCategory ? "Nenhum produto nesta categoria" : "Nenhum produto disponível no momento."}
+              description={searchQuery ? "Tente buscar por outro termo." : activeCategory ? "Escolha outra categoria." : "A loja ainda está preparando o cardápio."}
+              actionLabel={searchQuery ? "Limpar busca" : undefined}
+              onAction={searchQuery ? () => setSearchQuery("") : undefined}
+            />
+          )}
+        </section>
       </main>
+
+      <footer className="store-footer">
+        <div className="store-footer-identity">
+          <strong>{store.name}</strong>
+          <span>{store.segment}</span>
+        </div>
+        <div className="store-footer-actions">
+          <a href={`https://wa.me/${store.whatsapp}`} target="_blank" rel="noreferrer" aria-label={`WhatsApp de ${store.name}`}>
+            WhatsApp
+          </a>
+          <small>Tecnologia PediCampos</small>
+        </div>
+      </footer>
 
       <ProductModal
         product={selectedProduct}

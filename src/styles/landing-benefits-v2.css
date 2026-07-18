@@ -1,0 +1,725 @@
+.landing-benefits {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid #e6e9ee;
+  background:
+    radial-gradient(circle at 10% 18%, color-mix(in srgb, var(--color-primary) 8%, transparent), transparent 28rem),
+    linear-gradient(180deg, #ffffff 0%, #f7f8fa 100%);
+  padding: 76px 0 58px;
+}
+
+.landing-benefits::before {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: min(1180px, 90vw);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #dce2e9 18%, #dce2e9 82%, transparent);
+  content: "";
+  transform: translateX(-50%);
+}
+
+.landing-benefits-inner {
+  position: relative;
+  z-index: 1;
+  width: min(1180px, calc(100% - 28px));
+  margin: 0 auto;
+}
+
+.landing-benefits-heading {
+  max-width: 790px;
+  margin: 0 auto 34px;
+  text-align: center;
+}
+
+.landing-benefits-heading .eyebrow,
+.landing-product-flow-copy .eyebrow {
+  letter-spacing: 0.13em;
+}
+
+.landing-benefits-heading h2 {
+  max-width: 760px;
+  margin: 14px auto 16px;
+  color: #101827;
+  font-size: clamp(2rem, 8vw, 3.7rem);
+  letter-spacing: -0.055em;
+  line-height: 1.02;
+  text-wrap: balance;
+}
+
+.landing-benefits-heading p {
+  max-width: 700px;
+  margin: 0 auto;
+  color: #687386;
+  font-size: clamp(0.95rem, 2vw, 1.08rem);
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+
+.landing-benefits-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+.landing-benefit-card.card {
+  display: grid;
+  min-width: 0;
+  min-height: 205px;
+  align-content: start;
+  gap: 22px;
+  border: 1px solid #e0e5eb;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 22px;
+  box-shadow: 0 12px 34px rgba(15, 23, 42, 0.055);
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+}
+
+.landing-benefit-card:focus-visible {
+  border-color: var(--color-primary);
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 22%, transparent);
+  outline-offset: 3px;
+}
+
+.landing-benefit-icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, #e3e8ee);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--color-primary) 9%, white);
+  color: var(--color-primary-dark);
+}
+
+.landing-benefit-icon svg,
+.landing-preview-order-icon svg {
+  width: 25px;
+  height: 25px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.landing-benefit-card > div {
+  display: grid;
+  gap: 10px;
+}
+
+.landing-benefit-card h3 {
+  margin: 0;
+  color: #111827;
+  font-size: 1.08rem;
+  letter-spacing: -0.025em;
+  line-height: 1.18;
+  text-wrap: balance;
+}
+
+.landing-benefit-card p {
+  margin: 0;
+  color: #707b8e;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.landing-product-flow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 36px;
+  overflow: hidden;
+  border: 1px solid #263244;
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 82% 20%, color-mix(in srgb, var(--color-primary) 24%, transparent), transparent 30rem),
+    linear-gradient(135deg, #111827, #182335 58%, #101722);
+  margin-top: 36px;
+  padding: 30px 18px 18px;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.18);
+}
+
+.landing-product-flow-copy {
+  display: grid;
+  align-content: center;
+  justify-items: start;
+}
+
+.landing-product-flow-copy .eyebrow {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.08);
+  color: #d9fbe3;
+}
+
+.landing-product-flow-copy h2 {
+  max-width: 600px;
+  margin: 16px 0 14px;
+  color: white;
+  font-size: clamp(2rem, 8vw, 3.4rem);
+  letter-spacing: -0.055em;
+  line-height: 1;
+  text-wrap: balance;
+}
+
+.landing-product-flow-copy > p {
+  max-width: 590px;
+  margin: 0;
+  color: #aeb8c7;
+  font-size: 0.94rem;
+  line-height: 1.65;
+}
+
+.landing-flow-list {
+  display: grid;
+  gap: 11px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-flow-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #e8edf4;
+  font-size: 0.87rem;
+  font-weight: 750;
+}
+
+.landing-flow-list span {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary) 28%, #152033);
+  color: #a7f3bd;
+  font-size: 0.72rem;
+}
+
+.landing-flow-actions {
+  display: grid;
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.landing-flow-actions .btn {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 14px;
+}
+
+.landing-flow-actions .btn-secondary {
+  border-color: #3b4658;
+  background: rgba(255, 255, 255, 0.06);
+  color: white;
+}
+
+.landing-product-preview {
+  position: relative;
+  min-width: 0;
+  min-height: 510px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    rgba(255, 255, 255, 0.045);
+  background-size: 32px 32px;
+  scroll-margin-top: 150px;
+}
+
+.landing-preview-orbit {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  width: 330px;
+  height: 330px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 50%;
+  transform: translateX(-50%);
+}
+
+.landing-preview-phone {
+  position: absolute;
+  top: 32px;
+  left: 18px;
+  width: min(238px, 72%);
+  min-height: 438px;
+  overflow: hidden;
+  border: 5px solid #f7f9fb;
+  border-radius: 29px;
+  background: #f5f6f8;
+  box-shadow: 0 28px 70px rgba(3, 8, 18, 0.42);
+}
+
+.landing-preview-phone::before {
+  position: absolute;
+  z-index: 3;
+  top: 7px;
+  left: 50%;
+  width: 58px;
+  height: 14px;
+  border-radius: 999px;
+  background: #111827;
+  content: "";
+  transform: translateX(-50%);
+}
+
+.landing-preview-phone-top {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+  padding: 28px 13px 15px;
+}
+
+.landing-preview-logo {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  place-items: center;
+  border: 2px solid rgba(255, 255, 255, 0.72);
+  border-radius: 10px;
+  background: white;
+  color: var(--color-primary-dark);
+  font-size: 0.67rem;
+  font-weight: 950;
+}
+
+.landing-preview-phone-top div {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.landing-preview-phone-top strong {
+  overflow: hidden;
+  color: white;
+  font-size: 0.7rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.landing-preview-phone-top small {
+  color: #d5f6df;
+  font-size: 0.55rem;
+  font-weight: 750;
+}
+
+.landing-preview-search {
+  border: 1px solid #e1e5eb;
+  border-radius: 9px;
+  background: white;
+  margin: 10px;
+  padding: 8px 10px;
+  color: #9aa3b0;
+  font-size: 0.57rem;
+}
+
+.landing-preview-categories {
+  display: flex;
+  gap: 5px;
+  overflow: hidden;
+  padding: 0 10px 8px;
+}
+
+.landing-preview-categories span {
+  flex: 0 0 auto;
+  border: 1px solid #e0e4e9;
+  border-radius: 999px;
+  background: white;
+  padding: 5px 7px;
+  color: #6e7785;
+  font-size: 0.48rem;
+  font-weight: 800;
+}
+
+.landing-preview-categories span:first-child {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: white;
+}
+
+.landing-preview-products {
+  display: grid;
+  gap: 7px;
+  padding: 0 10px;
+}
+
+.landing-preview-products article {
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr);
+  gap: 8px;
+  overflow: hidden;
+  border: 1px solid #e2e6eb;
+  border-radius: 10px;
+  background: white;
+  padding: 6px;
+}
+
+.landing-preview-product-image {
+  min-height: 58px;
+  border-radius: 7px;
+  background:
+    radial-gradient(circle at 68% 30%, #f5c66d, transparent 24%),
+    linear-gradient(135deg, #f9b85e, #8a4c24);
+}
+
+.landing-preview-product-image.is-secondary {
+  background:
+    radial-gradient(circle at 32% 28%, #a7e0bb, transparent 28%),
+    linear-gradient(135deg, #4c9b6a, #163e29);
+}
+
+.landing-preview-products article div {
+  display: grid;
+  min-width: 0;
+  align-content: center;
+  gap: 2px;
+}
+
+.landing-preview-products strong {
+  overflow: hidden;
+  color: #172033;
+  font-size: 0.55rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.landing-preview-products small {
+  overflow: hidden;
+  color: #949daa;
+  font-size: 0.46rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.landing-preview-products b {
+  color: #162033;
+  font-size: 0.57rem;
+}
+
+.landing-preview-cart {
+  position: absolute;
+  right: 9px;
+  bottom: 9px;
+  left: 9px;
+  display: flex;
+  min-height: 39px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-radius: 10px;
+  background: var(--color-primary);
+  padding: 0 10px;
+  color: white;
+  font-size: 0.5rem;
+}
+
+.landing-preview-cart strong {
+  font-size: 0.52rem;
+}
+
+.landing-preview-order {
+  position: absolute;
+  z-index: 3;
+  top: 78px;
+  right: 10px;
+  display: grid;
+  width: min(175px, 52%);
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 9px;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.64);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.94);
+  padding: 11px;
+  box-shadow: 0 20px 50px rgba(3, 8, 18, 0.26);
+  backdrop-filter: blur(14px);
+}
+
+.landing-preview-order-icon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--color-primary) 11%, white);
+  color: var(--color-primary-dark);
+}
+
+.landing-preview-order-icon svg {
+  width: 19px;
+  height: 19px;
+}
+
+.landing-preview-order > div {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.landing-preview-order small {
+  color: #7b8594;
+  font-size: 0.52rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.landing-preview-order strong {
+  color: #111827;
+  font-size: 0.86rem;
+}
+
+.landing-preview-order span {
+  color: #727d8e;
+  font-size: 0.55rem;
+}
+
+.landing-preview-statuses {
+  position: absolute;
+  z-index: 3;
+  right: 10px;
+  bottom: 58px;
+  display: grid;
+  max-width: 58%;
+  gap: 8px;
+}
+
+.landing-preview-statuses span {
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.94);
+  padding: 7px 9px;
+  color: #243044;
+  font-size: 0.58rem;
+  font-weight: 850;
+  box-shadow: 0 14px 35px rgba(3, 8, 18, 0.22);
+  backdrop-filter: blur(12px);
+}
+
+.landing-preview-statuses i {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  place-items: center;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 0.65rem;
+  font-style: normal;
+}
+
+.landing-benefits + .two-column {
+  padding-top: 52px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .landing-benefit-card:hover {
+    border-color: color-mix(in srgb, var(--color-primary) 28%, #e0e5eb);
+    box-shadow: 0 22px 50px rgba(15, 23, 42, 0.1);
+    transform: translateY(-4px);
+  }
+
+  .landing-benefit-card:hover .landing-benefit-icon {
+    background: var(--color-primary);
+    color: white;
+  }
+}
+
+@media (min-width: 560px) {
+  .landing-benefits-inner {
+    width: min(1180px, calc(100% - 48px));
+  }
+
+  .landing-benefits-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .landing-benefit-card:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .landing-flow-actions {
+    width: auto;
+    grid-template-columns: repeat(2, auto);
+  }
+
+  .landing-flow-actions .btn {
+    width: auto;
+  }
+
+  .landing-product-flow {
+    padding: 38px 30px 28px;
+  }
+
+  .landing-product-preview {
+    min-height: 540px;
+  }
+
+  .landing-preview-phone {
+    left: 50%;
+    width: 260px;
+    transform: translateX(-64%);
+  }
+
+  .landing-preview-order {
+    right: 7%;
+    width: 190px;
+  }
+
+  .landing-preview-statuses {
+    right: 7%;
+    max-width: 220px;
+  }
+}
+
+@media (min-width: 900px) {
+  .landing-benefits {
+    padding: 96px 0 64px;
+  }
+
+  .landing-benefits-heading {
+    margin-bottom: 44px;
+  }
+
+  .landing-benefits-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .landing-benefit-card.card {
+    min-height: 220px;
+    grid-column: span 2;
+    padding: 24px;
+  }
+
+  .landing-benefit-card:nth-child(4),
+  .landing-benefit-card:nth-child(5) {
+    grid-column: span 3;
+  }
+
+  .landing-benefit-card:last-child {
+    grid-column: span 3;
+  }
+
+  .landing-benefit-card h3 {
+    font-size: 1.15rem;
+    white-space: nowrap;
+  }
+
+  .landing-product-flow {
+    grid-template-columns: minmax(0, 0.88fr) minmax(470px, 1.12fr);
+    gap: 50px;
+    align-items: center;
+    margin-top: 44px;
+    padding: 48px 34px 34px 48px;
+  }
+
+  .landing-product-preview {
+    min-height: 570px;
+  }
+
+  .landing-preview-phone {
+    top: 34px;
+    width: 274px;
+    min-height: 475px;
+  }
+
+  .landing-preview-order {
+    top: 96px;
+    right: 5%;
+    width: 205px;
+  }
+
+  .landing-preview-statuses {
+    right: 5%;
+    bottom: 82px;
+    max-width: 230px;
+  }
+
+  .landing-preview-statuses span {
+    font-size: 0.65rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .landing-benefit-card.card {
+    padding: 26px;
+  }
+
+  .landing-product-flow {
+    padding-left: 58px;
+  }
+}
+
+@media (max-width: 359px) {
+  .landing-benefits {
+    padding-top: 64px;
+  }
+
+  .landing-benefits-inner {
+    width: min(100% - 24px, 1180px);
+  }
+
+  .landing-benefit-card.card {
+    min-height: 0;
+    gap: 16px;
+    padding: 18px;
+  }
+
+  .landing-product-flow {
+    border-radius: 24px;
+    padding-inline: 14px;
+  }
+
+  .landing-product-preview {
+    min-height: 490px;
+  }
+
+  .landing-preview-phone {
+    left: 10px;
+    width: 216px;
+  }
+
+  .landing-preview-order,
+  .landing-preview-statuses {
+    right: 6px;
+  }
+
+  .landing-preview-order {
+    width: 148px;
+    grid-template-columns: 30px minmax(0, 1fr);
+    padding: 8px;
+  }
+
+  .landing-preview-order-icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .landing-preview-statuses {
+    max-width: 155px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-benefit-card,
+  .landing-benefit-icon,
+  .landing-flow-actions .btn {
+    transition: none;
+  }
+}

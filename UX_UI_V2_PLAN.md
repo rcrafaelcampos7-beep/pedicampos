@@ -402,3 +402,38 @@ Os componentes estruturais, espaçamentos, acessibilidade, tipografia, estados e
 ## Critério de conclusão da V2
 
 A V2 estará pronta quando todas as etapas tiverem comparação visual aprovada, checklists funcionais concluídos, acessibilidade essencial validada, testes/lint/build aprovados e nenhuma mudança não autorizada em regras de negócio, planos, entitlements ou Supabase.
+
+## 11. Marco aprovado — Landing Page V2 (18/07/2026)
+
+### Estado oficial
+
+- Fundação do Design System V2: implementada e validada.
+- Loja Pública V2: implementada com nova composição visual, preservando os contratos funcionais existentes.
+- Landing Page V2: concluída e aprovada visualmente pelo usuário.
+- Validações automatizadas: lint sem erros, 126 testes aprovados, build de produção aprovado e `git diff --check` aprovado.
+- Backend e contratos: Supabase, migrations, Edge Functions, autenticação, regras, planos, preços, rotas e integrações permaneceram fora do escopo.
+
+### Composições adicionadas à referência
+
+- hero comercial com prévias reais de loja, painel, pedido e pagamento;
+- faixa de prova de valor sem métricas inventadas;
+- benefícios com ícones SVG, descrição, foco e comportamento responsivo;
+- demonstração do fluxo completo em HTML/CSS;
+- quatro etapas conectadas no desktop e verticais no mobile;
+- prévia estruturada do painel administrativo;
+- diferenciais, planos comparáveis, FAQ acessível, CTA final e rodapé institucional;
+- Loja Pública com hero, busca, categorias, catálogo, cards, carrinho, estados vazios e skeletons.
+
+### Decisão obrigatória para as próximas etapas
+
+> A Landing Page V2 aprovada passa a ser a referência visual para a Loja Pública, modal de produto, carrinho, checkout, acompanhamento de pedido, painel da loja, painel master e demais telas do PediCampos.
+
+As próximas páginas devem reproduzir o mesmo nível de hierarquia, acabamento, espaçamento, responsividade, composição, identidade, acessibilidade, clareza comercial e consistência desktop/mobile, sem copiar mecanicamente a Landing nem alterar regras de negócio.
+
+### Sequência recomendada após o marco
+
+1. Modal de produto e carrinho da Loja Pública.
+2. Checkout e acompanhamento de pedido.
+3. Painel da loja.
+4. Painel master.
+5. Consolidação visual, acessibilidade, regressão e remoção comprovada de estilos obsoletos.

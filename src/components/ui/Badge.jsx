@@ -1,3 +1,7 @@
-export function Badge({ children, tone = "neutral", className = "" }) {
-  return <span className={`badge badge-${tone} ${className}`.trim()}>{children}</span>;
+export function Badge({ children, tone = "neutral", className = "", ...props }) {
+  return (
+    <span className={`badge badge-${tone} ${className}`.trim()} {...props}>
+      {children}
+    </span>
+  );
 }

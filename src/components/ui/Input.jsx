@@ -1,35 +1,78 @@
-export function Input({ label, help, className = "", ...props }) {
+import { useId } from "react";
+
+function FieldMessage({ id, error, help }) {
+  const message = error || help;
+  if (!message) return null;
+
   return (
-    <label className={`field ${className}`.trim()}>
-      {label ? <span>{label}</span> : null}
-      <input {...props} />
-      {help ? <small>{help}</small> : null}
-    </label>
+    <small id={id} className={error ? "field-error" : "field-help"}>
+      {message}
+    </small>
   );
 }
 
-export function Textarea({ label, help, className = "", ...props }) {
+export function Input({ label, help, error, className = "", id, ...props }) {
+  const generatedId = useId();
+  const controlId = id || generatedId;
+  const messageId = help || error ? `${controlId}-message` : undefined;
+
   return (
-    <label className={`field ${className}`.trim()}>
-      {label ? <span>{label}</span> : null}
-      <textarea {...props} />
-      {help ? <small>{help}</small> : null}
-    </label>
+    <div className={`field ${error ? "field-invalid" : ""} ${className}`.trim()}>
+      {label ? <label htmlFor={controlId}><span>{label}</span></label> : null}
+      <input
+        id={controlId}
+        aria-describedby={messageId}
+        aria-invalid={error ? "true" : undefined}
+        {...props}
+      />
+      <FieldMessage id={messageId} error={error} help={help} />
+    </div>
   );
 }
 
-export function Select({ label, children, className = "", ...props }) {
+export function Textarea({ label, help, error, className = "", id, ...props }) {
+  const generatedId = useId();
+  const controlId = id || generatedId;
+  const messageId = help || error ? `${controlId}-message` : undefined;
+
   return (
-    <label className={`field ${className}`.trim()}>
-      {label ? <span>{label}</span> : null}
-      <select {...props}>{children}</select>
-    </label>
+    <div className={`field ${error ? "field-invalid" : ""} ${className}`.trim()}>
+      {label ? <label htmlFor={controlId}><span>{label}</span></label> : null}
+      <textarea
+        id={controlId}
+        aria-describedby={messageId}
+        aria-invalid={error ? "true" : undefined}
+        {...props}
+      />
+      <FieldMessage id={messageId} error={error} help={help} />
+    </div>
   );
 }
 
-export function Checkbox({ label, checked, onChange, ...props }) {
+export function Select({ label, help, error, children, className = "", id, ...props }) {
+  const generatedId = useId();
+  const controlId = id || generatedId;
+  const messageId = help || error ? `${controlId}-message` : undefined;
+
   return (
-    <label className="checkbox">
+    <div className={`field ${error ? "field-invalid" : ""} ${className}`.trim()}>
+      {label ? <label htmlFor={controlId}><span>{label}</span></label> : null}
+      <select
+        id={controlId}
+        aria-describedby={messageId}
+        aria-invalid={error ? "true" : undefined}
+        {...props}
+      >
+        {children}
+      </select>
+      <FieldMessage id={messageId} error={error} help={help} />
+    </div>
+  );
+}
+
+export function Checkbox({ label, checked, onChange, className = "", ...props }) {
+  return (
+    <label className={`checkbox ${className}`.trim()}>
       <input
         type="checkbox"
         checked={checked}

@@ -56,6 +56,19 @@ describe("StorePage", () => {
     expect(await screen.findByText("Produto remoto")).toBeInTheDocument();
     expect(db.getStoreBySlug).toHaveBeenCalledWith("loja-demo", { allowLocalFallback: false });
   });
+  it("filtra produtos pela busca e permite limpar o termo", async () => {
+    db.getProductsByStore.mockResolvedValue([
+      { id: "p1", categoryId: null, name: "Açaí tradicional", description: "Com banana", price: 18, image: "", active: true },
+      { id: "p2", categoryId: null, name: "Suco natural", description: "Laranja", price: 10, image: "", active: true },
+    ]);
+    render(<StorePage slug="loja-demo" />);
+    expect(await screen.findByText("Açaí tradicional")).toBeInTheDocument();
+    fireEvent.change(screen.getByRole("searchbox", { name: "Buscar produtos" }), { target: { value: "acai" } });
+    expect(screen.getByText("Açaí tradicional")).toBeInTheDocument();
+    expect(screen.queryByText("Suco natural")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Limpar busca" }));
+    expect(screen.getByText("Suco natural")).toBeInTheDocument();
+  });
   it("oculta produto de categoria inativa mas preserva produto sem categoria", async () => {
     db.getCategoriesByStore.mockResolvedValue([{ id: "cat-inativa", name: "Inativa", active: false }]);
     db.getProductsByStore.mockResolvedValue([

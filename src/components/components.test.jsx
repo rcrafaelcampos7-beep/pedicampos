@@ -18,12 +18,62 @@ import { CartDrawer } from "./store/CartDrawer.jsx";
 import { OrderTimeline } from "./store/OrderTimeline.jsx";
 import { ProductCard } from "./store/ProductCard.jsx";
 import { ProductModal } from "./store/ProductModal.jsx";
+import { Alert } from "./ui/Alert.jsx";
+import { Button } from "./ui/Button.jsx";
 import { ImageCropModal } from "./ui/ImageCropModal.jsx";
+import { Input } from "./ui/Input.jsx";
+import { LoadingState, Skeleton } from "./ui/LoadingState.jsx";
+import { Modal } from "./ui/Modal.jsx";
 import { PaginationControls } from "./ui/PaginationControls.jsx";
 import { StatusBadge } from "./ui/StatusBadge.jsx";
 import { ENTITLEMENT_FEATURES } from "../utils/plans.js";
 
 describe("componentes criticos", () => {
+  it("Button comunica carregamento e bloqueia novo acionamento", () => {
+    render(<Button loading>Salvando</Button>);
+    const button = screen.getByRole("button", { name: "Salvando" });
+    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute("aria-busy", "true");
+  });
+  it("Input associa label, ajuda e erro ao controle", () => {
+    const { rerender } = render(<Input label="Nome" help="Informe o nome completo" />);
+    const input = screen.getByLabelText("Nome");
+    expect(input).toHaveAccessibleDescription("Informe o nome completo");
+    rerender(<Input label="Nome" error="Nome obrigatório" />);
+    expect(screen.getByLabelText("Nome")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByLabelText("Nome")).toHaveAccessibleDescription("Nome obrigatório");
+  });
+  it("Alert usa regioes vivas adequadas ao tom", () => {
+    const { rerender } = render(<Alert tone="info">Informação</Alert>);
+    expect(screen.getByRole("status")).toHaveTextContent("Informação");
+    rerender(<Alert tone="error">Falha</Alert>);
+    expect(screen.getByRole("alert")).toHaveTextContent("Falha");
+  });
+  it("LoadingState e Skeleton expõem carregamento sem ruído ao leitor", () => {
+    render(<LoadingState label="Carregando dados" />);
+    expect(screen.getByText("Carregando dados").parentElement).toHaveAttribute("aria-busy", "true");
+    const { container } = render(<Skeleton height="20px" />);
+    expect(container.querySelector(".skeleton")).toHaveAttribute("aria-hidden", "true");
+  });
+  it("Modal associa titulo, recebe foco e o mantem no dialogo", async () => {
+    const onClose = vi.fn();
+    render(
+      <Modal open title="Confirmar ação" onClose={onClose}>
+        <button type="button">Continuar</button>
+      </Modal>,
+    );
+    const dialog = screen.getByRole("dialog", { name: "Confirmar ação" });
+    const closeButton = screen.getByRole("button", { name: "Fechar modal" });
+    const continueButton = screen.getByRole("button", { name: "Continuar" });
+    expect(dialog).toHaveAttribute("aria-modal", "true");
+    await waitFor(() => expect(closeButton).toHaveFocus());
+    await userEvent.tab();
+    expect(continueButton).toHaveFocus();
+    await userEvent.tab();
+    expect(closeButton).toHaveFocus();
+    await userEvent.keyboard("{Escape}");
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
   it("PaginationControls bloqueia anterior na primeira pagina", () => {
     render(<PaginationControls page={1} totalPages={3} total={50} onPageChange={vi.fn()} />);
     expect(screen.getByRole("button", { name: "Anterior" })).toBeDisabled();

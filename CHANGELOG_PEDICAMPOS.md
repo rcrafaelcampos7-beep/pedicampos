@@ -1354,3 +1354,16 @@ Build:
 - O resumo consolidado retornou `PRE_UX_REMOTE_GATE = PASS` no Supabase.
 - O inventário confirmou as assinaturas críticas e eliminou falsos negativos ao trocar comparação textual por resolução com `to_regprocedure` e OID.
 - Os diagnósticos permaneceram somente leitura; nenhuma função, migration, policy, Edge Function ou dado foi alterado.
+
+## 18/07/2026 - Landing Page V2 aprovada e fundação visual premium
+
+- Consolidada a fundação do Design System com tokens de tipografia, espaçamento, formas, elevação, controles, movimento e cores semânticas.
+- Evoluídos componentes compartilhados de botão, card, badge, input, modal, loading, alerta e estado vazio, com foco visível e comportamento acessível.
+- Implementada a Loja Pública V2 com nova composição de hero, busca, categorias, catálogo responsivo, cards, estados vazios, skeletons, carrinho flutuante e rodapé.
+- Implementada busca de produtos por nome/descrição com normalização de acentos, sem alterar consultas, dados ou regras do catálogo.
+- Reformulada a Landing Page institucional com hero baseado no produto, prova de valor, seção premium de benefícios, fluxo de pedido, prévia do painel, diferenciais, planos, FAQ em acordeão, CTA final e rodapé.
+- Os mockups institucionais foram construídos em HTML/CSS e apresentam somente recursos já existentes: loja, catálogo, adicionais, carrinho, pedidos, status, Pix conforme plano, WhatsApp e painel administrativo.
+- A Landing Page V2 foi aprovada visualmente pelo usuário e passou a ser a referência obrigatória para as demais experiências do PediCampos.
+- Decisão oficial: “A Landing Page V2 aprovada passa a ser a referência visual para a Loja Pública, modal de produto, carrinho, checkout, acompanhamento de pedido, painel da loja, painel master e demais telas do PediCampos.”
+- Validação: lint com zero erros e 12 warnings conhecidos, 126 testes em 20 arquivos, build Vite com 147 módulos e `git diff --check` aprovados.
+- Nenhuma alteração foi realizada em Supabase, migrations, Edge Functions, autenticação, regras de negócio, planos, preços, rotas ou integrações.

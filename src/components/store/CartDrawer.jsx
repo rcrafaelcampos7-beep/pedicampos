@@ -23,10 +23,10 @@ export function CartDrawer({
   return (
     <>
       {cart.totals.quantity ? (
-        <button className="cart-bar" type="button" onClick={onOpen}>
-          <span>{cart.totals.quantity} itens</span>
-          <strong>{formatCurrency(cart.totals.subtotal)}</strong>
-          <span>Ver carrinho</span>
+        <button className="cart-bar" type="button" onClick={onOpen} aria-label={`Ver carrinho com ${cart.totals.quantity} itens`}>
+          <span className="cart-bar-count">{cart.totals.quantity} itens</span>
+          <span className="cart-bar-copy"><small>Ver carrinho</small><strong>{formatCurrency(cart.totals.subtotal)}</strong></span>
+          <span className="cart-bar-arrow" aria-hidden="true">→</span>
         </button>
       ) : null}
       <Modal open={open} onClose={onClose} title="Seu carrinho" size="md">

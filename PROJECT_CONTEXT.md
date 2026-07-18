@@ -1305,3 +1305,22 @@ Build:
 - As seis funcoes criticas foram confirmadas por assinatura com `function_inventory.sql`; o resumo passou a resolver funcoes por `to_regprocedure` e OID para evitar falsos negativos textuais.
 - Os diagnosticos foram somente leitura e nao alteraram schema, funcoes, policies, dados, Edge ou Storage.
 - O checkpoint tecnico libera o planejamento da UX/UI V2 sem mudar regras de negocio. Validacoes funcionais de dominio e isolamento continuam obrigatorias antes de producao.
+
+## UX/UI V2 — Landing Page aprovada (18/07/2026)
+
+- A fundação visual V2 foi consolidada com tokens de tipografia, espaçamento, raios, elevação, controles, movimento e estados semânticos; componentes compartilhados receberam estados de carregamento, erro, foco e composição compatíveis.
+- A Loja Pública V2 foi implementada com hero estruturado, busca, categorias, catálogo responsivo, cards de produto, estados vazios, skeletons, carrinho flutuante e rodapé, preservando cor, logo, dados e fluxos de cada loja.
+- A Landing Page institucional foi reformulada e aprovada visualmente pelo usuário. O fluxo final reúne hero de produto, prova de valor, benefícios, demonstração do fluxo, quatro etapas, prévia do painel, diferenciais, planos, FAQ acessível, CTA final e rodapé.
+- As prévias de loja, pedidos, pagamento e painel são composições HTML/CSS baseadas em recursos existentes; não representam novos dados, integrações ou funcionalidades.
+- A implementação preservou Supabase, migrations, Edge Functions, autenticação, regras de negócio, planos, preços, rotas e integrações.
+- Validação do marco: `npm run lint` com zero erros e 12 warnings conhecidos de `react-hooks/exhaustive-deps`; 126 testes aprovados em 20 arquivos; build Vite aprovado com 147 módulos; `git diff --check` aprovado.
+
+### Decisão visual oficial
+
+> A Landing Page V2 aprovada passa a ser a referência visual para a Loja Pública, modal de produto, carrinho, checkout, acompanhamento de pedido, painel da loja, painel master e demais telas do PediCampos.
+
+Esse padrão exige hierarquia clara, acabamento premium, espaçamento consistente, composição orientada ao produto, identidade PediCampos, acessibilidade e equivalência de qualidade entre desktop e mobile. A personalização das lojas continua limitada ao conteúdo e ao acento visual próprio.
+
+### Próxima etapa recomendada
+
+- Harmonizar o modal de produto e o carrinho da Loja Pública com a referência aprovada, preservando adicionais, quantidades, cálculos, persistência e navegação; em seguida, aplicar o mesmo padrão ao checkout e ao acompanhamento de pedido.
