@@ -1314,6 +1314,8 @@ Build:
 - As prévias de loja, pedidos, pagamento e painel são composições HTML/CSS baseadas em recursos existentes; não representam novos dados, integrações ou funcionalidades.
 - A implementação preservou Supabase, migrations, Edge Functions, autenticação, regras de negócio, planos, preços, rotas e integrações.
 - Validação do marco: `npm run lint` com zero erros e 12 warnings conhecidos de `react-hooks/exhaustive-deps`; 126 testes aprovados em 20 arquivos; build Vite aprovado com 147 módulos; `git diff --check` aprovado.
+- A comunicação comercial dos planos foi consolidada sem mudar entitlements: Start mantém pedidos pelo WhatsApp; Pro inclui pagamento online no checkout com Pix integrado; Premium herda os recursos do Pro e acrescenta WhatsApp automático, cupons e automações.
+- Pix integrado está disponível nos planos Pro e Premium por herança de recursos; WhatsApp automático permanece exclusivo do Premium.
 
 ### Decisão visual oficial
 

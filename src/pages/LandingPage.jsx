@@ -69,6 +69,27 @@ const DIFFERENTIALS = [
   "Pagamento online conforme o plano",
 ];
 
+const LANDING_PLAN_COPY = {
+  pro: {
+    description: "Receba pedidos pelo site, acompanhe pelo painel e ofereça pagamento online com Pix integrado.",
+    features: [
+      "Tudo do Start",
+      "Pedido salvo no painel",
+      "Status dos pedidos",
+      "Adicionais configuráveis",
+      "Pagamento online no checkout",
+      "Pix integrado",
+      "Relatórios simples",
+    ],
+  },
+  premium: {
+    description: "Plano completo com todos os recursos do Pro, além de WhatsApp automático, cupons e automações para sua operação.",
+    features: ["Tudo do Pro", "WhatsApp automático", "Cupons", "Automações"],
+  },
+};
+
+const PIX_FAQ_ANSWER = "Sim. Os planos Pro e Premium permitem pagamento online com Pix diretamente na loja.";
+
 function BenefitIcon({ name }) {
   const paths = {
     menu: <><path d="M7 4.5h10a2 2 0 0 1 2 2v13l-3-2-3 2-3-2-3 2v-13a2 2 0 0 1 2-2Z" /><path d="M10 9h6M10 13h4" /></>,
@@ -98,6 +119,7 @@ export function LandingPage() {
   const instagramHandle = String(platform.instagram || "").replace("@", "");
   const landingPlans = getActivePlans(platform).map((plan) => ({
     ...plan,
+    ...(LANDING_PLAN_COPY[plan.key] || {}),
     price: plan.priceLabel || `${formatCurrency(plan.price)}/mês`,
   }));
 
@@ -365,8 +387,11 @@ export function LandingPage() {
               <div className="landing-v2-container landing-differences-layout">
                 <header>
                   <span className="eyebrow">SEU NEGÓCIO, SUAS REGRAS</span>
-                  <h2>Uma alternativa profissional aos marketplaces</h2>
-                  <p>Mais identidade, proximidade com o cliente e controle sobre a operação da sua própria loja.</p>
+                  <h2>Mais controle sobre cada pedido</h2>
+                  <p>
+                    <strong>Uma alternativa profissional aos marketplaces.</strong><br />
+                    Gerencie sua operação, fortaleça sua marca e mantenha um relacionamento direto com seus clientes, com mais controle sobre produtos, pedidos e pagamentos.
+                  </p>
                 </header>
                 <div className="landing-differences-grid">
                   {DIFFERENTIALS.map((item) => (
@@ -408,6 +433,7 @@ export function LandingPage() {
                 {(platform.faq || []).map(({ question, answer }, index) => {
                   const expanded = openFaqIndex === index;
                   const panelId = `landing-faq-panel-${index}`;
+                  const publicAnswer = question.trim().toLocaleLowerCase("pt-BR") === "tem pix?" ? PIX_FAQ_ANSWER : answer;
                   return (
                     <article className="landing-faq-item" key={question}>
                       <h3>
@@ -422,7 +448,7 @@ export function LandingPage() {
                         </button>
                       </h3>
                       <div id={panelId} hidden={!expanded}>
-                        <p>{answer}</p>
+                        <p>{publicAnswer}</p>
                       </div>
                     </article>
                   );

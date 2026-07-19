@@ -70,7 +70,7 @@ export const defaultPlatformSettings = {
     { question: "Funciona no celular?", answer: "Sim. A experiência é pensada primeiro para celular." },
     { question: "Posso alterar produtos?", answer: "Sim. O painel da loja permite editar produtos, preços e categorias." },
     { question: "O pedido chega onde?", answer: "Depende do plano: via WhatsApp no Start e pelo painel nos planos Pro e Premium." },
-    { question: "Tem Pix?", answer: "Sim. O cliente vê Pix como forma de pagamento, e os planos Pro e Premium liberam pagamento online no checkout." },
+    { question: "Tem Pix?", answer: "Sim. Os planos Pro e Premium permitem pagamento online com Pix diretamente na loja." },
   ],
   plans: {
     start: {
@@ -88,14 +88,14 @@ export const defaultPlatformSettings = {
       name: "Pro",
       price: 179.99,
       priceLabel: "R$ 179,99/mês",
-      description: "Pedidos no site, painel de pedidos, status, adicionais e pagamento online no checkout.",
+      description: "Receba pedidos pelo site, acompanhe pelo painel e ofereça pagamento online com Pix integrado.",
       features: [
         "Tudo do Start",
         "Pedido salvo no painel",
         "Status dos pedidos",
         "Adicionais configuráveis",
-        "Pix automático",
-        "Cartão automático",
+        "Pagamento online no checkout",
+        "Pix integrado",
         "Relatórios simples",
       ],
       active: true,
@@ -107,8 +107,8 @@ export const defaultPlatformSettings = {
       name: "Premium",
       price: 199.99,
       priceLabel: "R$ 199,99/mês",
-      description: "Plano completo com pagamento automático, WhatsApp automático e automações.",
-      features: ["Tudo do Pro", "WhatsApp automático", "Mensagens por status", "Cupons", "Automações"],
+      description: "Plano completo com todos os recursos do Pro, além de WhatsApp automático, cupons e automações para sua operação.",
+      features: ["Tudo do Pro", "WhatsApp automático", "Cupons", "Automações"],
       active: true,
       highlighted: true,
       badge: "Melhor escolha",
@@ -260,6 +260,10 @@ function normalizePublicCopy(value) {
   return value
     .replace(/ver loja demo/gi, "Ver loja exemplo")
     .replace(/loja demo/gi, "Loja exemplo")
+    .replace(/pix online simulado/gi, "Pix integrado")
+    .replace(/pix simulado/gi, "Pix integrado")
+    .replace(/pagamento simulado/gi, "pagamento online")
+    .replace(/pix online/gi, "Pix integrado")
     .replace(/pagamento automático simulado/gi, "pagamento online no checkout")
     .replace(/pagamento automatico simulado/gi, "pagamento online no checkout")
     .replace(/pix automático simulado/gi, "Pix automático")

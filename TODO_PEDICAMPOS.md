@@ -699,6 +699,8 @@ Legenda:
 - [x] Obter aprovação visual da Landing Page V2 pelo usuário.
 - [x] Definir a Landing Page V2 como referência visual obrigatória para as próximas páginas.
 - [x] Validar lint com zero erros, 126 testes, build de produção e `git diff --check`.
+- [x] Alinhar a copy comercial: Pix integrado no Pro e Premium, com WhatsApp automático exclusivo do Premium.
+- [x] Preservar o padrão premium aprovado da Landing Page como referência obrigatória das próximas páginas.
 - [ ] Aplicar o padrão premium aprovado ao modal de produto e ao carrinho, preservando toda a lógica atual.
 - [ ] Aplicar o padrão ao checkout e ao acompanhamento de pedido.
 - [ ] Aplicar o padrão ao painel da loja e depois ao painel master.

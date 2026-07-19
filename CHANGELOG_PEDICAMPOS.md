@@ -1367,3 +1367,6 @@ Build:
 - Decisão oficial: “A Landing Page V2 aprovada passa a ser a referência visual para a Loja Pública, modal de produto, carrinho, checkout, acompanhamento de pedido, painel da loja, painel master e demais telas do PediCampos.”
 - Validação: lint com zero erros e 12 warnings conhecidos, 126 testes em 20 arquivos, build Vite com 147 módulos e `git diff --check` aprovados.
 - Nenhuma alteração foi realizada em Supabase, migrations, Edge Functions, autenticação, regras de negócio, planos, preços, rotas ou integrações.
+- Copy comercial dos planos alinhada: Start mantém pedidos pelo WhatsApp; Pro apresenta pagamento online no checkout e Pix integrado; Premium mantém tudo do Pro e destaca somente WhatsApp automático, cupons e automações.
+- FAQ de Pix e seção de diferenciais revisadas sem alterar a composição visual aprovada; termos internos de simulação permanecem fora da interface pública.
+- Reforçado que Pix integrado está disponível no Pro e Premium e que WhatsApp automático é exclusivo do Premium.

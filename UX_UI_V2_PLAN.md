@@ -412,6 +412,8 @@ A V2 estará pronta quando todas as etapas tiverem comparação visual aprovada,
 - Landing Page V2: concluída e aprovada visualmente pelo usuário.
 - Validações automatizadas: lint sem erros, 126 testes aprovados, build de produção aprovado e `git diff --check` aprovado.
 - Backend e contratos: Supabase, migrations, Edge Functions, autenticação, regras, planos, preços, rotas e integrações permaneceram fora do escopo.
+- Copy comercial validada: Start recebe pedidos pelo WhatsApp; Pro oferece pagamento online no checkout com Pix integrado; Premium herda tudo do Pro e acrescenta WhatsApp automático, cupons e automações.
+- Pix integrado pertence ao Pro e ao Premium; WhatsApp automático é um diferencial exclusivo do Premium.
 
 ### Composições adicionadas à referência
 
